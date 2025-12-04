@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Panel de Administración{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --primary-color: #4e73df;
+            --secondary-color: #858796;
+            --success-color: #1cc88a;
+            --danger-color: #e74a3b;
+            --warning-color: #f6c23e;
+            --info-color: #36b9cc;
+        }
+        
+        body {
+            font-size: 0.9rem;
+            background-color: #f8f9fc;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, #4e73df 10%, #224abe 100%);
+            padding: 1rem 0;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+        }
+        
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 4.375rem;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 1rem;
+        }
+        
+        .sidebar-brand:hover {
+            color: white;
+        }
+        
+        .nav-item {
+            position: relative;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .nav-link:hover,
+        .nav-link.active {
+            color: white;
+            background-color: rgba(255,255,255,0.1);
+        }
+        
+        .nav-link i {
+            flex-shrink: 0;
+            margin-right: 0.5rem;
+            font-size: 0.85rem;
+            width: 1rem;
+            text-align: center;
+        }
+        
+        /* Content */
+        .content-wrapper {
+            margin-left: var(--sidebar-width);
+            padding: 2rem;
+        }
+        
+        .topbar {
+            background-color: white;
+            height: 4.375rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            margin-bottom: 2rem;
+            padding: 0 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+        
+        /* Cards */
+        .stats-card {
+            border-left: 4px solid;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            border-radius: 0.35rem;
+        }
+        
+        .stats-card.primary { border-left-color: var(--primary-color); }
+        .stats-card.success { border-left-color: var(--success-color); }
+        .stats-card.warning { border-left-color: var(--warning-color); }
+        .stats-card.danger { border-left-color: var(--danger-color); }
+        .stats-card.info { border-left-color: var(--info-color); }
+        
+        .stats-card .card-body {
+            padding: 1.25rem 1.5rem;
+        }
+        
+        .stats-card .text-xs {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .stats-card .h5 {
+            font-weight: 700;
+            font-size: 1.25rem;
+            margin-bottom: 0;
+            color: #5a5c69;
+        }
+        
+        .stats-card .icon {
+            font-size: 2rem;
+            color: #dddfeb;
+        }
+        
+        /* Tables */
+        .table-hover tbody tr:hover {
+            background-color: rgba(78, 115, 223, 0.05);
+        }
+        
+        /* Status badges */
+        .status-badge {
+            padding: 0.35rem 0.65rem;
+            border-radius: 0.35rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .content-wrapper {
+                margin-left: 0;
+            }
+        }
+        
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <a class="sidebar-brand" href="{% url 'shop:admin_dashboard' %}">
+            <i class="bi bi-speedometer2"></i>
+            <span class="ms-2">Panel Admin</span>
+        </a>
+        
+        <hr class="sidebar-divider my-0" style="border-color: rgba(255,255,255,0.15);">
+        
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}" 
+                   href="{% url 'shop:admin_dashboard' %}">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link {% if 'admin_orders' in request.resolver_match.url_name %}active{% endif %}" 
+                   href="{% url 'shop:admin_orders' %}">
+                    <i class="bi bi-receipt"></i>
+                    <span>Órdenes</span>
+                    {% if pending_orders_count > 0 %}
+                        <span class="badge bg-danger ms-auto">{{ pending_orders_count }}</span>
+                    {% endif %}
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link {% if 'admin_products' in request.resolver_match.url_name %}active{% endif %}" 
+                   href="{% url 'shop:admin_products' %}">
+                    <i class="bi bi-box-seam"></i>
+                    <span>Productos</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'admin_users' in request.resolver_match.url_name %}active{% endif %}" 
+                   href="{% url 'shop:admin_users' %}">
+                    <i class="bi bi-people"></i>
+                    <span>Usuarios</span>
+                </a>
+            </li>
+            
+            <hr class="sidebar-divider" style="border-color: rgba(255,255,255,0.15);">
+            
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'shop:home' %}" target="_blank">
+                    <i class="bi bi-shop"></i>
+                    <span>Ver Tienda</span>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'admin:index' %}" target="_blank">
+                    <i class="bi bi-gear"></i>
+                    <span>Django Admin</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+    
+    <!-- Content -->
+    <div class="content-wrapper">
+        <!-- Topbar -->
+        <div class="topbar">
+            <button class="btn btn-link d-md-none" id="sidebarToggle">
+                <i class="bi bi-list fs-3"></i>
+            </button>
+            
+            <h4 class="mb-0">{% block page_title %}Panel de Administración{% endblock %}</h4>
+            
+            <div class="d-flex align-items-center">
+                <span class="me-3">{{ user.get_full_name|default:user.username }}</span>
+                <a href="{% url 'shop:home' %}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-house"></i> Volver a la Tienda
+                </a>
+            </div>
+        </div>
+        
+        
+        
+        <!-- Page Content -->
+        {% block content %}{% endblock %}
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == 'success' %}
+                    <div class="admin-message" data-type="success" style="display:none;">{{ message|escape }}</div>
+                {% elif message.tags == 'error' %}
+                    <div class="admin-message" data-type="danger" style="display:none;">{{ message|escape }}</div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+    
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Toast de notificaciones -->
+    <div id="admin-toast" class="alert alert-success" role="alert" aria-live="polite" aria-atomic="true" 
+         style="position: fixed; top: 80px; right: 20px; z-index: 1080; min-width: 280px; max-width: calc(100vw - 40px); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25); border-radius: 12px; padding: 0.75rem 1.5rem; display: none;">
+        <i class="bi bi-check-circle-fill"></i>
+        <span class="admin-toast-message">Operación realizada exitosamente</span>
+    </div>
+    
+    <style>
+        @media (max-width: 576px) {
+            #admin-toast {
+                top: 70px;
+                right: 10px;
+                left: 10px;
+                min-width: auto;
+                max-width: calc(100vw - 20px);
+                padding: 0.6rem 1.1rem;
+            }
+        }
+    </style>
+    
+    <script>
+        // Sidebar toggle para móvil
+        $('#sidebarToggle').on('click', function() {
+            $('.sidebar').toggleClass('show');
+        });
+        
+        // Cerrar sidebar al hacer click fuera (móvil)
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.sidebar, #sidebarToggle').length) {
+                $('.sidebar').removeClass('show');
+            }
+        });
+        
+        // Función para mostrar notificación toast
+        window.showAdminToast = function(message, type) {
+            type = type || 'success';
+            const $toast = $('#admin-toast');
+            if ($toast.length === 0) return;
+            
+            // Cambiar clase según el tipo
+            $toast.removeClass('alert-success alert-danger alert-warning alert-info')
+                  .addClass('alert-' + type);
+            
+            // Cambiar ícono según el tipo
+            let icon = 'bi-check-circle-fill';
+            if (type === 'danger') icon = 'bi-x-circle-fill';
+            else if (type === 'warning') icon = 'bi-exclamation-triangle-fill';
+            else if (type === 'info') icon = 'bi-info-circle-fill';
+            
+            $toast.find('i').removeClass().addClass('bi ' + icon);
+            $toast.find('.admin-toast-message').text(message || 'Operación realizada exitosamente');
+            
+            // Mostrar con animación
+            $toast.stop(true, true).fadeOut(0);
+            $toast.fadeIn(200, function() {
+                setTimeout(function() {
+                    $toast.fadeOut(200);
+                }, 3000);
+            });
+        };
+        
+        // Mostrar toast si hay mensajes de Django
+        $(document).ready(function() {
+            $('.admin-message').each(function() {
+                var type = $(this).data('type');
+                var msg = $(this).attr('data-message');
+                if (!msg || !msg.trim) {
+                    msg = $(this).text().trim();
+                }
+                if (msg && typeof window.showAdminToast === 'function') {
+                    setTimeout(function() { showAdminToast(msg, type); }, 300);
+                }
+            });
+            try {
+                var params = new URLSearchParams(window.location.search);
+                var toastType = params.get('toast');
+                var toastMsg = params.get('msg');
+                if (toastType && toastMsg && typeof window.showAdminToast === 'function') {
+                    setTimeout(function() { window.showAdminToast(toastMsg, toastType); }, 200);
+                    params.delete('toast');
+                    params.delete('msg');
+                    var newQs = params.toString();
+                    var newUrl = window.location.pathname + (newQs ? ('?' + newQs) : '');
+                    window.history.replaceState({}, '', newUrl);
+                }
+            } catch (e) {}
+        });
+    </script>
+    
+    <div class="modal fade" id="adminConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-question-circle text-primary me-1"></i>
+                        Confirmar acción
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="adminConfirmModalMessage" class="mb-0"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="adminConfirmModalAccept">Aceptar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        window.showConfirmModal = function(options) {
+            options = options || {};
+            const message = options.message || '¿Confirmas la acción?';
+            const confirmText = options.confirmText || 'Aceptar';
+            const confirmClass = options.confirmClass || 'btn-primary';
+            const onConfirm = typeof options.onConfirm === 'function' ? options.onConfirm : null;
+            const modalEl = document.getElementById('adminConfirmModal');
+            if (!modalEl) return;
+            const msgEl = document.getElementById('adminConfirmModalMessage');
+            const acceptBtn = document.getElementById('adminConfirmModalAccept');
+            msgEl.textContent = message;
+            acceptBtn.textContent = confirmText;
+            acceptBtn.className = 'btn ' + confirmClass;
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            acceptBtn.onclick = function() {
+                modal.hide();
+                if (onConfirm) onConfirm();
+            };
+            modal.show();
+        };
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

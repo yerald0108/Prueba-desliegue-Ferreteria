@@ -1,0 +1,251 @@
+{% extends 'shop/admin/base_admin.html' %}
+
+{% block title %}Detalle de Usuario - Panel Admin{% endblock %}
+{% block page_title %}Detalle de Usuario{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">
+        <i class="bi bi-person-circle"></i>
+        {{ detail_user.get_full_name|default:detail_user.username }}
+        <small class="text-muted">@{{ detail_user.username }}</small>
+    </h5>
+    <div>
+        <a href="{% url 'shop:admin_users' %}" class="btn btn-sm btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver a Usuarios
+        </a>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card shadow stats-card primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-xs">Órdenes</div>
+                        <div class="h5">{{ order_count }}</div>
+                    </div>
+                    <i class="bi bi-receipt icon"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card shadow stats-card success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-xs">Total gastado</div>
+                        <div class="h5">${{ total_spent|floatformat:2 }}</div>
+                    </div>
+                    <i class="bi bi-cash-stack icon"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card shadow stats-card info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-xs">Ticket promedio</div>
+                        <div class="h5">${{ avg_order|default:0|floatformat:2 }}</div>
+                    </div>
+                    <i class="bi bi-graph-up icon"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mt-1">
+    <div class="col-lg-6">
+        <div class="card shadow mb-3">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="bi bi-info-circle"></i> Información del Usuario</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <strong>Email:</strong><br>
+                        <span>{{ detail_user.email }}</span>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <strong>Teléfono:</strong><br>
+                        <span>{{ profile.phone|default:'-' }}</span>
+                    </div>
+                    <div class="col-md-12 mb-2">
+                        <strong>Dirección:</strong><br>
+                        <span>{{ profile.address|default:'-' }}</span>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <strong>Ubicación:</strong><br>
+                        <span>
+                            {% if profile.city %}{{ profile.city }}{% else %}-{% endif %}
+                            {% if profile.province %}, {{ profile.province }}{% endif %}
+                        </span>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <strong>Estado del Email:</strong><br>
+                        {% if profile.email_verified %}
+                            <span class="badge bg-success">Verificado</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">No verificado</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <strong>Activo:</strong><br>
+                        <span id="user-active-badge" class="badge {% if detail_user.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                            {% if detail_user.is_active %}Sí{% else %}No{% endif %}
+                        </span>
+                        
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <strong>Registrado:</strong><br>
+                        <span>{{ detail_user.date_joined|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <strong>En línea:</strong><br>
+                        <span id="user-online-badge" class="badge bg-secondary">Desconectado</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="bi bi-bar-chart"></i> Estado de Órdenes</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for s in status_breakdown %}
+                    <div class="col-md-6 mb-2">
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">{{ s.status|capfirst }}</span>
+                            <span><span class="badge bg-primary">{{ s.count }}</span> · ${{ s.total|default:0|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12 text-muted">Sin órdenes</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card shadow mb-3">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="bi bi-clock-history"></i> Órdenes Recientes</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Número</th>
+                                <th>Fecha</th>
+                                <th>Estado</th>
+                                <th class="text-end">Total</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                            <tr>
+                                <td>{{ order.order_number }}</td>
+                                <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
+                                <td><span class="badge bg-secondary">{{ order.get_status_display }}</span></td>
+                                <td class="text-end">${{ order.total|floatformat:2 }}</td>
+                                <td class="text-end">
+                                    <a href="{% url 'shop:admin_order_detail' order.id %}" class="btn btn-sm btn-outline-primary">
+                                        Ver
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    No hay órdenes para este usuario
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="bi bi-star"></i> Productos más comprados</h6>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Productos distintos comprados: <strong>{{ distinct_products }}</strong></p>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th class="text-center">Cantidad</th>
+                                <th class="text-end">Ingresos</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in top_products %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'shop:admin_product_detail' p.product__id %}">{{ p.product__name }}</a>
+                                </td>
+                                <td class="text-center">{{ p.total_quantity }}</td>
+                                <td class="text-end">${{ p.revenue|default:0|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-4">Sin compras</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function(){
+        // Lógica de activar/desactivar deshabilitada temporalmente
+        // const btn = document.getElementById('toggle-active-btn');
+        // const badge = document.getElementById('user-active-badge');
+        // const form = document.getElementById('toggle-active-form');
+        // if (!btn || !badge || !form) return;
+        // btn.addEventListener('click', function(e){ ... });
+        const onlineBadge = document.getElementById('user-online-badge');
+        const onlineUrl = "{% url 'shop:admin_user_online_status' detail_user.id %}";
+        function refreshOnline(){
+            fetch(onlineUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' }})
+                .then(r => r.json())
+                .then(data => {
+                    if (!onlineBadge) return;
+                    if (data.is_online) {
+                        onlineBadge.classList.remove('bg-secondary');
+                        onlineBadge.classList.add('bg-success');
+                        onlineBadge.textContent = 'En línea';
+                    } else {
+                        onlineBadge.classList.remove('bg-success');
+                        onlineBadge.classList.add('bg-secondary');
+                        onlineBadge.textContent = 'Desconectado';
+                    }
+                })
+                .catch(() => {});
+        }
+        refreshOnline();
+        setInterval(refreshOnline, 8000);
+    })();
+</script>
+{% endblock %}

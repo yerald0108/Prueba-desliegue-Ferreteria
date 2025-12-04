@@ -1,0 +1,55 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Verificación Exitosa{% endblock %}
+
+{% block extra_css %}
+<style>
+    .verify-hero {
+        background: linear-gradient(135deg, rgba(76, 175, 80, 0.12), rgba(76, 175, 80, 0.18));
+        border-radius: 18px;
+        padding: 38px 26px;
+    }
+    .verify-card {
+        border-radius: 18px;
+        padding: 34px 26px;
+    }
+    .verify-icon {
+        font-size: 3rem;
+        color: #28a745;
+        display: inline-block;
+        transform: scale(0.9);
+        animation: v-pop 520ms ease-out forwards;
+    }
+    @keyframes v-pop {
+        0%   { transform: scale(0.6); opacity: 0; }
+        60%  { transform: scale(1.15); opacity: 1; }
+        100% { transform: scale(1); }
+    }
+    .verify-title {
+        font-weight: 800;
+        letter-spacing: 0.2px;
+    }
+    .verify-subtitle {
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="verify-hero mb-4">
+                <div class="text-center">
+                    <i class="bi bi-check-circle-fill verify-icon"></i>
+                    <h2 class="verify-title mt-3 mb-2">¡Tu cuenta ha sido verificada!</h2>
+                    <p class="verify-subtitle mb-0">Gracias por confirmar tu correo. Disfruta de una experiencia segura en {{ site_name }}.</p>
+                </div>
+            </div>
+            <div class="card shadow-sm verify-card text-center">
+                <p class="mb-0">Puedes cerrar esta ventana y continuar navegando.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

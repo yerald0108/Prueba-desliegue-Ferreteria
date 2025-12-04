@@ -1,0 +1,41 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Reenviar Verificación{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h3 class="mb-3">
+                        <i class="bi bi-shield-check"></i> Verifica tu email
+                    </h3>
+                    <p class="text-muted">Ingresa tu correo electrónico para reenviar el enlace de verificación.</p>
+
+                    <form method="post" action="{% url 'shop:resend_verification' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="email" class="form-label fw-bold">Correo electrónico</label>
+                            <input type="email" id="email" name="email" class="form-control" placeholder="correo@ejemplo.com" value="{{ request.user.email|default:'' }}" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-envelope"></i> Reenviar verificación
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <a href="{% url 'shop:login' %}" class="btn btn-outline-secondary btn-sm">
+                            Iniciar sesión
+                        </a>
+                        <a href="{% url 'shop:home' %}" class="btn btn-outline-secondary btn-sm ms-2">
+                            Ir al inicio
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+{% endblock %}

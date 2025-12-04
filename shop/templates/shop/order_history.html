@@ -1,0 +1,81 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Mis Órdenes - Ferretería{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="mb-4">
+        <i class="bi bi-clock-history"></i> Historial de Órdenes
+    </h2>
+    
+    {% if orders %}
+        <div class="row g-4">
+            {% for order in orders %}
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-lg-3">
+                                    <h6 class="mb-1">
+                                        <i class="bi bi-receipt"></i> {{ order.order_number }}
+                                    </h6>
+                                    <small class="text-muted">{{ order.created_at|date:"d/m/Y H:i" }}</small>
+                                </div>
+                                
+                                <div class="col-lg-2">
+                                    <span class="badge bg-{% if order.status == 'pending' %}warning{% elif order.status == 'confirmed' %}info{% elif order.status == 'preparing' %}primary{% elif order.status == 'in_transit' %}info{% elif order.status == 'delivered' %}success{% else %}danger{% endif %} fs-6">
+                                        {{ order.get_status_display }}
+                                    </span>
+                                </div>
+                                
+                                <div class="col-lg-3">
+                                    <small class="text-muted d-block">Entrega</small>
+                                    <strong>{{ order.delivery_date|date:"d/m/Y" }}</strong>
+                                    <br>
+                                    <small>{{ order.get_delivery_time_display }}</small>
+                                </div>
+                                
+                                <div class="col-lg-2 text-center">
+                                    <small class="text-muted d-block">Total</small>
+                                    <h5 class="mb-0 text-primary">${{ order.total }}</h5>
+                                </div>
+                                
+                                <div class="col-lg-2 text-end">
+                                    <a href="{% url 'shop:order_detail' order.id %}" 
+                                       class="btn btn-outline-primary">
+                                        <i class="bi bi-eye"></i> Ver Detalles
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <hr class="my-3">
+                            
+                            <div class="d-flex gap-2 flex-wrap">
+                                {% for item in order.items.all|slice:":3" %}
+                                    <span class="badge bg-light text-dark">
+                                        {{ item.quantity }}x {{ item.product.name }}
+                                    </span>
+                                {% endfor %}
+                                {% if order.items.count > 3 %}
+                                    <span class="badge bg-light text-dark">
+                                        +{{ order.items.count|add:"-3" }} más
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-inbox text-muted" style="font-size: 5rem;"></i>
+            <h3 class="mt-3">No tienes órdenes aún</h3>
+            <p class="text-muted">Empieza a comprar y tus órdenes aparecerán aquí</p>
+            <a href="{% url 'shop:product_list' %}" class="btn btn-primary btn-lg mt-3">
+                <i class="bi bi-shop"></i> Ir a la Tienda
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,154 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Inicio - Ferretería y Miscelánea Delivery{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">Ferretería y Miscelánea a tu Puerta</h1>
+                <p class="lead mb-4">Todo lo que necesitas para tu hogar y negocio, con entrega rápida en tu provincia.</p>
+                <div class="d-flex gap-3">
+                    <a href="{% url 'shop:product_list' %}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-cart-plus"></i> Ver Productos
+                    </a>
+                    {% if not user.is_authenticated %}
+                        <a href="{% url 'shop:register' %}" class="btn btn-outline-light btn-lg">
+                            <i class="bi bi-person-plus"></i> Registrarse
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                <i class="bi bi-truck" style="font-size: 15rem; opacity: 0.3;"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features -->
+<section class="container mb-5">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card text-center p-4">
+                <div class="card-body">
+                    <i class="bi bi-truck text-primary" style="font-size: 3rem;"></i>
+                    <h5 class="card-title mt-3">Entrega Rápida</h5>
+                    <p class="card-text">Recibe tus productos el mismo día o elige tu horario de entrega preferido.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center p-4">
+                <div class="card-body">
+                    <i class="bi bi-shield-check text-primary" style="font-size: 3rem;"></i>
+                    <h5 class="card-title mt-3">Compra Segura</h5>
+                    <p class="card-text">Verificación por email y múltiples métodos de pago seguros.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center p-4">
+                <div class="card-body">
+                    <i class="bi bi-chat-dots text-primary" style="font-size: 3rem;"></i>
+                    <h5 class="card-title mt-3">Soporte Local</h5>
+                    <p class="card-text">Atención personalizada y seguimiento de tu pedido en tiempo real.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categories -->
+{% if categories %}
+<section class="container mb-5">
+    <h2 class="text-center mb-4">Categorías</h2>
+    <div class="row g-3">
+        {% for category in categories %}
+        <div class="col-md-3 col-sm-6">
+            <a href="{% url 'shop:product_list' %}?category={{ category.slug }}" class="text-decoration-none">
+                <div class="card category-card text-center p-4">
+                    <div class="card-body">
+                        <i class="bi bi-tools" style="font-size: 2.5rem;"></i>
+                        <h5 class="card-title mt-3 mb-0">{{ category.name }}</h5>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Featured Products -->
+{% if featured_products %}
+<section class="container mb-5">
+    <h2 class="text-center mb-4">Productos Destacados</h2>
+    <div class="row g-4">
+        {% for product in featured_products %}
+        <div class="col-lg-3 col-md-4 col-sm-6">
+            <div class="card h-100">
+                <div class="position-relative">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" class="card-img-top product-image" alt="{{ product.name }}">
+                    {% else %}
+                        <div class="product-image bg-secondary d-flex align-items-center justify-content-center">
+                            <i class="bi bi-image text-white" style="font-size: 3rem;"></i>
+                        </div>
+                    {% endif %}
+                    
+                    {% if product.stock == 0 %}
+                        <span class="stock-badge out-of-stock">Agotado</span>
+                    {% elif product.stock < 10 %}
+                        <span class="stock-badge low-stock">Últimas unidades</span>
+                    {% else %}
+                        <span class="stock-badge in-stock">Disponible</span>
+                    {% endif %}
+                </div>
+                
+                <div class="card-body d-flex flex-column">
+                    <h6 class="card-title">{{ product.name }}</h6>
+                    <p class="card-text text-muted small flex-grow-1">
+                        {{ product.description|truncatewords:10 }}
+                    </p>
+                    <div class="d-flex justify-content-between align-items-center mt-auto">
+                        <span class="price-tag">${{ product.price }}</span>
+                        <a href="{% url 'shop:product_detail' product.pk %}" class="btn btn-sm btn-primary">
+                            Ver más
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="text-center mt-4">
+        <a href="{% url 'shop:product_list' %}" class="btn btn-outline-primary btn-lg">
+            Ver Todos los Productos <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+</section>
+{% endif %}
+
+<!-- CTA Section -->
+<section class="container mb-5">
+    <div class="card bg-primary text-white">
+        <div class="card-body text-center p-5">
+            <h2 class="mb-3">¿Listo para hacer tu pedido?</h2>
+            <p class="lead mb-4">Regístrate ahora y disfruta de entregas rápidas en toda la provincia.</p>
+            {% if not user.is_authenticated %}
+                <a href="{% url 'shop:register' %}" class="btn btn-light btn-lg">
+                    <i class="bi bi-person-plus"></i> Crear Cuenta Gratis
+                </a>
+            {% else %}
+                <a href="{% url 'shop:product_list' %}" class="btn btn-light btn-lg">
+                    <i class="bi bi-cart-plus"></i> Empezar a Comprar
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

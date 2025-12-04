@@ -1,0 +1,399 @@
+{% extends 'shop/admin/base_admin.html' %}
+
+{% block title %}{{ product.name }} - Panel Admin{% endblock %}
+
+{% block page_title %}Detalle de Producto{% endblock %}
+
+{% block content %}
+<div class="row fade-in">
+    <!-- Información Principal -->
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-box-seam"></i> {{ product.name }}
+                </h6>
+                <div>
+                    {% if product.is_active %}
+                        <span class="badge bg-success">
+                            <i class="bi bi-eye"></i> Público
+                        </span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark">
+                            <i class="bi bi-eye-slash"></i> Oculto
+                        </span>
+                    {% endif %}
+                    
+                    {% if product.featured %}
+                        <span class="badge bg-warning">
+                            <i class="bi bi-star-fill"></i> Destacado
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-5">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" 
+                                 alt="{{ product.name }}" 
+                                 class="img-fluid rounded shadow-sm mb-3">
+                        {% else %}
+                            <div class="bg-secondary rounded d-flex align-items-center justify-content-center mb-3" 
+                                 style="height: 300px;">
+                                <i class="bi bi-image text-white" style="font-size: 5rem;"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-7">
+                        <div class="mb-3">
+                            <span class="badge bg-primary">{{ product.category.name }}</span>
+                        </div>
+                        
+                        <table class="table table-borderless">
+                            <tr>
+                                <th width="40%">SKU:</th>
+                                <td><code>{{ product.sku }}</code></td>
+                            </tr>
+                            <tr>
+                                <th>Precio:</th>
+                                <td class="fs-4 text-primary fw-bold">${{ product.price }}</td>
+                            </tr>
+                            <tr>
+                                <th>Stock:</th>
+                                <td>
+                                    <span class="badge 
+                                        {% if product.stock == 0 %}bg-danger
+                                        {% elif product.stock <= 10 %}bg-warning text-dark
+                                        {% else %}bg-success
+                                        {% endif %} fs-6">
+                                        {{ product.stock }} unidades
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Creado:</th>
+                                <td>{{ product.created_at|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Última actualización:</th>
+                                <td>{{ product.updated_at|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                        </table>
+                        
+                        <h6 class="mt-4">Descripción:</h6>
+                        <p class="text-muted">{{ product.description }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Estadísticas de Ventas -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-graph-up"></i> Estadísticas de Ventas
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-6 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <i class="bi bi-cart-check fs-1 text-success"></i>
+                                <h3 class="mt-2">{{ total_sold }}</h3>
+                                <p class="text-muted mb-0">Unidades Vendidas</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <i class="bi bi-currency-dollar fs-1 text-primary"></i>
+                                <h3 class="mt-2">${{ revenue|floatformat:2 }}</h3>
+                                <p class="text-muted mb-0">Ingresos Generados</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if recent_orders %}
+                <h6 class="mt-4 mb-3">Órdenes Recientes:</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Orden</th>
+                                <th>Cliente</th>
+                                <th>Cantidad</th>
+                                <th>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in recent_orders %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'shop:admin_order_detail' item.order.id %}">
+                                        {{ item.order.order_number }}
+                                    </a>
+                                </td>
+                                <td>{{ item.order.user.get_full_name|default:item.order.user.username }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ item.order.created_at|date:"d/m/Y" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> 
+                    Este producto aún no tiene ventas
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Panel de Acciones -->
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-lightning-fill"></i> Acciones Rápidas
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'shop:admin_product_edit' product.id %}" 
+                       class="btn btn-primary">
+                        <i class="bi bi-pencil-square"></i> Editar Producto
+                    </a>
+                    
+                    <button class="btn btn-{% if product.is_active %}warning{% else %}success{% endif %} toggle-status-btn"
+                            data-product-id="{{ product.id }}">
+                        <i class="bi bi-{% if product.is_active %}eye-slash{% else %}eye{% endif %}"></i>
+                        {% if product.is_active %}Ocultar{% else %}Publicar{% endif %} Producto
+                    </button>
+                    
+                    <button class="btn btn-info update-stock-btn"
+                            data-bs-toggle="modal"
+                            data-bs-target="#stockModal">
+                        <i class="bi bi-box-seam"></i> Actualizar Stock
+                    </button>
+                    
+                    <a href="{% url 'shop:product_detail' product.id %}" 
+                       class="btn btn-outline-primary"
+                       target="_blank">
+                        <i class="bi bi-eye"></i> Ver en Tienda
+                    </a>
+                    
+                    <hr>
+                    
+                    <button class="btn btn-danger delete-product-btn"
+                            data-product-id="{{ product.id }}">
+                        <i class="bi bi-trash"></i> Eliminar Producto
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Información Adicional -->
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <h6 class="card-title mb-3">
+                    <i class="bi bi-info-circle"></i> Información
+                </h6>
+                
+                <div class="alert alert-{% if product.stock <= 10 %}warning{% else %}success{% endif %} small">
+                    {% if product.stock == 0 %}
+                        <i class="bi bi-x-circle"></i>
+                        <strong>Producto agotado</strong><br>
+                        Actualiza el stock para volver a vender
+                    {% elif product.stock <= 10 %}
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Stock bajo</strong><br>
+                        Solo quedan {{ product.stock }} unidades
+                    {% else %}
+                        <i class="bi bi-check-circle"></i>
+                        <strong>Stock saludable</strong><br>
+                        {{ product.stock }} unidades disponibles
+                    {% endif %}
+                </div>
+                
+                {% if not product.is_active %}
+                <div class="alert alert-warning small">
+                    <i class="bi bi-eye-slash"></i>
+                    <strong>Producto oculto</strong><br>
+                    Los clientes no pueden ver este producto
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Stock -->
+<div class="modal fade" id="stockModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-box-seam"></i> Actualizar Stock
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>{{ product.name }}</strong></p>
+                <p>Stock actual: <strong class="text-primary">{{ product.stock }}</strong> unidades</p>
+                
+                <div class="mb-3">
+                    <label class="form-label">Nueva cantidad *</label>
+                    <input type="number" 
+                           id="newStock" 
+                           class="form-control form-control-lg" 
+                           min="0" 
+                           value="{{ product.stock }}"
+                           placeholder="Cantidad">
+                </div>
+                
+                <div class="alert alert-info small">
+                    <i class="bi bi-info-circle"></i>
+                    Ingresa la cantidad total de unidades disponibles
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" id="saveStockBtn">
+                    <i class="bi bi-save"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Toggle estado activo/inactivo
+    $('.toggle-status-btn').on('click', function() {
+        const productId = $(this).data('product-id');
+        const $btn = $(this);
+        
+        $.ajax({
+            url: `/admin-panel/producto/${productId}/toggle/`,
+            method: 'POST',
+            data: {
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Recargar página para actualizar estado
+                    window.location.reload();
+                }
+            },
+            error: function() {
+                alert('Error al actualizar el estado');
+            }
+        });
+    });
+    
+    // Actualizar stock
+    $('#saveStockBtn').on('click', function() {
+        const newStock = $('#newStock').val();
+        
+        if (newStock === '' || newStock < 0) {
+            alert('Por favor ingresa una cantidad válida');
+            return;
+        }
+        
+        $.ajax({
+            url: `/admin-panel/producto/{{ product.id }}/stock/`,
+            method: 'POST',
+            data: {
+                'action': 'set',
+                'quantity': newStock,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Cerrar modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('stockModal'));
+                    modal.hide();
+                    
+                    // Mostrar notificación
+                    if (window.showAdminToast) {
+                        window.showAdminToast('Stock actualizado correctamente', 'success');
+                    }
+                    
+                    // Recargar página
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1000);
+                }
+            },
+            error: function() {
+                alert('Error al actualizar el stock');
+            }
+        });
+    });
+    
+    // Eliminar producto
+    $('.delete-product-btn').on('click', function() {
+        const productId = $(this).data('product-id');
+        
+        if (window.showConfirmModal) {
+            window.showConfirmModal({
+                message: '¿Estás seguro de eliminar este producto? Esta acción no se puede deshacer.',
+                confirmText: 'Eliminar',
+                confirmClass: 'btn-danger',
+                onConfirm: function() {
+                    $.ajax({
+                        url: `/admin-panel/producto/${productId}/eliminar/`,
+                        method: 'POST',
+                        data: {
+                            'csrfmiddlewaretoken': '{{ csrf_token }}'
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                var msg = response.message || 'Producto eliminado correctamente';
+                                var target = '{% url "shop:admin_products" %}?toast=success&msg=' + encodeURIComponent(msg);
+                                window.location.href = target;
+                            } else {
+                                alert(response.message);
+                            }
+                        },
+                        error: function() {
+                            alert('Error al eliminar el producto');
+                        }
+                    });
+                }
+            });
+        } else {
+            if (confirm('¿Estás seguro de eliminar este producto?')) {
+                $.ajax({
+                    url: `/admin-panel/producto/${productId}/eliminar/`,
+                    method: 'POST',
+                    data: {
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            var msg = response.message || 'Producto eliminado correctamente';
+                            var target = '{% url "shop:admin_products" %}?toast=success&msg=' + encodeURIComponent(msg);
+                            window.location.href = target;
+                        } else {
+                            alert(response.message);
+                        }
+                    }
+                });
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

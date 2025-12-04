@@ -1,0 +1,109 @@
+{% extends 'shop/emails/base_email.html' %}
+
+{% block content %}
+<h2>Actualización de tu Orden {{ order.order_number }}</h2>
+
+<p>Hola {{ user.first_name }},</p>
+
+<p>Tu orden ha sido actualizada.</p>
+
+<div class="info-box">
+    <h3 style="margin-top: 0;">Estado Actual</h3>
+    <p style="font-size: 18px; margin: 0;">
+        <strong style="color: #ff6b35;">{{ order.get_status_display }}</strong>
+    </p>
+</div>
+
+{% if order.status == 'confirmed' %}
+<p>✓ Tu orden ha sido confirmada y estamos preparando tus productos.</p>
+{% elif order.status == 'preparing' %}
+<p>📦 Estamos empacando tu pedido cuidadosamente.</p>
+{% elif order.status == 'in_transit' %}
+<p>🚚 Tu pedido está en camino. Llegará pronto.</p>
+{% elif order.status == 'delivered' %}
+<p>✅ Tu pedido ha sido entregado. ¡Esperamos que disfrutes tus productos!</p>
+{% elif order.status == 'cancelled' %}
+<p>❌ Tu orden ha sido cancelada. Si tienes preguntas, por favor contáctanos.</p>
+{% if order.cancellation_reason %}
+<div class="info-box">
+    <p><strong>📝 Motivo de la cancelación:</strong></p>
+    <p>{{ order.cancellation_reason }}</p>
+</div>
+{% endif %}
+{% endif %}
+
+<div class="order-details">
+    <h3 style="margin-top: 0; color: #004e89;">📋 Resumen de tu Orden</h3>
+    <table>
+        <tr>
+            <td>Número de Orden:</td>
+            <td><strong>{{ order.order_number }}</strong></td>
+        </tr>
+        <tr>
+            <td>Fecha de Orden:</td>
+            <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
+        </tr>
+        <tr>
+            <td>Estado Actual:</td>
+            <td><strong>{{ order.get_status_display }}</strong></td>
+        </tr>
+        <tr>
+            <td>Método de Pago:</td>
+            <td>{{ order.get_payment_method_display }}</td>
+        </tr>
+        <tr>
+            <td>Subtotal:</td>
+            <td>${{ order.subtotal }}</td>
+        </tr>
+        <tr>
+            <td>Envío:</td>
+            <td>${{ order.delivery_fee }}</td>
+        </tr>
+        <tr>
+            <td><strong>Total:</strong></td>
+            <td class="total">${{ order.total }}</td>
+        </tr>
+    </table>
+</div>
+
+<div class="order-details">
+    <h3 style="margin-top: 0; color: #004e89;">🚚 Información de Entrega</h3>
+    <table>
+        <tr>
+            <td>Dirección:</td>
+            <td>{{ order.delivery_address }}</td>
+        </tr>
+        <tr>
+            <td>Ciudad:</td>
+            <td>{{ order.delivery_city }}, {{ order.delivery_province }}</td>
+        </tr>
+        <tr>
+            <td>Fecha de Entrega:</td>
+            <td>{{ order.delivery_date|date:"d/m/Y" }}</td>
+        </tr>
+        <tr>
+            <td>Horario:</td>
+            <td>{{ order.get_delivery_time_display }}</td>
+        </tr>
+        <tr>
+            <td>Teléfono:</td>
+            <td>{{ order.contact_phone }}</td>
+        </tr>
+    </table>
+</div>
+
+{% if order.notes %}
+<div class="info-box">
+    <p><strong>📝 Notas de tu pedido:</strong></p>
+    <p>{{ order.notes }}</p>
+</div>
+{% endif %}
+
+<div style="text-align: center;">
+    <a href="{{ site_url }}/orden/{{ order.id }}/" class="button">Ver detalles de la orden</a>
+</div>
+
+<p>Si no realizaste esta compra o crees que hay un error, por favor contáctanos lo antes posible.</p>
+
+<p>Gracias por confiar en {{ site_name }}.<br>El equipo de {{ site_name }}</p>
+{% endblock %}

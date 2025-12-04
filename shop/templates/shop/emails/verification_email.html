@@ -1,0 +1,24 @@
+{% extends 'shop/emails/base_email.html' %}
+
+{% block content %}
+<h2>¡Hola {{ user.first_name }}!</h2>
+
+<p>Gracias por registrarte en {{ site_name }}. Estamos emocionados de tenerte con nosotros.</p>
+
+<p>Para completar tu registro y activar tu cuenta, por favor verifica tu dirección de email haciendo clic en el botón de abajo:</p>
+
+<div style="text-align: center;">
+    <a href="{{ verification_url }}" class="button">✓ Verificar mi Email</a>
+</div>
+
+<div class="info-box">
+    <p><strong>⏰ Importante:</strong> Este enlace expirará en 24 horas por razones de seguridad.</p>
+</div>
+
+<p>Si no puedes hacer clic en el botón, copia y pega el siguiente enlace en tu navegador:</p>
+<p style="word-break: break-all; color: #004e89;">{{ verification_url }}</p>
+
+<p>Si no creaste una cuenta en {{ site_name }}, puedes ignorar este email de forma segura.</p>
+
+<p>¡Gracias!<br>El equipo de {{ site_name }}</p>
+{% endblock %}

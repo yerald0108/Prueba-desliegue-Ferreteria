@@ -1,0 +1,287 @@
+<!-- shop/templates/shop/admin/products.html -->
+{% extends 'shop/admin/base_admin.html' %}
+
+{% block title %}Gestión de Productos - Panel Admin{% endblock %}
+
+{% block page_title %}Gestión de Productos{% endblock %}
+
+{% block content %}
+<div class="card shadow mb-4 fade-in">
+    <div class="card-header py-3">
+        <div class="row align-items-center">
+            <div class="col-md-3">
+                <h6 class="m-0 font-weight-bold text-primary mb-0">
+                    <i class="bi bi-box-seam"></i> Inventario de Productos
+                </h6>
+            </div>
+            <div class="col-md-9">
+                <div class="row g-2">
+                    <!-- Botón NUEVO PRODUCTO - MUY VISIBLE -->
+                    <div class="col-md-3">
+                        <a href="{% url 'shop:admin_product_create' %}" class="btn btn-success w-100">
+                            <i class="bi bi-plus-circle"></i> <strong>Crear Producto</strong>
+                        </a>
+                    </div>
+                    
+                    <!-- Filtros -->
+                    <div class="col-md-2">
+                        <form method="get">
+                            <select name="category" class="form-select form-select-sm" onchange="this.form.submit()">
+                                <option value="">Todas las categorías</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.slug }}" {% if category_filter == category.slug %}selected{% endif %}>
+                                        {{ category.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <form method="get">
+                            <select name="stock" class="form-select form-select-sm" onchange="this.form.submit()">
+                                <option value="">Todos los stocks</option>
+                                <option value="low" {% if stock_filter == 'low' %}selected{% endif %}>Bajo stock</option>
+                                <option value="out" {% if stock_filter == 'out' %}selected{% endif %}>Agotados</option>
+                            </select>
+                        </form>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <form method="get">
+                            <div class="input-group input-group-sm">
+                                <input type="text" 
+                                       name="q" 
+                                       class="form-control" 
+                                       placeholder="Buscar productos..."
+                                       value="{{ search_query }}">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <a href="{% url 'shop:admin_products' %}" class="btn btn-sm btn-secondary w-100">
+                            Limpiar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if products %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;"></th>
+                            <th>Producto</th>
+                            <th>Categoría</th>
+                            <th>Precio</th>
+                            <th class="text-center">Stock</th>
+                            <th class="text-center">Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td>
+                                {% if product.image %}
+                                    <img src="{{ product.image.url }}" 
+                                         alt="{{ product.name }}" 
+                                         class="rounded"
+                                         style="width: 50px; height: 50px; object-fit: cover;">
+                                {% else %}
+                                    <div class="bg-secondary rounded d-flex align-items-center justify-content-center"
+                                         style="width: 50px; height: 50px;">
+                                        <i class="bi bi-image text-white"></i>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ product.name }}</strong>
+                                <br>
+                                <small class="text-muted">SKU: {{ product.sku }}</small>
+                            </td>
+                            <td>{{ product.category.name }}</td>
+                            <td><strong class="text-primary">${{ product.price }}</strong></td>
+                            <td class="text-center">
+                                <span class="badge 
+                                    {% if product.stock == 0 %}bg-danger
+                                    {% elif product.stock <= 10 %}bg-warning text-dark
+                                    {% else %}bg-success
+                                    {% endif %}">
+                                    {{ product.stock }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="form-check form-switch d-inline-block">
+                                    <input class="form-check-input product-toggle" 
+                                           type="checkbox" 
+                                           data-product-id="{{ product.id }}"
+                                           {% if product.is_active %}checked{% endif %}>
+                                </div>
+                            </td>
+                            <td>
+                                <!-- Botón Ver Detalle -->
+                                <a href="{% url 'shop:admin_product_detail' product.id %}"
+                                   class="btn btn-sm btn-info"
+                                   title="Ver detalle">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                
+                                <!-- Botón Editar -->
+                                <a href="{% url 'shop:admin_product_edit' product.id %}"
+                                   class="btn btn-sm btn-primary"
+                                   title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                
+                                <!-- Botón Stock -->
+                                <button class="btn btn-sm btn-warning update-stock-btn" 
+                                        data-product-id="{{ product.id }}"
+                                        data-product-name="{{ product.name }}"
+                                        data-current-stock="{{ product.stock }}"
+                                        title="Actualizar stock">
+                                    <i class="bi bi-box"></i>
+                                </button>
+                                
+                                <!-- Botón Ver en Tienda -->
+                                <a href="{% url 'shop:product_detail' product.id %}" 
+                                   class="btn btn-sm btn-outline-primary"
+                                   target="_blank"
+                                   title="Ver en tienda">
+                                    <i class="bi bi-shop"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
+                <h4 class="text-muted mb-3">No hay productos</h4>
+                <p class="text-muted mb-4">Comienza creando tu primer producto</p>
+                <a href="{% url 'shop:admin_product_create' %}" class="btn btn-success btn-lg">
+                    <i class="bi bi-plus-circle"></i> Crear Primer Producto
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal para actualizar stock -->
+<div class="modal fade" id="stockModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-box-seam"></i> Actualizar Stock
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong id="productName"></strong></p>
+                <p>Stock actual: <strong id="currentStock"></strong></p>
+                
+                <div class="mb-3">
+                    <label class="form-label">Nueva cantidad</label>
+                    <input type="number" id="newStock" class="form-control" min="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="saveStockBtn">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentProductId = null;
+
+// Toggle activar/desactivar producto
+$('.product-toggle').on('change', function() {
+    const productId = $(this).data('product-id');
+    const $toggle = $(this);
+    
+    $.ajax({
+        url: `/admin-panel/producto/${productId}/toggle/`,
+        method: 'POST',
+        data: {
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        },
+        success: function(response) {
+            if (response.success) {
+                if (window.showAdminToast) {
+                    window.showAdminToast(response.message, 'success');
+                }
+            }
+        },
+        error: function() {
+            $toggle.prop('checked', !$toggle.prop('checked'));
+            alert('Error al actualizar el estado del producto');
+        }
+    });
+});
+
+// Abrir modal de stock
+$('.update-stock-btn').on('click', function() {
+    currentProductId = $(this).data('product-id');
+    $('#productName').text($(this).data('product-name'));
+    $('#currentStock').text($(this).data('current-stock'));
+    $('#newStock').val($(this).data('current-stock'));
+    
+    const modal = new bootstrap.Modal(document.getElementById('stockModal'));
+    modal.show();
+});
+
+// Guardar stock
+$('#saveStockBtn').on('click', function() {
+    const newStock = $('#newStock').val();
+    
+    if (newStock === '' || newStock < 0) {
+        alert('Por favor ingresa una cantidad válida');
+        return;
+    }
+    
+    $.ajax({
+        url: `/admin-panel/producto/${currentProductId}/stock/`,
+        method: 'POST',
+        data: {
+            'action': 'set',
+            'quantity': newStock,
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        },
+        success: function(response) {
+            if (response.success) {
+                // Cerrar modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('stockModal'));
+                modal.hide();
+                
+                // Mostrar notificación
+                if (window.showAdminToast) {
+                    window.showAdminToast('Stock actualizado correctamente', 'success');
+                }
+                
+                // Recargar después de 1 segundo
+                setTimeout(function() {
+                    location.reload();
+                }, 1000);
+            }
+        },
+        error: function() {
+            alert('Error al actualizar el stock');
+        }
+    });
+});
+</script>
+{% endblock %}

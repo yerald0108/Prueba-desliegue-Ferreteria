@@ -1,0 +1,462 @@
+{% extends 'shop/admin/base_admin.html' %}
+
+{% block title %}Orden {{ order.order_number }} - Panel Admin{% endblock %}
+
+{% block page_title %}Orden {{ order.order_number }}{% endblock %}
+
+{% block content %}
+<div class="row fade-in">
+    <div class="col-lg-8">
+        <!-- Información de la Orden -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-info-circle"></i> Información de la Orden
+                </h6>
+                <span class="status-badge 
+                    {% if order.status == 'pending' %}bg-warning text-dark
+                    {% elif order.status == 'confirmed' %}bg-info
+                    {% elif order.status == 'preparing' %}bg-primary
+                    {% elif order.status == 'in_transit' %}bg-info
+                    {% elif order.status == 'delivered' %}bg-success
+                    {% else %}bg-danger
+                    {% endif %}">
+                    {{ order.get_status_display }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Cliente:</strong> {{ order.user.get_full_name|default:order.user.username }}</p>
+                        <p class="mb-1"><strong>Email:</strong> {{ order.user.email }}</p>
+                        <p class="mb-1"><strong>Teléfono:</strong> {{ order.contact_phone }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Fecha de orden:</strong> {{ order.created_at|date:"d/m/Y H:i" }}</p>
+                        <p class="mb-1"><strong>Fecha de entrega:</strong> {{ order.delivery_date|date:"d/m/Y" }}</p>
+                        <p class="mb-1"><strong>Horario:</strong> {{ order.get_delivery_time_display }}</p>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="bi bi-geo-alt"></i> Dirección de Entrega</h6>
+                        <p class="mb-1">{{ order.delivery_address }}</p>
+                        <p class="mb-0">{{ order.delivery_city }}, {{ order.delivery_province }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="bi bi-wallet2"></i> Método de Pago</h6>
+                        <p class="mb-0">{{ order.get_payment_method_display }}</p>
+                    </div>
+                </div>
+                
+                {% if order.notes %}
+                <hr>
+                <h6><i class="bi bi-chat-left-text"></i> Notas del Cliente</h6>
+                <p class="mb-0 text-muted">{{ order.notes }}</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Productos -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-box-seam"></i> Productos
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th class="text-center">Cantidad</th>
+                                <th class="text-end">Precio Unit.</th>
+                                <th class="text-end">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items.all %}
+                            <tr>
+                                <td>
+                                    <strong>{{ item.product.name }}</strong>
+                                    <br>
+                                    <small class="text-muted">SKU: {{ item.product.sku }}</small>
+                                </td>
+                                <td class="text-center">{{ item.quantity }}</td>
+                                <td class="text-end">${{ item.price }}</td>
+                                <td class="text-end"><strong>${{ item.subtotal }}</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                <td class="text-end">${{ order.subtotal }}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Envío:</strong></td>
+                                <td class="text-end">${{ order.delivery_fee }}</td>
+                            </tr>
+                            <tr class="table-primary">
+                                <td colspan="3" class="text-end"><h5 class="mb-0">Total:</h5></td>
+                                <td class="text-end"><h5 class="mb-0 text-primary">${{ order.total }}</h5></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Actualizar Estado -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-arrow-repeat"></i> Actualizar Estado
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="post" id="updateStatusForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_status">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Estado actual: 
+                            <strong id="currentStatusDisplay">{{ order.get_status_display }}</strong> 
+                        </label>
+                        <select name="status" id="statusSelect" class="form-select" required>
+                            {% for value, label in status_choices %}
+                                <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100" id="updateStatusBtn">
+                        <i class="bi bi-save"></i> Actualizar Estado
+                    </button>
+                </form>
+                
+                <!-- Mostrar motivo de cancelación si existe -->
+                {% if order.cancellation_reason %}
+                    <div class="alert alert-warning mt-3">
+                        <h6 class="alert-heading"><i class="bi bi-x-circle"></i> Motivo de Cancelación:</h6>
+                        <p class="mb-0">{{ order.cancellation_reason }}</p>
+                        <small class="text-muted">Actualizado: {{ order.updated_at|date:"d/m/Y H:i" }}</small>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Modal de Cancelación -->
+        <div class="modal fade" id="cancellationModal" tabindex="-1" aria-labelledby="cancellationModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title" id="cancellationModalLabel">
+                            <i class="bi bi-exclamation-triangle"></i> Cancelar Orden
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-warning">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Atención:</strong> Esta acción cancelará la orden y notificará al cliente.
+                        </div>
+                        
+                        <form id="cancellationForm">
+                            <div class="mb-3">
+                                <label for="cancellationReason" class="form-label">
+                                    <strong>Motivo de la cancelación *</strong>
+                                </label>
+                                <textarea 
+                                    class="form-control" 
+                                    id="cancellationReason" 
+                                    name="cancellation_reason" 
+                                    rows="4" 
+                                    placeholder="Explica el motivo por el cual se cancela esta orden..." 
+                                    required></textarea>
+                                <div class="invalid-feedback">
+                                    Por favor ingresa el motivo de la cancelación.
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <p class="mb-2"><strong>Información de la orden:</strong></p>
+                                <ul class="small mb-0">
+                                    <li>Número: <strong>{{ order.order_number }}</strong></li>
+                                    <li>Cliente: <strong>{{ order.user.get_full_name|default:order.user.username }}</strong></li>
+                                    <li>Total: <strong>${{ order.total }}</strong></li>
+                                </ul>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x"></i> Cancelar
+                        </button>
+                        <button type="button" class="btn btn-danger" id="confirmCancellationBtn">
+                            <i class="bi bi-check-circle"></i> Confirmar Cancelación
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Notas del Administrador -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-sticky"></i> Notas del Admin
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_notes">
+                    
+                    <div class="mb-3">
+                        <textarea name="admin_notes" 
+                                  class="form-control" 
+                                  rows="4" 
+                                  placeholder="Notas internas...">{{ order.admin_notes }}</textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-secondary w-100">
+                        <i class="bi bi-save"></i> Guardar Notas
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Acciones -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-lightning"></i> Acciones Rápidas
+                </h6>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'shop:admin_orders' %}" class="btn btn-outline-secondary w-100 mb-2">
+                    <i class="bi bi-arrow-left"></i> Volver a Órdenes
+                </a>
+                <a href="mailto:{{ order.user.email }}" class="btn btn-outline-primary w-100 mb-2">
+                    <i class="bi bi-envelope"></i> Enviar Email
+                </a>
+                <button class="btn btn-outline-info w-100" onclick="window.print()">
+                    <i class="bi bi-printer"></i> Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    let pendingStatus = null;
+    let cancellationModal = null;
+    
+    // Inicializar el modal
+    const cancellationModalElement = document.getElementById('cancellationModal');
+    if (cancellationModalElement) {
+        cancellationModal = new bootstrap.Modal(cancellationModalElement);
+    }
+    
+    // Manejar cambio de estado
+    $('#updateStatusForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const selectedStatus = $('#statusSelect').val();
+        
+        // Si el estado es "cancelled", mostrar modal primero
+        if (selectedStatus === 'cancelled') {
+            pendingStatus = selectedStatus;
+            
+            // Limpiar formulario de cancelación
+            $('#cancellationReason').val('').removeClass('is-invalid');
+            
+            // Mostrar modal
+            if (cancellationModal) {
+                cancellationModal.show();
+            }
+            return; // No continuar con el submit
+        }
+        
+        // Para otros estados, procesar normalmente
+        updateOrderStatus(selectedStatus, null);
+    });
+    
+    // Confirmar cancelación desde el modal
+    $('#confirmCancellationBtn').on('click', function() {
+        const reason = $('#cancellationReason').val().trim();
+        
+        // Validar que haya un motivo
+        if (!reason) {
+            $('#cancellationReason').addClass('is-invalid');
+            return;
+        }
+        
+        // Ocultar modal
+        if (cancellationModal) {
+            cancellationModal.hide();
+        }
+        
+        // Actualizar estado con motivo de cancelación
+        updateOrderStatus('cancelled', reason);
+    });
+    
+    // Función para actualizar el estado de la orden
+    function updateOrderStatus(status, cancellationReason = null) {
+        const $form = $('#updateStatusForm');
+        const $btn = $('#updateStatusBtn');
+        const $statusSelect = $('#statusSelect');
+        const $currentStatusDisplay = $('#currentStatusDisplay');
+        const originalText = $btn.html();
+        
+        // Obtener el texto del estado seleccionado
+        const selectedStatusText = $statusSelect.find(`option[value="${status}"]`).text();
+        
+        console.log('Enviando actualización de estado...', {
+            status: status,
+            statusText: selectedStatusText,
+            cancellationReason: cancellationReason
+        });
+        
+        // Deshabilitar botón y mostrar loading
+        $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Actualizando...');
+        
+        // Preparar datos
+        const formData = $form.serialize() + '&status=' + status;
+        const postData = cancellationReason 
+            ? formData + '&cancellation_reason=' + encodeURIComponent(cancellationReason)
+            : formData;
+        
+        $.ajax({
+            url: window.location.href,
+            method: 'POST',
+            dataType: 'json',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            data: postData,
+            success: function(response, textStatus, xhr) {
+                console.log('Respuesta recibida:', response);
+                
+                // Si la respuesta es un string, intentar parsearlo como JSON
+                if (typeof response === 'string') {
+                    try {
+                        response = JSON.parse(response);
+                    } catch (e) {
+                        console.error('Error al parsear respuesta como JSON:', e);
+                        window.location.reload();
+                        return;
+                    }
+                }
+                
+                // Manejar respuesta JSON
+                let message = 'Estado actualizado exitosamente';
+                if (response && response.message) {
+                    message = response.message;
+                    if (response.email_sent) {
+                        message += ' (Email enviado al cliente)';
+                    }
+                } else {
+                    message += ' a: ' + selectedStatusText;
+                }
+                
+                // Actualizar el texto del estado actual en la página
+                let newStatusText = selectedStatusText;
+                if (response && response.status_display) {
+                    newStatusText = response.status_display;
+                    $currentStatusDisplay.text(newStatusText);
+                } else {
+                    $currentStatusDisplay.text(selectedStatusText);
+                }
+                
+                // Actualizar el badge de estado en el header
+                const $statusBadge = $('.status-badge');
+                $statusBadge.text(newStatusText);
+                
+                // Cambiar color del badge según el estado
+                const statusValue = response && response.status ? response.status : status;
+                $statusBadge.removeClass('bg-warning bg-info bg-primary bg-success bg-danger text-dark')
+                           .addClass(
+                               statusValue === 'pending' ? 'bg-warning text-dark' :
+                               statusValue === 'confirmed' ? 'bg-info' :
+                               statusValue === 'preparing' ? 'bg-primary' :
+                               statusValue === 'in_transit' ? 'bg-info' :
+                               statusValue === 'delivered' ? 'bg-success' :
+                               'bg-danger'
+                           );
+                
+                // Si hay motivo de cancelación, mostrar alert o recargar
+                if (statusValue === 'cancelled' && cancellationReason) {
+                    // Recargar la página para mostrar el motivo de cancelación
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1500);
+                }
+                
+                // Restaurar botón inmediatamente
+                $btn.prop('disabled', false).html(originalText);
+                
+                // Mostrar toast de éxito DESPUÉS de actualizar todo
+                setTimeout(function() {
+                    if (typeof window.showAdminToast === 'function') {
+                        console.log('Mostrando toast:', message);
+                        window.showAdminToast(message, 'success');
+                    } else {
+                        console.error('showAdminToast no está disponible');
+                        alert(message);
+                    }
+                }, 100);
+            },
+            error: function(xhr, status, error) {
+                console.error('Error en AJAX:', status, error, xhr);
+                
+                let errorMessage = 'Error al actualizar el estado. Por favor intenta de nuevo.';
+                
+                try {
+                    if (xhr.responseJSON) {
+                        if (xhr.responseJSON.error) {
+                            errorMessage = xhr.responseJSON.error;
+                        } else if (xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
+                    } else if (xhr.responseText) {
+                        console.warn('Respuesta HTML recibida en lugar de JSON');
+                        window.location.reload();
+                        return;
+                    }
+                } catch (e) {
+                    console.error('Error al parsear respuesta:', e);
+                }
+                
+                // Restaurar botón
+                $btn.prop('disabled', false).html(originalText);
+                
+                // Mostrar toast de error
+                if (typeof window.showAdminToast === 'function') {
+                    window.showAdminToast(errorMessage, 'danger');
+                }
+            }
+        });
+    }
+    
+    // Validación del textarea en tiempo real
+    $('#cancellationReason').on('input', function() {
+        if ($(this).val().trim()) {
+            $(this).removeClass('is-invalid');
+        }
+    });
+});
+</script>
+{% endblock %}

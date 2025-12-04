@@ -1,0 +1,304 @@
+{% extends 'shop/admin/base_admin.html' %}
+
+{% block title %}
+    {% if is_new %}Crear Nuevo Producto{% else %}Editar Producto{% endif %} - Panel Admin
+{% endblock %}
+
+{% block page_title %}
+    {% if is_new %}
+        <i class="bi bi-plus-circle"></i> Crear Nuevo Producto
+    {% else %}
+        <i class="bi bi-pencil-square"></i> Editar Producto
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row fade-in">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-info-circle"></i> Información del Producto
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" id="productForm">
+                    {% csrf_token %}
+                    
+                    <!-- Nombre y SKU -->
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="{{ form.name.id_for_label }}" class="form-label fw-bold">
+                                {{ form.name.label }}
+                            </label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="text-danger small">{{ form.name.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                <i class="bi bi-lightbulb"></i> Nombre descriptivo y claro del producto
+                            </small>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.sku.id_for_label }}" class="form-label fw-bold">
+                                {{ form.sku.label }}
+                            </label>
+                            {{ form.sku }}
+                            {% if form.sku.errors %}
+                                <div class="text-danger small">{{ form.sku.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Código único
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <!-- Categoría -->
+                    <div class="mb-3">
+                        <label for="{{ form.category.id_for_label }}" class="form-label fw-bold">
+                            {{ form.category.label }}
+                        </label>
+                        {{ form.category }}
+                        {% if form.category.errors %}
+                            <div class="text-danger small">{{ form.category.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Descripción -->
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label fw-bold">
+                            {{ form.description.label }}
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            <i class="bi bi-info-circle"></i> Describe características, usos y beneficios del producto
+                        </small>
+                    </div>
+                    
+                    <!-- Precio y Stock -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.price.id_for_label }}" class="form-label fw-bold">
+                                {{ form.price.label }}
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                {{ form.price }}
+                            </div>
+                            {% if form.price.errors %}
+                                <div class="text-danger small">{{ form.price.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.stock.id_for_label }}" class="form-label fw-bold">
+                                {{ form.stock.label }}
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-box-seam"></i>
+                                </span>
+                                {{ form.stock }}
+                                <span class="input-group-text">unidades</span>
+                            </div>
+                            {% if form.stock.errors %}
+                                <div class="text-danger small">{{ form.stock.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Imagen -->
+                    <div class="mb-4">
+                        <label for="{{ form.image.id_for_label }}" class="form-label fw-bold">
+                            {{ form.image.label }}
+                        </label>
+                        
+                        <!-- Preview de imagen actual -->
+                        {% if not is_new and product.image %}
+                            <div class="mb-3">
+                                <p class="small text-muted mb-2">Imagen actual:</p>
+                                <img src="{{ product.image.url }}" 
+                                     alt="{{ product.name }}" 
+                                     class="img-thumbnail"
+                                     style="max-width: 200px; max-height: 200px;">
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Input de archivo -->
+                        <div class="mb-2">
+                            {{ form.image }}
+                        </div>
+                        
+                        <!-- Preview de nueva imagen -->
+                        <div id="imagePreviewContainer" class="mt-3" style="display: none;">
+                            <p class="small text-muted mb-2">Vista previa:</p>
+                            <img id="imagePreview" 
+                                 class="img-thumbnail" 
+                                 style="max-width: 200px; max-height: 200px;">
+                        </div>
+                        
+                        {% if form.image.errors %}
+                            <div class="text-danger small">{{ form.image.errors.0 }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            <i class="bi bi-info-circle"></i> 
+                            Formatos: JPG, PNG, WEBP, GIF. Tamaño máximo: 5MB
+                        </small>
+                    </div>
+                    
+                    <!-- Opciones -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h6 class="card-title mb-3">
+                                <i class="bi bi-sliders"></i> Opciones
+                            </h6>
+                            
+                            <div class="form-check mb-2">
+                                {{ form.featured }}
+                                <label class="form-check-label" for="{{ form.featured.id_for_label }}">
+                                    <strong>{{ form.featured.label }}</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        Los productos destacados aparecen en la página principal
+                                    </small>
+                                </label>
+                            </div>
+                            
+                            <div class="form-check">
+                                {{ form.is_active }}
+                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                    <strong>{{ form.is_active.label }}</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        Si está activado, el producto será visible inmediatamente para los clientes
+                                    </small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Botones -->
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                            <i class="bi bi-check-circle"></i>
+                            {% if is_new %}Publicar Producto{% else %}Guardar Cambios{% endif %}
+                        </button>
+                        <a href="{% url 'shop:admin_products' %}" class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Panel lateral de ayuda -->
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <h6 class="card-title mb-3">
+                    <i class="bi bi-lightbulb-fill text-warning"></i> Consejos
+                </h6>
+                
+                <div class="alert alert-info small">
+                    <strong>Nombre del Producto:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Sé específico y descriptivo</li>
+                        <li>Incluye marca si aplica</li>
+                        <li>Menciona tamaño o capacidad</li>
+                    </ul>
+                </div>
+                
+                <div class="alert alert-info small">
+                    <strong>SKU:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Debe ser único</li>
+                        <li>Usa formato: CATEGORIA-NOMBRE-###</li>
+                        <li>Ejemplo: FER-MAR-001</li>
+                    </ul>
+                </div>
+                
+                <div class="alert alert-info small">
+                    <strong>Imagen:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Fondo blanco o neutro</li>
+                        <li>Buena iluminación</li>
+                        <li>Resolución mínima: 800x800px</li>
+                        <li>Tamaño máximo: 5MB</li>
+                    </ul>
+                </div>
+                
+                <div class="alert alert-success small">
+                    <strong><i class="bi bi-check-circle"></i> Ventajas de activar:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Visible inmediatamente</li>
+                        <li>Aparece en búsquedas</li>
+                        <li>Los clientes pueden comprarlo</li>
+                    </ul>
+                </div>
+                
+                <div class="alert alert-warning small">
+                    <strong><i class="bi bi-eye-slash"></i> Desactivado:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Solo visible para administradores</li>
+                        <li>Útil para productos en preparación</li>
+                        <li>Puedes activarlo después</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Preview de imagen
+    $('#{{ form.image.id_for_label }}').on('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                $('#imagePreview').attr('src', e.target.result);
+                $('#imagePreviewContainer').show();
+            };
+            reader.readAsDataURL(file);
+        } else {
+            $('#imagePreviewContainer').hide();
+        }
+    });
+    
+    // Validación del formulario
+    $('#productForm').on('submit', function(e) {
+        const $btn = $('#submitBtn');
+        const originalText = $btn.html();
+        
+        // Deshabilitar botón y mostrar loading
+        $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Guardando...');
+        
+        // Permitir que el formulario se envíe normalmente
+        // Si hay errores, Django los manejará
+    });
+    
+    // Generar SKU automático basado en el nombre (opcional)
+    $('#{{ form.name.id_for_label }}').on('blur', function() {
+        const $sku = $('#{{ form.sku.id_for_label }}');
+        
+        // Solo si el SKU está vacío
+        if (!$sku.val()) {
+            const name = $(this).val();
+            if (name) {
+                // Tomar primeras 3 letras de cada palabra
+                const words = name.split(' ').slice(0, 3);
+                let sku = words.map(w => w.substring(0, 3).toUpperCase()).join('-');
+                sku += '-' + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                $sku.val(sku);
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

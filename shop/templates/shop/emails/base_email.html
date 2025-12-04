@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ subject }}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .email-header {
+            background: linear-gradient(135deg, #004e89 0%, #1a1a2e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .email-header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .email-body {
+            padding: 30px;
+        }
+        .email-body h2 {
+            color: #004e89;
+            font-size: 20px;
+            margin-top: 0;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #ff6b35;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .button:hover {
+            background-color: #e55a2b;
+        }
+        .email-footer {
+            background-color: #f5f5f5;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+        }
+        .info-box {
+            background-color: #f0f8ff;
+            border-left: 4px solid #004e89;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .order-details {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .order-details table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .order-details td {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .order-details td:first-child {
+            font-weight: bold;
+            width: 40%;
+        }
+        .total {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ff6b35;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <h1>🏪 {{ site_name }}</h1>
+        </div>
+        
+        <div class="email-body">
+            {% block content %}{% endblock %}
+        </div>
+        
+        <div class="email-footer">
+            <p>© 2024 {{ site_name }}. Todos los derechos reservados.</p>
+            <p>
+                Este es un email automático, por favor no respondas a este mensaje.<br>
+                Si tienes alguna pregunta, contáctanos en contacto@miferreteria.com
+            </p>
+            <p>
+                <a href="{{ site_url }}" style="color: #004e89; text-decoration: none;">Visitar nuestra tienda</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

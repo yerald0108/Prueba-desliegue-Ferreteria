@@ -1,0 +1,84 @@
+{% load static %}
+
+{% for product in products %}
+<div class="col-lg-4 col-md-6 product-card-wrapper" data-product-id="{{ product.id }}">
+    <div class="card h-100 product-card">
+        <div class="position-relative product-image-container">
+            {% if product.image %}
+                <img src="{{ product.image.url }}" 
+                     class="card-img-top product-image" 
+                     alt="{{ product.name }}"
+                     loading="lazy">
+            {% else %}
+                <div class="product-image bg-secondary d-flex align-items-center justify-content-center">
+                    <i class="bi bi-image text-white" style="font-size: 3rem;"></i>
+                </div>
+            {% endif %}
+            
+            {% if product.stock == 0 %}
+                <span class="stock-badge out-of-stock">Agotado</span>
+            {% elif product.stock < 10 %}
+                <span class="stock-badge low-stock">Solo {{ product.stock }}</span>
+            {% else %}
+                <span class="stock-badge in-stock">Disponible</span>
+            {% endif %}
+            
+            {% if product.featured %}
+                <span class="badge bg-warning position-absolute" style="top: 10px; left: 10px;">
+                    <i class="bi bi-star-fill"></i> Destacado
+                </span>
+            {% endif %}
+        </div>
+        
+        <div class="card-body d-flex flex-column">
+            <div class="mb-2">
+                <span class="badge bg-secondary">{{ product.category.name }}</span>
+            </div>
+            
+            <h6 class="card-title">{{ product.name }}</h6>
+            
+            <p class="card-text text-muted small flex-grow-1">
+                {{ product.description|truncatewords:12 }}
+            </p>
+            
+            <div class="mt-auto">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="price-tag">${{ product.price }}</span>
+                    <small class="text-muted">SKU: {{ product.sku }}</small>
+                </div>
+                
+                <div class="d-flex gap-2">
+                    <a href="{% url 'shop:product_detail' product.pk %}" 
+                       class="btn btn-outline-primary flex-grow-1">
+                        <i class="bi bi-eye"></i> Ver
+                    </a>
+                    
+                    {% if user.is_authenticated and product.in_stock %}
+                        <button class="btn btn-primary quick-add-btn" 
+                                data-product-id="{{ product.pk }}">
+                            <i class="bi bi-cart-plus"></i>
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% empty %}
+<div class="col-12">
+    <div class="text-center py-5">
+        <i class="bi bi-inbox text-muted" style="font-size: 5rem;"></i>
+        <h3 class="mt-3">No se encontraron productos</h3>
+        <p class="text-muted">
+            {% if query %}
+                No hay productos que coincidan con "{{ query }}"
+            {% else %}
+                No hay productos en esta categoría
+            {% endif %}
+        </p>
+        <a href="{% url 'shop:product_list' %}" class="btn btn-primary mt-3">
+            Ver todos los productos
+        </a>
+    </div>
+</div>
+{% endfor %}

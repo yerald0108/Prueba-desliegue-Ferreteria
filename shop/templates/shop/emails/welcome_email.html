@@ -1,0 +1,33 @@
+{% extends 'shop/emails/base_email.html' %}
+
+{% block content %}
+<h2>¡Bienvenido a {{ site_name }}, {{ user.first_name }}! 🎉</h2>
+
+<p>Tu cuenta ha sido verificada exitosamente. ¡Ya puedes empezar a comprar!</p>
+
+<div class="info-box">
+    <h3 style="margin-top: 0;">¿Qué puedes hacer ahora?</h3>
+    <ul>
+        <li>Explorar nuestro catálogo completo de productos</li>
+        <li>Agregar productos a tu carrito</li>
+        <li>Realizar tu primera compra con entrega a domicilio</li>
+        <li>Seguir el estado de tus pedidos</li>
+    </ul>
+</div>
+
+<div style="text-align: center;">
+    <a href="{{ site_url }}/productos/" class="button">🛒 Empezar a Comprar</a>
+</div>
+
+<p><strong>Beneficios de tu cuenta:</strong></p>
+<ul>
+    <li>✓ Envío rápido en 24-48 horas</li>
+    <li>✓ Seguimiento de pedidos en tiempo real</li>
+    <li>✓ Historial de compras</li>
+    <li>✓ Ofertas exclusivas</li>
+</ul>
+
+<p>Si tienes alguna pregunta, no dudes en contactarnos.</p>
+
+<p>¡Gracias por elegirnos!<br>El equipo de {{ site_name }}</p>
+{% endblock %}

@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Ferretería y Miscelánea - Delivery{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <style>
+        :root {
+            --primary-color: #ff6b35;
+            --secondary-color: #004e89;
+            --dark-color: #1a1a2e;
+            --light-color: #f5f5f5;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-color);
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--dark-color) 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+            color: white !important;
+        }
+        
+        .nav-link {
+            color: rgba(255,255,255,0.9) !important;
+            transition: color 0.3s;
+        }
+        
+        .nav-link:hover {
+            color: var(--primary-color) !important;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            background-color: #e55a2b;
+            border-color: #e55a2b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(255, 107, 53, 0.3);
+        }
+        
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .product-image {
+            height: 200px;
+            object-fit: cover;
+            border-radius: 15px 15px 0 0;
+        }
+        
+        .cart-badge {
+            position: relative;
+            top: -10px;
+            right: -5px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            padding: 2px 7px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        /* Animación del ícono de carrito cuando se agrega un producto */
+        .cart-animate {
+            animation: cart-bounce 0.6s ease-out;
+        }
+
+        @keyframes cart-bounce {
+            0%   { transform: translateY(0) scale(1); filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0)); }
+            30%  { transform: translateY(-6px) scale(1.2); filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8)); }
+            60%  { transform: translateY(0) scale(0.95); filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.4)); }
+            100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0)); }
+        }
+
+        /* Ícono de pulso alrededor del carrito */
+        .cart-pulse::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.7);
+            transform: translate(-50%, -50%);
+            animation: cart-pulse-ring 0.7s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes cart-pulse-ring {
+            0% { transform: translate(-50%, -50%) scale(0.4); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1.3); opacity: 0; }
+        }
+
+        /* Imagen o “burbuja” que viaja desde el botón al carrito */
+        .fly-to-cart-img {
+            position: fixed;
+            z-index: 1050;
+            pointer-events: none;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+        }
+
+        .fly-to-cart-fallback {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #ffe0d2, var(--primary-color));
+            position: fixed;
+            z-index: 1050;
+            pointer-events: none;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--dark-color) 100%);
+            color: white;
+            padding: 80px 0;
+            margin-bottom: 50px;
+        }
+        
+        .category-card {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .category-card:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .footer {
+            background-color: var(--dark-color);
+            color: white;
+            padding: 40px 0 20px;
+            margin-top: 80px;
+        }
+        
+        .price-tag {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .stock-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .in-stock {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .low-stock {
+            background-color: #ffc107;
+            color: #000;
+        }
+        
+        .out-of-stock {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        /* Comportamiento del resumen de pedido en checkout */
+        .checkout-summary {
+            position: sticky;
+            top: 90px; /* espacio por debajo de la navbar sticky */
+            margin-top: 1rem;
+            z-index: 1; /* por debajo de la navbar de Bootstrap (z-index más alto) */
+        }
+
+        /* Comportamiento del resumen en la página de carrito */
+        .cart-summary {
+            position: sticky;
+            top: 90px; /* mismo offset que el checkout */
+            margin-top: 1rem;
+            z-index: 1;
+        }
+
+        /* Notificación flotante "añadido al carrito" */
+        .cart-toast {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1080;
+            min-width: 280px;
+            max-width: calc(100vw - 40px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+            border-radius: 12px;
+            padding: 0.75rem 1.5rem;
+            display: none;
+        }
+
+        .cart-toast .bi {
+            font-size: 1.2rem;
+            margin-right: 0.35rem;
+        }
+
+        @media (max-width: 576px) {
+            .cart-toast {
+                top: 70px;
+                right: 10px;
+                left: 10px;
+                min-width: auto;
+                max-width: calc(100vw - 20px);
+                padding: 0.6rem 1.1rem;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'shop:home' %}">
+                <i class="bi bi-shop"></i> Mi Ferretería
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'shop:home' %}">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'shop:product_list' %}">Productos</a>
+                    </li>
+                </ul>
+                
+                <!-- Search form -->
+                <form class="d-flex me-3" method="get" action="{% url 'shop:product_list' %}">
+                    <input class="form-control me-2" type="search" name="q" placeholder="Buscar productos..." aria-label="Search">
+                    <button class="btn btn-outline-light" type="submit">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </form>
+                
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link position-relative" href="{% url 'shop:cart' %}">
+                                <i class="bi bi-cart3"></i> Carrito
+                                {# Siempre renderizamos el badge para que pueda ser actualizado vía JS #}
+                                <span class="cart-badge" {% if not user.cart.items_count %}style="display:none"{% endif %}>
+                                    {{ user.cart.items_count|default:"0" }}
+                                </span>
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle"></i> {{ user.first_name|default:user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{% url 'shop:profile' %}">
+                                    <i class="bi bi-person"></i> Mi Perfil
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'shop:order_history' %}">
+                                    <i class="bi bi-clock-history"></i> Mis Órdenes
+                                </a></li>
+
+                                {% if user.is_staff %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{% url 'shop:admin_dashboard' %}">
+                                        <i class="bi bi-speedometer2"></i> Panel Admin
+                                    </a></li>
+                                {% endif %}
+
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#" id="logoutLink">
+                                    <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                                </a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'shop:login' %}">
+                                <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'shop:register' %}">
+                                <i class="bi bi-person-plus"></i> Registrarse
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Messages -->
+    {% if messages %}
+        <div class="container mt-3">
+            {% for message in messages %}
+                <div class="alert {{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+        
+        {% for message in messages %}
+            {% if message.tags == 'success' %}
+                <div id="global-success-message" data-message="{{ message|escapejs }}" style="display: none;">{{ message }}</div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+    
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h5><i class="bi bi-shop"></i> Mi Ferretería</h5>
+                    <p>Tu ferretería y miscelánea de confianza con entrega a domicilio.</p>
+                    <div class="social-links">
+                        <a href="#" class="text-white me-3"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="text-white me-3"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="text-white me-3"><i class="bi bi-whatsapp"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h5>Enlaces Rápidos</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{% url 'shop:product_list' %}" class="text-white-50">Productos</a></li>
+                        <li><a href="#" class="text-white-50">Sobre Nosotros</a></li>
+                        <li><a href="#" class="text-white-50">Contacto</a></li>
+                        <li><a href="#" class="text-white-50">Preguntas Frecuentes</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h5>Contacto</h5>
+                    <p class="text-white-50">
+                        <i class="bi bi-geo-alt"></i> Tu Provincia, Tu Ciudad<br>
+                        <i class="bi bi-telephone"></i> +123 456 7890<br>
+                        <i class="bi bi-envelope"></i> contacto@miferreteria.com
+                    </p>
+                </div>
+            </div>
+            <hr class="bg-white">
+            <div class="text-center">
+                <p class="mb-0">&copy; 2024 Mi Ferretería. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal global de confirmación -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-question-circle text-primary me-1"></i>
+                        Confirmar acción
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirmModalMessage" class="mb-0">
+                        ¿Estás seguro de realizar esta acción?
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="confirmModalAcceptBtn">Aceptar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast global para "producto añadido al carrito" -->
+    <div id="cart-toast" class="alert alert-success cart-toast" role="alert" aria-live="polite" aria-atomic="true">
+        <i class="bi bi-check-circle-fill"></i>
+        <span class="cart-toast-message">Producto añadido al carrito</span>
+    </div>
+    
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- jQuery (para AJAX) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        // Animación reutilizable: imagen/burbuja que vuela al carrito + rebote y pulso del ícono
+        window.animateAddToCart = function (startElement) {
+            try {
+                const $start = $(startElement);
+                const $cartLink = $('.navbar a[href$="carrito/"], .navbar a[href*="cart"]').first();
+                const $cartIcon = $cartLink.find('.bi-cart3').first();
+
+                if ($start.length === 0 || $cartIcon.length === 0) {
+                    return;
+                }
+
+                const startOffset = $start.offset();
+                const cartOffset = $cartIcon.offset();
+
+                // Intentar usar la imagen del producto más cercana
+                let $img = $start.closest('.card, .row').find('img.product-image, .card-img-top, .img-fluid').first();
+                let useFallback = false;
+
+                if ($img.length === 0 || !$img.attr('src')) {
+                    useFallback = true;
+                }
+
+                const startX = startOffset.left + $start.outerWidth() / 2;
+                const startY = startOffset.top + $start.outerHeight() / 2;
+                const endX = cartOffset.left + $cartIcon.outerWidth() / 2;
+                const endY = cartOffset.top + $cartIcon.outerHeight() / 2;
+
+                let $flyEl;
+
+                if (!useFallback) {
+                    $flyEl = $('<img class="fly-to-cart-img" />')
+                        .attr('src', $img.attr('src'))
+                        .appendTo('body');
+                    $flyEl.css({
+                        width: 60,
+                        height: 60,
+                        left: startX - 30,
+                        top: startY - 30
+                    });
+                } else {
+                    $flyEl = $('<div class="fly-to-cart-fallback"></div>').appendTo('body');
+                    $flyEl.css({
+                        left: startX - 8,
+                        top: startY - 8
+                    });
+                }
+
+                // Trayectoria curva: primero hacia arriba, luego hacia el carrito
+                const midX = (startX + endX) / 2;
+                const midY = Math.min(startY, endY) - 120;  // punto de control elevado para hacer un arco
+
+                $flyEl.animate(
+                    { left: midX, top: midY },
+                    250,
+                    'swing',
+                    function () {
+                        $flyEl.animate(
+                            { left: endX - (useFallback ? 8 : 30), top: endY - (useFallback ? 8 : 30), opacity: 0.1, width: useFallback ? 10 : 30, height: useFallback ? 10 : 30 },
+                            260,
+                            'swing',
+                            function () {
+                                $flyEl.remove();
+                                // Rebote + pulso del ícono del carrito
+                                $cartIcon.addClass('cart-animate');
+                                $cartLink.addClass('cart-pulse');
+                                setTimeout(function () {
+                                    $cartIcon.removeClass('cart-animate');
+                                    $cartLink.removeClass('cart-pulse');
+                                }, 700);
+                            }
+                        );
+                    }
+                );
+            } catch (e) {
+                console.error('Error en animateAddToCart:', e);
+            }
+        };
+
+        // Notificación reutilizable "añadido al carrito"
+        window.showCartNotification = function (message) {
+            try {
+                const $toast = $('#cart-toast');
+                if ($toast.length === 0) {
+                    return;
+                }
+
+                const text = message || 'Se ha añadido el producto al carrito';
+                $toast.find('.cart-toast-message').text(text);
+
+                // Reiniciar animación si ya estaba visible
+                $toast.stop(true, true).fadeOut(0);
+                $toast.fadeIn(200, function () {
+                    setTimeout(function () {
+                        $toast.fadeOut(200);
+                    }, 2200);
+                });
+            } catch (e) {
+                console.error('Error en showCartNotification:', e);
+            }
+        };
+
+        // Notificación genérica de éxito (reutilizable para cualquier acción)
+        window.showSuccessNotification = function (message) {
+            try {
+                const $toast = $('#cart-toast');
+                if ($toast.length === 0) {
+                    return;
+                }
+
+                const text = message || 'Operación realizada exitosamente';
+                $toast.find('.cart-toast-message').text(text);
+
+                // Reiniciar animación si ya estaba visible
+                $toast.stop(true, true).fadeOut(0);
+                $toast.fadeIn(200, function () {
+                    setTimeout(function () {
+                        $toast.fadeOut(200);
+                    }, 2500);
+                });
+            } catch (e) {
+                console.error('Error en showSuccessNotification:', e);
+            }
+        };
+
+        // Modal de confirmación reutilizable
+        window.showConfirmModal = function (options) {
+            try {
+                const defaults = {
+                    message: '¿Estás seguro de realizar esta acción?',
+                    confirmText: 'Aceptar',
+                    cancelText: 'Cancelar',
+                    confirmClass: 'btn-danger',
+                    onConfirm: null
+                };
+                const opts = Object.assign({}, defaults, options || {});
+
+                const $modal = $('#confirmModal');
+                if ($modal.length === 0) return;
+
+                $('#confirmModalMessage').text(opts.message);
+
+                const $confirmBtn = $('#confirmModalAcceptBtn');
+                $confirmBtn.text(opts.confirmText)
+                    .removeClass('btn-danger btn-primary btn-warning btn-success')
+                    .addClass(opts.confirmClass || 'btn-danger');
+
+                // Limpiar handlers previos
+                $confirmBtn.off('click');
+
+                $confirmBtn.on('click', function () {
+                    const modalEl = $modal[0];
+                    const instance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                    instance.hide();
+                    if (typeof opts.onConfirm === 'function') {
+                        opts.onConfirm();
+                    }
+                });
+
+                const modal = new bootstrap.Modal($modal[0]);
+                modal.show();
+            } catch (e) {
+                console.error('Error en showConfirmModal:', e);
+            }
+        };
+        
+        // Verificar si hay una notificación guardada en sessionStorage (después de redirección)
+        $(document).ready(function() {
+            var savedNotification = sessionStorage.getItem('successNotification');
+            if (savedNotification) {
+                // Limpiar el sessionStorage
+                sessionStorage.removeItem('successNotification');
+                
+                // Mostrar la notificación
+                setTimeout(function() {
+                    if (typeof window.showSuccessNotification === 'function') {
+                        window.showSuccessNotification(savedNotification);
+                    } else if (typeof window.showCartNotification === 'function') {
+                        window.showCartNotification(savedNotification);
+                    }
+                }, 300);
+            }
+
+            // También convertir los mensajes de éxito de Django (messages.success)
+            // en una notificación flotante y ocultar el alert "grande"
+            var $globalSuccess = $('#global-success-message');
+            if ($globalSuccess.length) {
+                var msg = $globalSuccess.data('message') || $globalSuccess.text();
+                if (msg && msg.trim()) {
+                    // Ocultar primero los alerts visuales de tipo success con animación
+                    $('.alert.alert-success').fadeOut(300, function() {
+                        $(this).remove();
+                    });
+                    
+                    // Mostrar el toast después de un pequeño delay
+                    setTimeout(function() {
+                        if (typeof window.showSuccessNotification === 'function') {
+                            window.showSuccessNotification(msg.trim());
+                        } else if (typeof window.showCartNotification === 'function') {
+                            window.showCartNotification(msg.trim());
+                        }
+                    }, 400);
+                } else {
+                    // Si no hay mensaje, solo ocultar los alerts
+                    $('.alert.alert-success').fadeOut(300, function() {
+                        $(this).remove();
+                    });
+                }
+            }
+            
+            // También verificar si hay mensajes de éxito directamente en los alerts
+            var $successAlerts = $('.alert.alert-success');
+            if ($successAlerts.length && !$globalSuccess.length) {
+                $successAlerts.each(function() {
+                    var $alert = $(this);
+                    var msg = $alert.text().trim();
+                    if (msg) {
+                        // Ocultar el alert con animación
+                        $alert.fadeOut(300, function() {
+                            $(this).remove();
+                        });
+                        
+                        // Mostrar toast
+                        setTimeout(function() {
+                            if (typeof window.showSuccessNotification === 'function') {
+                                window.showSuccessNotification(msg);
+                            } else if (typeof window.showCartNotification === 'function') {
+                                window.showCartNotification(msg);
+                            }
+                        }, 400);
+                    }
+                });
+            }
+        });
+        
+        // Logout por AJAX
+        $(document).ready(function() {
+            $('#logoutLink').on('click', function(e) {
+                e.preventDefault();
+                
+                $.ajax({
+                    url: '{% url "shop:logout" %}',
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    data: {
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                        // Guardar mensaje en sessionStorage para mostrar después de la redirección
+                        sessionStorage.setItem('successNotification', 'Sesión cerrada exitosamente');
+                        
+                        // Redirigir inmediatamente
+                        window.location.href = '{% url "shop:home" %}';
+                    },
+                    error: function() {
+                        // Si falla el AJAX, hacer logout normal
+                        window.location.href = '{% url "shop:logout" %}';
+                    }
+                });
+            });
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

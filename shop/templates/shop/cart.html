@@ -1,0 +1,356 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Carrito de Compras - Ferretería{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="mb-4">
+        <i class="bi bi-cart3"></i> Mi Carrito de Compras
+    </h2>
+    
+    {% if cart.items.exists %}
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        {% for item in cart.items.all %}
+                            <div class="row align-items-center mb-3 pb-3 border-bottom cart-item" data-item-id="{{ item.id }}">
+                                <div class="col-md-2">
+                                    {% if item.product.image %}
+                                        <img src="{{ item.product.image.url }}" class="img-fluid rounded" alt="{{ item.product.name }}">
+                                    {% else %}
+                                        <div class="bg-secondary rounded d-flex align-items-center justify-content-center" style="height: 80px;">
+                                            <i class="bi bi-image text-white"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <h6 class="mb-1">{{ item.product.name }}</h6>
+                                    <small class="text-muted">{{ item.product.category.name }}</small>
+                                    <br>
+                                    <span class="badge bg-info">SKU: {{ item.product.sku }}</span>
+                                </div>
+                                
+                                <div class="col-md-2 text-center">
+                                    <strong class="text-primary">${{ item.product.price }}</strong>
+                                </div>
+                                
+                                <div class="col-md-3">
+                                    <div class="input-group">
+                                        <button class="btn btn-outline-secondary btn-sm decrease-qty" type="button">
+                                            <i class="bi bi-dash"></i>
+                                        </button>
+                                        <input type="number" 
+                                               class="form-control form-control-sm text-center quantity-input" 
+                                               value="{{ item.quantity }}" 
+                                               min="1" 
+                                               max="{{ item.product.stock }}"
+                                               data-item-id="{{ item.id }}">
+                                        <button class="btn btn-outline-secondary btn-sm increase-qty" type="button">
+                                            <i class="bi bi-plus"></i>
+                                        </button>
+                                    </div>
+                                    <small class="text-muted d-block mt-1 text-center">
+                                        Stock: {{ item.product.stock }}
+                                    </small>
+                                </div>
+                                
+                                <div class="col-md-1 text-end">
+                                    <button class="btn btn-danger btn-sm remove-item" data-item-id="{{ item.id }}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                                
+                                <div class="col-12 mt-2">
+                                    <div class="text-end">
+                                        <strong>Subtotal: </strong>
+                                        <span class="text-primary item-subtotal">${{ item.subtotal }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <a href="{% url 'shop:product_list' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-left"></i> Seguir Comprando
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Resumen -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm cart-summary">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">Resumen del Pedido</h5>
+                        
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Productos ({{ cart.items_count }}):</span>
+                            <strong id="cart-subtotal">${{ cart.total }}</strong>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Envío estimado:</span>
+                            <strong>$5.00</strong>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="d-flex justify-content-between mb-4">
+                            <h5>Total:</h5>
+                            <h5 class="text-primary" id="cart-total">${{ cart.total|add:"5" }}</h5>
+                        </div>
+                        
+                        <a href="{% url 'shop:checkout' %}" class="btn btn-primary w-100 btn-lg mb-3">
+                            <i class="bi bi-credit-card"></i> Proceder al Pago
+                        </a>
+
+                        <button type="button" class="btn btn-outline-danger w-100 mb-3 clear-cart">
+                            <i class="bi bi-trash"></i> Vaciar carrito
+                        </button>
+                        
+                        <div class="alert alert-info small">
+                            <i class="bi bi-truck"></i>
+                            <strong>Envío rápido</strong><br>
+                            Entrega en 24-48 horas
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-cart-x text-muted" style="font-size: 5rem;"></i>
+            <h3 class="mt-3">Tu carrito está vacío</h3>
+            <p class="text-muted">Agrega productos para empezar a comprar</p>
+            <a href="{% url 'shop:product_list' %}" class="btn btn-primary btn-lg mt-3">
+                <i class="bi bi-shop"></i> Ir a la Tienda
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Actualizar cantidad
+    $('.quantity-input').on('change', function() {
+        const itemId = $(this).data('item-id');
+        const quantity = $(this).val();
+        updateCartItem(itemId, quantity);
+    });
+    
+    // Botones de incremento/decremento
+    $('.increase-qty').on('click', function() {
+        const input = $(this).siblings('.quantity-input');
+        const max = parseInt(input.attr('max'));
+        let value = parseInt(input.val());
+        if (value < max) {
+            input.val(value + 1).trigger('change');
+        }
+    });
+    
+    $('.decrease-qty').on('click', function() {
+        const input = $(this).siblings('.quantity-input');
+        let value = parseInt(input.val());
+        if (value > 1) {
+            input.val(value - 1).trigger('change');
+        }
+    });
+    
+    // Eliminar item (usando modal de confirmación)
+    $('.remove-item').on('click', function() {
+        const itemId = $(this).data('item-id');
+        if (window.showConfirmModal) {
+            window.showConfirmModal({
+                message: '¿Estás seguro de eliminar este producto del carrito?',
+                confirmText: 'Eliminar',
+                confirmClass: 'btn-danger',
+                onConfirm: function() {
+                    removeCartItem(itemId);
+                }
+            });
+        } else {
+            // Fallback al confirm nativo si por alguna razón no está disponible el modal
+            if (confirm('¿Estás seguro de eliminar este producto del carrito?')) {
+                removeCartItem(itemId);
+            }
+        }
+    });
+    
+    function updateCartItem(itemId, quantity) {
+        $.ajax({
+            url: `/actualizar-carrito/${itemId}/`,
+            method: 'POST',
+            data: {
+                'quantity': quantity,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Actualizar subtotal del item
+                    $(`.cart-item[data-item-id="${itemId}"] .item-subtotal`).text('$' + response.subtotal.toFixed(2));
+                    
+                    // Actualizar totales
+                    $('#cart-subtotal').text('$' + response.cart_total.toFixed(2));
+                    $('#cart-total').text('$' + (response.cart_total + 5).toFixed(2));
+                    
+                    // Actualizar badge del navbar
+                    $('.cart-badge').text(response.cart_count);
+
+                    // Si la cantidad llega a 0 desde aquí (teóricamente ya se borra en backend),
+                    // mostramos una notificación de eliminación
+                    if (response.cart_count === 0 && window.showCartNotification) {
+                        window.showCartNotification('Se ha vaciado el carrito');
+                    }
+                } else {
+                    alert(response.message);
+                }
+            },
+            error: function() {
+                alert('Error al actualizar el carrito');
+            }
+        });
+    }
+    
+    function removeCartItem(itemId) {
+        $.ajax({
+            url: `/eliminar-del-carrito/${itemId}/`,
+            method: 'POST',
+            data: {
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Eliminar item del DOM
+                    $(`.cart-item[data-item-id="${itemId}"]`).fadeOut(300, function() {
+                        $(this).remove();
+                        
+                        // Si no quedan items, mostrar estado vacío sin recargar
+                        if ($('.cart-item').length === 0) {
+                            showEmptyCartState();
+                        }
+                    });
+                    
+                    // Actualizar totales
+                    $('#cart-subtotal').text('$' + response.cart_total.toFixed(2));
+                    $('#cart-total').text('$' + (response.cart_total + 5).toFixed(2));
+                    
+                    // Actualizar badge del navbar
+                    $('.cart-badge').text(response.cart_count);
+                    if (response.cart_count === 0) {
+                        $('.cart-badge').hide();
+                    }
+
+                    // Notificación flotante (definida en base.html)
+                    if (window.showCartNotification) {
+                        if (response.cart_count === 0) {
+                            window.showCartNotification('Se ha vaciado el carrito');
+                        } else {
+                            window.showCartNotification('Se ha eliminado el producto del carrito');
+                        }
+                    }
+                }
+            },
+            error: function() {
+                alert('Error al eliminar el producto');
+            }
+        });
+    }
+
+    // Función para mostrar el estado de carrito vacío sin recargar la página
+    function showEmptyCartState() {
+        const emptyCartHtml = `
+            <div class="text-center py-5">
+                <i class="bi bi-cart-x text-muted" style="font-size: 5rem;"></i>
+                <h3 class="mt-3">Tu carrito está vacío</h3>
+                <p class="text-muted">Agrega productos para empezar a comprar</p>
+                <a href="{% url 'shop:product_list' %}" class="btn btn-primary btn-lg mt-3">
+                    <i class="bi bi-shop"></i> Ir a la Tienda
+                </a>
+            </div>
+        `;
+        
+        // Reemplazar todo el contenido del contenedor principal
+        $('.container.py-5').html(`
+            <h2 class="mb-4">
+                <i class="bi bi-cart3"></i> Mi Carrito de Compras
+            </h2>
+            ${emptyCartHtml}
+        `);
+    }
+
+    // Vaciar carrito (usando modal de confirmación)
+    $('.clear-cart').on('click', function() {
+        if (window.showConfirmModal) {
+            window.showConfirmModal({
+                message: '¿Deseas vaciar todo el carrito? Esta acción no se puede deshacer.',
+                confirmText: 'Vaciar carrito',
+                confirmClass: 'btn-danger',
+                onConfirm: function() {
+                    $.ajax({
+                        url: '{% url "shop:clear_cart" %}',
+                        method: 'POST',
+                        data: {
+                            'csrfmiddlewaretoken': '{{ csrf_token }}'
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                // Actualizar badge del navbar
+                                $('.cart-badge').text('0').hide();
+
+                                // Notificación flotante
+                                if (window.showCartNotification) {
+                                    window.showCartNotification('Se ha vaciado el carrito');
+                                }
+
+                                // Mostrar estado vacío sin recargar (esperar un poco para que se vea la notificación)
+                                setTimeout(function() {
+                                    showEmptyCartState();
+                                }, 500);
+                            } else {
+                                alert(response.message || 'No se pudo vaciar el carrito');
+                            }
+                        },
+                        error: function() {
+                            alert('Error al vaciar el carrito');
+                        }
+                    });
+                }
+            });
+        } else {
+            // Fallback por si falla el modal
+            if (!confirm('¿Deseas vaciar todo el carrito?')) {
+                return;
+            }
+            $.ajax({
+                url: '{% url "shop:clear_cart" %}',
+                method: 'POST',
+                data: {
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('.cart-badge').text('0').hide();
+                        if (window.showCartNotification) {
+                            window.showCartNotification('Se ha vaciado el carrito');
+                        }
+                        setTimeout(function() {
+                            showEmptyCartState();
+                        }, 500);
+                    } else {
+                        alert(response.message || 'No se pudo vaciar el carrito');
+                    }
+                },
+                error: function() {
+                    alert('Error al vaciar el carrito');
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

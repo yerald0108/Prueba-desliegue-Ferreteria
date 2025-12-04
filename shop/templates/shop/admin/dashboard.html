@@ -1,0 +1,316 @@
+{% extends 'shop/admin/base_admin.html' %}
+
+{% block title %}Dashboard - Panel de Administración{% endblock %}
+
+{% block page_title %}Dashboard General{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card primary">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs">Ingresos Totales</div>
+                            <div class="h5 text-primary">${{ total_revenue|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-currency-dollar icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card success">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs text-success">Total Órdenes</div>
+                            <div class="h5">{{ total_orders }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-receipt icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card warning">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs text-warning">Órdenes Pendientes</div>
+                            <div class="h5">{{ pending_orders }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-clock-history icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card info">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs text-info">Total Usuarios</div>
+                            <div class="h5">{{ total_users }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-people icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Alerts Row -->
+    <div class="row mb-4">
+        {% if low_stock_products > 0 %}
+        <div class="col-md-6 mb-3">
+            <div class="alert alert-warning d-flex align-items-center" role="alert">
+                <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+                <div>
+                    <strong>{{ low_stock_products }}</strong> producto{{ low_stock_products|pluralize }} con bajo stock
+                    <a href="{% url 'shop:admin_products' %}?stock=low" class="alert-link ms-2">Ver ahora</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if out_of_stock > 0 %}
+        <div class="col-md-6 mb-3">
+            <div class="alert alert-danger d-flex align-items-center" role="alert">
+                <i class="bi bi-x-circle-fill fs-4 me-3"></i>
+                <div>
+                    <strong>{{ out_of_stock }}</strong> producto{{ out_of_stock|pluralize }} agotado{{ out_of_stock|pluralize }}
+                    <a href="{% url 'shop:admin_products' %}?stock=out" class="alert-link ms-2">Ver ahora</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-xl-8 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-graph-up"></i> Ventas de los Últimos 7 Días
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="salesChart" height="80"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-4 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-pie-chart"></i> Productos Más Vendidos
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if top_products %}
+                        <div class="list-group list-group-flush">
+                            {% for product in top_products %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <div>
+                                    <strong>{{ product.product__name|truncatewords:4 }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ product.total_sold }} unidades</small>
+                                </div>
+                                <span class="badge bg-primary rounded-pill">${{ product.revenue|floatformat:0 }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">No hay datos disponibles</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Orders -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-receipt"></i> Órdenes Recientes
+                    </h6>
+                    <a href="{% url 'shop:admin_orders' %}" class="btn btn-sm btn-primary">
+                        Ver Todas
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Número</th>
+                                    <th>Cliente</th>
+                                    <th>Fecha</th>
+                                    <th>Total</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in recent_orders %}
+                                <tr>
+                                    <td><strong>{{ order.order_number }}</strong></td>
+                                    <td>{{ order.user.get_full_name|default:order.user.username }}</td>
+                                    <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
+                                    <td><strong class="text-primary">${{ order.total }}</strong></td>
+                                    <td>
+                                        <span class="status-badge 
+                                            {% if order.status == 'pending' %}bg-warning text-dark
+                                            {% elif order.status == 'confirmed' %}bg-info
+                                            {% elif order.status == 'preparing' %}bg-primary
+                                            {% elif order.status == 'in_transit' %}bg-info
+                                            {% elif order.status == 'delivered' %}bg-success
+                                            {% else %}bg-danger
+                                            {% endif %}">
+                                            {{ order.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'shop:admin_order_detail' order.id %}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">No hay órdenes recientes</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sales by Category -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-tags"></i> Ventas por Categoría
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Categoría</th>
+                                    <th class="text-end">Unidades Vendidas</th>
+                                    <th class="text-end">Ingresos</th>
+                                    <th style="width: 40%;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for category in sales_by_category %}
+                                <tr>
+                                    <td><strong>{{ category.product__category__name }}</strong></td>
+                                    <td class="text-end">{{ category.total_sold }}</td>
+                                    <td class="text-end"><strong class="text-primary">${{ category.revenue|floatformat:2 }}</strong></td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar bg-primary" 
+                                                 role="progressbar" 
+                                                 style="width: {{ category.revenue|floatformat:0 }}%"
+                                                 aria-valuenow="{{ category.revenue }}" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">No hay datos disponibles</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Gráfico de ventas
+    const ctx = document.getElementById('salesChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ chart_labels|safe }},
+                datasets: [{
+                    label: 'Ventas ($)',
+                    data: {{ chart_data|safe }},
+                    borderColor: 'rgb(78, 115, 223)',
+                    backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointBackgroundColor: 'rgb(78, 115, 223)',
+                    pointBorderColor: 'white',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Ventas: $' + context.parsed.y.toFixed(2);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

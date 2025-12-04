@@ -1,0 +1,248 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Checkout - Finalizar Compra{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h3 class="mb-4">
+                        <i class="bi bi-credit-card"></i> Finalizar Compra
+                    </h3>
+                    {% if not user.profile.email_verified %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-shield-exclamation"></i>
+                        <strong>Verifica tu email</strong> para obtener actualizaciones de tu orden.
+                        <a href="{% url 'shop:resend_verification' %}" class="alert-link">Verificar ahora</a>
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post" id="checkoutForm">
+                        {% csrf_token %}
+                        
+                        <!-- Información de Entrega -->
+                        <div class="mb-4">
+                            <h5 class="text-primary border-bottom pb-2">
+                                <i class="bi bi-geo-alt"></i> Información de Entrega
+                            </h5>
+                            
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                <strong>Importante:</strong> Asegúrate de proporcionar una dirección y número de contacto correctos para la entrega.
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.delivery_address.id_for_label }}" class="form-label fw-bold">
+                                    Dirección de Entrega *
+                                </label>
+                                {{ form.delivery_address }}
+                                {% if form.delivery_address.errors %}
+                                    <div class="text-danger small">{{ form.delivery_address.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.delivery_city.id_for_label }}" class="form-label fw-bold">
+                                        Ciudad *
+                                    </label>
+                                    {{ form.delivery_city }}
+                                    {% if form.delivery_city.errors %}
+                                        <div class="text-danger small">{{ form.delivery_city.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.delivery_province.id_for_label }}" class="form-label fw-bold">
+                                        Provincia *
+                                    </label>
+                                    {{ form.delivery_province }}
+                                    {% if form.delivery_province.errors %}
+                                        <div class="text-danger small">{{ form.delivery_province.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.contact_phone.id_for_label }}" class="form-label fw-bold">
+                                    Número de Contacto *
+                                </label>
+                                {{ form.contact_phone }}
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle"></i> Ingresa solo los 8 dígitos (ejemplo: 56835698). El código +53 se agregará automáticamente. Te contactaremos a este número si hay algún problema con tu pedido.
+                                </small>
+                                {% if form.contact_phone.errors %}
+                                    <div class="text-danger small">{{ form.contact_phone.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Fecha, Hora de Entrega y Método de Pago -->
+                        <div class="mb-4">
+                            <div class="row g-4">
+                                <!-- Columna Izquierda: Fecha y Hora de Entrega -->
+                                <div class="col-md-6">
+                                    <h5 class="text-primary border-bottom pb-2">
+                                        <i class="bi bi-calendar-check"></i> Fecha y Hora de Entrega
+                                    </h5>
+
+                                    <div class="mb-3">
+                                        <label for="{{ form.delivery_date.id_for_label }}" class="form-label fw-bold">
+                                            Fecha de Entrega *
+                                        </label>
+                                        {{ form.delivery_date }}
+                                        {% if form.delivery_date.errors %}
+                                            <div class="text-danger small">{{ form.delivery_date.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Hora de Entrega *</label>
+                                        <div class="d-flex flex-column gap-2">
+                                            {% for radio in form.delivery_time %}
+                                                <div class="form-check">
+                                                    {{ radio.tag }}
+                                                    <label class="form-check-label" for="{{ radio.id_for_label }}">
+                                                        {{ radio.choice_label }}
+                                                    </label>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                        {% if form.delivery_time.errors %}
+                                            <div class="text-danger small">{{ form.delivery_time.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Columna Derecha: Método de Pago -->
+                                <div class="col-md-6">
+                                    <h5 class="text-primary border-bottom pb-2">
+                                        <i class="bi bi-wallet2"></i> Método de Pago
+                                    </h5>
+
+                                    <div class="d-flex flex-column gap-2">
+                                        {% for radio in form.payment_method %}
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <div class="form-check">
+                                                        {{ radio.tag }}
+                                                        <label class="form-check-label" for="{{ radio.id_for_label }}">
+                                                            {{ radio.choice_label }}
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% if form.payment_method.errors %}
+                                        <div class="text-danger small mt-2">{{ form.payment_method.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Notas Adicionales -->
+                        <div class="mb-4">
+                            <h5 class="text-primary border-bottom pb-2">
+                                <i class="bi bi-chat-left-text"></i> Notas Adicionales
+                            </h5>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label">
+                                    Instrucciones especiales (Opcional)
+                                </label>
+                                {{ form.notes }}
+                                <small class="form-text text-muted">
+                                    Ej: "Dejar en la entrada", "Tocar el timbre", etc.
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                            <label class="form-check-label" for="termsCheck">
+                                Acepto los términos y condiciones y confirmo que la información proporcionada es correcta *
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-check-circle"></i> Confirmar Pedido
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Resumen del Pedido -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm checkout-summary">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">
+                        <i class="bi bi-receipt"></i> Resumen del Pedido
+                    </h5>
+                    
+                    <!-- Items -->
+                    <div class="mb-3">
+                        {% for item in cart.items.all %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <strong>{{ item.product.name }}</strong>
+                                    <br>
+                                    <small class="text-muted">Cantidad: {{ item.quantity }}</small>
+                                </div>
+                                <span class="text-primary">${{ item.subtotal }}</span>
+                            </div>
+                            {% if not forloop.last %}
+                                <hr class="my-2">
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Totales -->
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <strong>${{ cart.total }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Envío:</span>
+                        <strong>$5.00</strong>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-3">
+                        <h5>Total:</h5>
+                        <h5 class="text-primary">${{ cart.total|add:"5" }}</h5>
+                    </div>
+                    
+                    <div class="alert alert-info small">
+                        <i class="bi bi-shield-check"></i>
+                        <strong>Compra segura</strong><br>
+                        Tu información está protegida
+                    </div>
+                    
+                    <div class="text-center">
+                        <a href="{% url 'shop:cart' %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-arrow-left"></i> Volver al Carrito
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+    const termsCheck = document.getElementById('termsCheck');
+    if (!termsCheck.checked) {
+        e.preventDefault();
+        alert('Debes aceptar los términos y condiciones para continuar');
+        return false;
+    }
+});
+</script>
+{% endblock %}
