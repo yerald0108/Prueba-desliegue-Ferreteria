@@ -300,3 +300,86 @@ class ProductForm(forms.ModelForm):
                 )
         
         return image
+    
+class ChangePasswordForm(forms.Form):
+    """Formulario seguro para cambiar contraseña"""
+    current_password = forms.CharField(
+        label='Contraseña Actual',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ingresa tu contraseña actual',
+            'autocomplete': 'current-password',
+        }),
+        help_text='Por seguridad, primero verifica tu contraseña actual'
+    )
+    
+    new_password1 = forms.CharField(
+        label='Nueva Contraseña',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ingresa tu nueva contraseña',
+            'autocomplete': 'new-password',
+        }),
+        help_text='Mínimo 8 caracteres. No puede ser muy similar a tu información personal.'
+    )
+    
+    new_password2 = forms.CharField(
+        label='Confirmar Nueva Contraseña',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Confirma tu nueva contraseña',
+            'autocomplete': 'new-password',
+        })
+    )
+    
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+    
+    def clean_current_password(self):
+        """Verificar que la contraseña actual sea correcta"""
+        current_password = self.cleaned_data.get('current_password')
+        
+        if not self.user.check_password(current_password):
+            raise forms.ValidationError(
+                'La contraseña actual es incorrecta. Por favor inténtalo de nuevo.'
+            )
+        
+        return current_password
+    
+    def clean_new_password1(self):
+        """Validar la nueva contraseña"""
+        password = self.cleaned_data.get('new_password1')
+        
+        if password:
+            # Usar los validadores de Django
+            from django.contrib.auth.password_validation import validate_password
+            try:
+                validate_password(password, self.user)
+            except forms.ValidationError as e:
+                # Re-lanzar los errores de validación
+                raise forms.ValidationError(e.messages)
+        
+        return password
+    
+    def clean(self):
+        """Validar que las contraseñas nuevas coincidan"""
+        cleaned_data = super().clean()
+        new_password1 = cleaned_data.get('new_password1')
+        new_password2 = cleaned_data.get('new_password2')
+        
+        if new_password1 and new_password2:
+            if new_password1 != new_password2:
+                self.add_error('new_password2', 'Las contraseñas no coinciden.')
+        
+        return cleaned_data
+    
+    def save(self, commit=True):
+        """Guardar la nueva contraseña"""
+        password = self.cleaned_data.get('new_password1')
+        self.user.set_password(password)
+        
+        if commit:
+            self.user.save()
+        
+        return self.user

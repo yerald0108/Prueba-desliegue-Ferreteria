@@ -137,3 +137,35 @@ def send_welcome_email(user):
     except Exception as e:
         print(f"Error al enviar email de bienvenida: {e}")
         return False
+
+def send_password_change_email(user, request):
+    """Enviar email de notificación de cambio de contraseña"""
+    from django.utils import timezone
+    
+    context = {
+        'user': user,
+        'timestamp': timezone.now(),
+        'timezone': 'Hora de Colombia',  # Ajusta según tu zona horaria
+        'site_name': settings.SITE_NAME,
+        'site_url': settings.SITE_URL,
+    }
+    
+    html_content = render_to_string('shop/emails/password_change_notification.html', context)
+    text_content = strip_tags(html_content)
+    
+    subject = f'Contraseña Cambiada - {settings.SITE_NAME}'
+    
+    email = EmailMultiAlternatives(
+        subject=subject,
+        body=text_content,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[user.email]
+    )
+    email.attach_alternative(html_content, "text/html")
+    
+    try:
+        email.send()
+        return True
+    except Exception as e:
+        print(f"Error al enviar email de cambio de contraseña: {e}")
+        return False

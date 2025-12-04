@@ -30,6 +30,7 @@ urlpatterns = [
     
     # Perfil
     path('perfil/', views.profile, name='profile'),
+    path('cambiar-contrasena/', views.change_password, name='change_password'),
 
     # Panel de administración
     path('admin-panel/', views.admin_dashboard, name='admin_dashboard'),
