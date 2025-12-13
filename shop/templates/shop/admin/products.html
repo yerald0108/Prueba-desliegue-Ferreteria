@@ -221,9 +221,6 @@ $('.product-toggle').on('change', function() {
         },
         success: function(response) {
             if (response.success) {
-                if (window.showAdminToast) {
-                    window.showAdminToast(response.message, 'success');
-                }
             }
         },
         error: function() {
@@ -268,9 +265,6 @@ $('#saveStockBtn').on('click', function() {
                 modal.hide();
                 
                 // Mostrar notificación
-                if (window.showAdminToast) {
-                    window.showAdminToast('Stock actualizado correctamente', 'success');
-                }
                 
                 // Recargar después de 1 segundo
                 setTimeout(function() {

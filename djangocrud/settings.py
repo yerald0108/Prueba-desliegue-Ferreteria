@@ -10,10 +10,10 @@ SECRET_KEY = 'django-insecure-7z0+38t)adnb-d$oslr!&4xay5em%o+pr+b1168&1tv0l*im2*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.100.10', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['192.168.195.10', 'localhost', '127.0.0.1']
 
 CSRF_TRUSTED_ORIGINS = [
-    'http://192.168.100.10:8000',
+    'http://192.168.195.10:8000',
 ]
 
 # Application definition
@@ -113,13 +113,13 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'yeraldfuste@gmail.com'  # Cambia esto
+EMAIL_HOST_USER = 'yeraldfuste@gmail.com'
 EMAIL_HOST_PASSWORD = 'puzipcsyhbwlkdvg'  
 DEFAULT_FROM_EMAIL = 'Tu Ferretería <yeraldfuste@gmail.com>'
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
 # URL del sitio (para links en emails)
-SITE_URL = 'http://192.168.137.203:8000'
+SITE_URL = 'http://192.168.195.10:8000'
 SITE_NAME = 'Mi Ferretería'
 
 # Messages

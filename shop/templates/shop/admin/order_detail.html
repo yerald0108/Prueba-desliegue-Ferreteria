@@ -408,16 +408,8 @@ $(document).ready(function() {
                 // Restaurar botón inmediatamente
                 $btn.prop('disabled', false).html(originalText);
                 
-                // Mostrar toast de éxito DESPUÉS de actualizar todo
-                setTimeout(function() {
-                    if (typeof window.showAdminToast === 'function') {
-                        console.log('Mostrando toast:', message);
-                        window.showAdminToast(message, 'success');
-                    } else {
-                        console.error('showAdminToast no está disponible');
-                        alert(message);
-                    }
-                }, 100);
+                // Mostrar mensaje de éxito
+                alert(message);
             },
             error: function(xhr, status, error) {
                 console.error('Error en AJAX:', status, error, xhr);
@@ -443,10 +435,7 @@ $(document).ready(function() {
                 // Restaurar botón
                 $btn.prop('disabled', false).html(originalText);
                 
-                // Mostrar toast de error
-                if (typeof window.showAdminToast === 'function') {
-                    window.showAdminToast(errorMessage, 'danger');
-                }
+                alert(errorMessage);
             }
         });
     }

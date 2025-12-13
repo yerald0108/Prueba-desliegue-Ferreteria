@@ -278,15 +278,7 @@
         
         <!-- Page Content -->
         {% block content %}{% endblock %}
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == 'success' %}
-                    <div class="admin-message" data-type="success" style="display:none;">{{ message|escape }}</div>
-                {% elif message.tags == 'error' %}
-                    <div class="admin-message" data-type="danger" style="display:none;">{{ message|escape }}</div>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
+        
     </div>
     
     <!-- Bootstrap 5 JS -->
@@ -294,25 +286,7 @@
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
-    <!-- Toast de notificaciones -->
-    <div id="admin-toast" class="alert alert-success" role="alert" aria-live="polite" aria-atomic="true" 
-         style="position: fixed; top: 80px; right: 20px; z-index: 1080; min-width: 280px; max-width: calc(100vw - 40px); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25); border-radius: 12px; padding: 0.75rem 1.5rem; display: none;">
-        <i class="bi bi-check-circle-fill"></i>
-        <span class="admin-toast-message">Operación realizada exitosamente</span>
-    </div>
     
-    <style>
-        @media (max-width: 576px) {
-            #admin-toast {
-                top: 70px;
-                right: 10px;
-                left: 10px;
-                min-width: auto;
-                max-width: calc(100vw - 20px);
-                padding: 0.6rem 1.1rem;
-            }
-        }
-    </style>
     
     <script>
         // Sidebar toggle para móvil
@@ -327,60 +301,7 @@
             }
         });
         
-        // Función para mostrar notificación toast
-        window.showAdminToast = function(message, type) {
-            type = type || 'success';
-            const $toast = $('#admin-toast');
-            if ($toast.length === 0) return;
-            
-            // Cambiar clase según el tipo
-            $toast.removeClass('alert-success alert-danger alert-warning alert-info')
-                  .addClass('alert-' + type);
-            
-            // Cambiar ícono según el tipo
-            let icon = 'bi-check-circle-fill';
-            if (type === 'danger') icon = 'bi-x-circle-fill';
-            else if (type === 'warning') icon = 'bi-exclamation-triangle-fill';
-            else if (type === 'info') icon = 'bi-info-circle-fill';
-            
-            $toast.find('i').removeClass().addClass('bi ' + icon);
-            $toast.find('.admin-toast-message').text(message || 'Operación realizada exitosamente');
-            
-            // Mostrar con animación
-            $toast.stop(true, true).fadeOut(0);
-            $toast.fadeIn(200, function() {
-                setTimeout(function() {
-                    $toast.fadeOut(200);
-                }, 3000);
-            });
-        };
         
-        // Mostrar toast si hay mensajes de Django
-        $(document).ready(function() {
-            $('.admin-message').each(function() {
-                var type = $(this).data('type');
-                var msg = $(this).attr('data-message');
-                if (!msg || !msg.trim) {
-                    msg = $(this).text().trim();
-                }
-                if (msg && typeof window.showAdminToast === 'function') {
-                    setTimeout(function() { showAdminToast(msg, type); }, 300);
-                }
-            });
-            try {
-                var params = new URLSearchParams(window.location.search);
-                var toastType = params.get('toast');
-                var toastMsg = params.get('msg');
-                if (toastType && toastMsg && typeof window.showAdminToast === 'function') {
-                    setTimeout(function() { window.showAdminToast(toastMsg, toastType); }, 200);
-                    params.delete('toast');
-                    params.delete('msg');
-                    var newQs = params.toString();
-                    var newUrl = window.location.pathname + (newQs ? ('?' + newQs) : '');
-                    window.history.replaceState({}, '', newUrl);
-                }
-            } catch (e) {}
-        });
     </script>
     
     <div class="modal fade" id="adminConfirmModal" tabindex="-1" aria-hidden="true">

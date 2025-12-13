@@ -169,7 +169,7 @@ $('#addToCartForm').on('submit', function(e) {
     e.preventDefault();
     
     const quantity = $('#quantity').val();
-    const productId = {{ product.pk }};
+    const productId = '{{ product.pk }}';
     
     $.ajax({
         url: `/agregar-al-carrito/${productId}/`,
@@ -188,10 +188,7 @@ $('#addToCartForm').on('submit', function(e) {
                     window.animateAddToCart($('#addToCartForm button[type="submit"]'));
                 }
 
-                // Notificación flotante (definida en base.html)
-                if (window.showCartNotification) {
-                    window.showCartNotification('Se ha añadido el producto al carrito');
-                }
+                
                 
                 // (Opcional) seguir usando el alert local si se desea feedback extra
                 const alertHtml = `

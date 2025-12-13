@@ -201,11 +201,7 @@ $(document).ready(function() {
                     // Actualizar badge del navbar
                     $('.cart-badge').text(response.cart_count);
 
-                    // Si la cantidad llega a 0 desde aquí (teóricamente ya se borra en backend),
-                    // mostramos una notificación de eliminación
-                    if (response.cart_count === 0 && window.showCartNotification) {
-                        window.showCartNotification('Se ha vaciado el carrito');
-                    }
+                    
                 } else {
                     alert(response.message);
                 }
@@ -245,14 +241,7 @@ $(document).ready(function() {
                         $('.cart-badge').hide();
                     }
 
-                    // Notificación flotante (definida en base.html)
-                    if (window.showCartNotification) {
-                        if (response.cart_count === 0) {
-                            window.showCartNotification('Se ha vaciado el carrito');
-                        } else {
-                            window.showCartNotification('Se ha eliminado el producto del carrito');
-                        }
-                    }
+                    
                 }
             },
             error: function() {
@@ -302,10 +291,7 @@ $(document).ready(function() {
                                 // Actualizar badge del navbar
                                 $('.cart-badge').text('0').hide();
 
-                                // Notificación flotante
-                                if (window.showCartNotification) {
-                                    window.showCartNotification('Se ha vaciado el carrito');
-                                }
+                                
 
                                 // Mostrar estado vacío sin recargar (esperar un poco para que se vea la notificación)
                                 setTimeout(function() {
@@ -335,9 +321,7 @@ $(document).ready(function() {
                 success: function(response) {
                     if (response.success) {
                         $('.cart-badge').text('0').hide();
-                        if (window.showCartNotification) {
-                            window.showCartNotification('Se ha vaciado el carrito');
-                        }
+                        
                         setTimeout(function() {
                             showEmptyCartState();
                         }, 500);

@@ -326,9 +326,6 @@ $(document).ready(function() {
                     modal.hide();
                     
                     // Mostrar notificación
-                    if (window.showAdminToast) {
-                        window.showAdminToast('Stock actualizado correctamente', 'success');
-                    }
                     
                     // Recargar página
                     setTimeout(function() {
@@ -360,8 +357,7 @@ $(document).ready(function() {
                         },
                         success: function(response) {
                             if (response.success) {
-                                var msg = response.message || 'Producto eliminado correctamente';
-                                var target = '{% url "shop:admin_products" %}?toast=success&msg=' + encodeURIComponent(msg);
+                                var target = '{% url "shop:admin_products" %}';
                                 window.location.href = target;
                             } else {
                                 alert(response.message);
@@ -383,8 +379,7 @@ $(document).ready(function() {
                     },
                     success: function(response) {
                         if (response.success) {
-                            var msg = response.message || 'Producto eliminado correctamente';
-                            var target = '{% url "shop:admin_products" %}?toast=success&msg=' + encodeURIComponent(msg);
+                            var target = '{% url "shop:admin_products" %}';
                             window.location.href = target;
                         } else {
                             alert(response.message);

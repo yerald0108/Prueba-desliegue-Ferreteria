@@ -173,13 +173,7 @@
                 </div>
             </div>
             
-            {% if messages %}
-                {% for message in messages %}
-                    {% if message.tags == 'success' %}
-                        <div id="success-message" data-message="{{ message|escapejs }}" style="display: none;">{{ message }}</div>
-                    {% endif %}
-                {% endfor %}
-            {% endif %}
+            
             
             <div class="card shadow-sm mt-4">
                 <div class="card-body">
@@ -202,42 +196,6 @@
 {% block extra_js %}
 <script>
 $(document).ready(function() {
-    // Función para mostrar notificación de éxito
-    function showProfileSuccessNotification() {
-        var $successMsg = $('#success-message');
-        if ($successMsg.length > 0) {
-            // Intentar obtener el mensaje de diferentes formas
-            var message = $successMsg.attr('data-message');
-            if (!message || message.trim() === '') {
-                message = $successMsg.data('message');
-            }
-            if (!message || message.trim() === '') {
-                message = $successMsg.text().trim();
-            }
-            
-            if (message && message.trim() !== '') {
-                // Verificar que la función existe y el toast está disponible
-                if (typeof window.showSuccessNotification === 'function') {
-                    window.showSuccessNotification(message);
-                    return true;
-                } else if (typeof window.showCartNotification === 'function') {
-                    // Fallback: usar la función del carrito si existe
-                    window.showCartNotification(message);
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-    
-    // Intentar mostrar la notificación después de que todo esté cargado
-    setTimeout(function() {
-        if (!showProfileSuccessNotification()) {
-            // Si no funcionó, intentar de nuevo después de un delay
-            setTimeout(showProfileSuccessNotification, 300);
-        }
-    }, 500);
-    
     // Interceptar el envío del formulario para mostrar feedback visual
     $('#profileForm').on('submit', function(e) {
         var $form = $(this);
