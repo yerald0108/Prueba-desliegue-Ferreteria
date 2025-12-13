@@ -1,0 +1,17 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Error del Servidor - 500{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <i class="bi bi-x-circle text-danger" style="font-size: 8rem;"></i>
+    <h1 class="mt-4">500 - Error del Servidor</h1>
+    <p class="lead text-muted">Algo salió mal. Nuestro equipo ha sido notificado.</p>
+    
+    <div class="mt-5">
+        <a href="{% url 'shop:home' %}" class="btn btn-primary btn-lg">
+            <i class="bi bi-house"></i> Volver al Inicio
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -28,6 +28,13 @@ from .models import Product, Category, Cart, CartItem, Order, OrderItem, UserPro
 from .forms import UserRegistrationForm, UserProfileForm, CheckoutForm, ProductForm
 from .forms import ChangePasswordForm
 from .email_utils import send_password_change_email
+from django.db import transaction
+from django.db.models import F
+from django_ratelimit.decorators import ratelimit
+from django_ratelimit.exceptions import Ratelimited
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def home(request):
@@ -57,11 +64,27 @@ def product_detail(request, pk):
     return render(request, 'shop/product_detail.html', context)
 
 
+@ratelimit(key='ip', rate='3/h', method='POST', block=True)
 def register(request):
-    """Registro de usuario"""
+    """
+    Registro de usuario con rate limiting.
+    Límite: 3 registros por hora por IP
+    """
     if request.user.is_authenticated:
         return redirect('shop:home')
     
+    # Verificar rate limit
+    was_limited = getattr(request, 'limited', False)
+    if was_limited:
+        logger.warning(f"Registration rate limit exceeded for IP: {request.META.get('REMOTE_ADDR')}")
+        messages.error(
+            request,
+            'Demasiados intentos de registro. Por favor espera antes de intentar nuevamente.'
+        )
+        return render(request, 'shop/register.html', {
+            'user_form': UserRegistrationForm()
+        })
+
     if request.method == 'POST':
         user_form = UserRegistrationForm(request.POST)
         
@@ -162,16 +185,41 @@ def resend_verification(request):
     return render(request, 'shop/emails/resend_verification.html')
 
 
+@ratelimit(key='ip', rate='5/m', method='POST', block=True)
+@ratelimit(key='user_or_ip', rate='10/h', method='POST', block=True)
 def user_login(request):
-    """Login de usuario"""
+    """
+    Login de usuario con rate limiting.
+    
+    Límites:
+    - 5 intentos por minuto por IP
+    - 10 intentos por hora por usuario/IP
+    """
+    # Si el usuario ya está autenticado, redirigir
     if request.user.is_authenticated:
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': True, 'redirect': 'shop:home'})
         return redirect('shop:home')
     
+    # Verificar si fue bloqueado por rate limiting
+    was_limited = getattr(request, 'limited', False)
+    if was_limited:
+        logger.warning(f"Rate limit exceeded for IP: {request.META.get('REMOTE_ADDR')}")
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': False,
+                'error': 'Demasiados intentos de inicio de sesión. Por favor espera unos minutos.'
+            }, status=429)
+        
+        messages.error(
+            request,
+            'Demasiados intentos de inicio de sesión. Por favor espera unos minutos antes de intentar nuevamente.'
+        )
+        return render(request, 'shop/login.html')
+    
     if request.method == 'POST':
-        # Ahora el usuario inicia sesión principalmente con su correo electrónico.
-        # También aceptamos el username como respaldo por si el usuario lo introduce.
+        # Obtener credenciales
         raw_identifier = request.POST.get('email') or request.POST.get('username') or ''
         identifier = raw_identifier.strip()
         password = request.POST.get('password')
@@ -179,36 +227,49 @@ def user_login(request):
         user = None
         if identifier:
             try:
-                from django.contrib.auth.models import User
-
-                # 1) Intentar encontrar por email (case-insensitive)
+                # Intentar encontrar por email (case-insensitive)
                 user_obj = User.objects.filter(email__iexact=identifier).first()
 
-                # 2) Si no se encuentra por email, intentar por username
+                # Si no se encuentra por email, intentar por username
                 if not user_obj:
                     user_obj = User.objects.filter(username__iexact=identifier).first()
 
                 if user_obj:
                     user = authenticate(request, username=user_obj.username, password=password)
-            except Exception:
+                    
+                    # Log de intento fallido
+                    if user is None:
+                        logger.warning(
+                            f"Failed login attempt for identifier: {identifier} from IP: {request.META.get('REMOTE_ADDR')}"
+                        )
+            except Exception as e:
+                logger.error(f"Login error for {identifier}: {e}")
                 user = None
         
         if user is not None:
             if user.is_active:
                 login(request, user)
+                logger.info(f"Successful login for user: {user.username}")
+                
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     next_url = request.GET.get('next', 'shop:home')
                     return JsonResponse({'success': True, 'redirect': next_url})
+                
                 next_url = request.GET.get('next', 'shop:home')
                 return redirect(next_url)
             else:
+                logger.warning(f"Login attempt for inactive user: {identifier}")
+                error_msg = 'Por favor verifica tu correo electrónico primero.'
+                
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    return JsonResponse({'success': False, 'error': 'Por favor verifica tu correo electrónico primero.'}, status=400)
-                messages.error(request, 'Por favor verifica tu correo electrónico primero.')
+                    return JsonResponse({'success': False, 'error': error_msg}, status=400)
+                messages.error(request, error_msg)
         else:
+            error_msg = 'Usuario o contraseña incorrectos.'
+            
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'error': 'Usuario o contraseña incorrectos.'}, status=400)
-            messages.error(request, 'Usuario o contraseña incorrectos.')
+                return JsonResponse({'success': False, 'error': error_msg}, status=400)
+            messages.error(request, error_msg)
     
     return render(request, 'shop/login.html')
 
@@ -332,65 +393,164 @@ def clear_cart(request):
 
 @login_required
 def checkout(request):
-    """Proceso de checkout"""
-    cart = get_object_or_404(Cart, user=request.user)
+    """
+    Proceso de checkout con transacciones atómicas.
+    Si algo falla, TODO se revierte automáticamente.
+    """
+    # Obtener carrito con prefetch para evitar queries extras
+    cart = get_object_or_404(
+        Cart.objects.select_related('user').prefetch_related('items__product'),
+        user=request.user
+    )
     
+    # ==========================================
+    # VALIDACIÓN 1: Verificar que hay items
+    # ==========================================
     if not cart.items.exists():
         messages.warning(request, 'Tu carrito está vacío.')
         return redirect('shop:cart')
-    
-    # Verificar stock
-    for item in cart.items.all():
-        if item.quantity > item.product.stock:
-            messages.error(request, f'No hay suficiente stock de {item.product.name}')
-            return redirect('shop:cart')
     
     if request.method == 'POST':
         form = CheckoutForm(request.POST)
         
         if form.is_valid():
-            # Crear orden
-            order = form.save(commit=False)
-            order.user = request.user
-            order.order_number = f'ORD-{uuid.uuid4().hex[:8].upper()}'
-            order.subtotal = cart.total
-            order.delivery_fee = Decimal('5.00')  # Fee fijo, puedes hacer esto dinámico
-            order.total = order.subtotal + order.delivery_fee
-            order.save()
-            
-            # Crear items de la orden
-            for item in cart.items.all():
-                OrderItem.objects.create(
-                    order=order,
-                    product=item.product,
-                    quantity=item.quantity,
-                    price=item.product.price
-                )
+            try:
+                # ==========================================
+                # INICIO DE TRANSACCIÓN ATÓMICA
+                # Si algo dentro de este bloque falla,
+                # TODO se revierte automáticamente
+                # ==========================================
+                with transaction.atomic():
+                    # ==========================================
+                    # VALIDACIÓN 2: Verificar stock con LOCK
+                    # select_for_update() bloquea los registros
+                    # para evitar problemas de concurrencia
+                    # ==========================================
+                    cart_items = cart.items.select_for_update().select_related('product')
+                    
+                    insufficient_stock = []
+                    for item in cart_items:
+                        if item.quantity > item.product.stock:
+                            insufficient_stock.append(
+                                f"{item.product.name} (disponible: {item.product.stock})"
+                            )
+                    
+                    if insufficient_stock:
+                        raise ValueError(
+                            f"Stock insuficiente para: {', '.join(insufficient_stock)}"
+                        )
+                    
+                    # ==========================================
+                    # PASO 1: Crear la orden
+                    # ==========================================
+                    order = form.save(commit=False)
+                    order.user = request.user
+                    order.order_number = f'ORD-{uuid.uuid4().hex[:8].upper()}'
+                    order.subtotal = cart.total
+                    order.delivery_fee = Decimal('5.00')  # TODO: Hacer dinámico
+                    order.total = order.subtotal + order.delivery_fee
+                    order.save()
+                    
+                    logger.info(f"Order created: {order.order_number} for user {request.user.username}")
+                    
+                    # ==========================================
+                    # PASO 2: Crear items de la orden
+                    # ==========================================
+                    order_items_to_create = []
+                    products_to_update = []
+                    
+                    for item in cart_items:
+                        # Crear item de orden
+                        order_items_to_create.append(
+                            OrderItem(
+                                order=order,
+                                product=item.product,
+                                quantity=item.quantity,
+                                price=item.product.price
+                            )
+                        )
+                        
+                        # Preparar actualización de stock
+                        # Usar F() para actualización atómica
+                        item.product.stock = F('stock') - item.quantity
+                        products_to_update.append(item.product)
+                    
+                    # Bulk create para mejor rendimiento
+                    OrderItem.objects.bulk_create(order_items_to_create)
+                    
+                    # ==========================================
+                    # PASO 3: Actualizar stock atómicamente
+                    # ==========================================
+                    for product in products_to_update:
+                        product.save(update_fields=['stock'])
+                    
+                    # ==========================================
+                    # PASO 4: Limpiar carrito
+                    # ==========================================
+                    cart.items.all().delete()
+                    
+                    logger.info(f"Order {order.order_number} completed successfully")
+                    
+                # ==========================================
+                # FIN DE TRANSACCIÓN ATÓMICA
+                # Si llegamos aquí, TODO se guardó correctamente
+                # ==========================================
                 
-                # Reducir stock
-                item.product.stock -= item.quantity
-                item.product.save()
-            
-            # Limpiar carrito
-            cart.items.all().delete()
-            
-            # Enviar email de confirmación
-            if send_order_confirmation_email(order):
-                messages.success(
-                    request, 
-                    f'¡Orden realizada exitosamente! Número de orden: {order.order_number}. '
-                    'Te hemos enviado un email de confirmación.'
-                )
-            else:
-                messages.warning(
+                # ==========================================
+                # PASO 5: Enviar email (fuera de transacción)
+                # Si falla, la orden ya está guardada
+                # ==========================================
+                email_sent = False
+                try:
+                    email_sent = send_order_confirmation_email(order)
+                    if email_sent:
+                        logger.info(f"Confirmation email sent for order {order.order_number}")
+                    else:
+                        logger.warning(f"Failed to send confirmation email for order {order.order_number}")
+                except Exception as e:
+                    logger.error(
+                        f"Exception sending email for order {order.order_number}: {e}",
+                        exc_info=True
+                    )
+                
+                # ==========================================
+                # Mensaje de éxito
+                # ==========================================
+                if email_sent:
+                    messages.success(
+                        request,
+                        f'¡Orden {order.order_number} realizada exitosamente! '
+                        'Te hemos enviado un email de confirmación.'
+                    )
+                else:
+                    messages.success(
+                        request,
+                        f'¡Orden {order.order_number} realizada exitosamente!'
+                    )
+                    messages.warning(
+                        request,
+                        'No pudimos enviar el email de confirmación, pero tu orden fue procesada. '
+                        'Puedes ver los detalles en "Mis Órdenes".'
+                    )
+                
+                return redirect('shop:order_detail', order_id=order.id)
+                
+            except ValueError as e:
+                # Error de validación (ej: stock insuficiente)
+                logger.warning(f"Checkout validation error for user {request.user.username}: {e}")
+                messages.error(request, str(e))
+            except Exception as e:
+                # Error inesperado
+                logger.exception(f"Unexpected checkout error for user {request.user.username}: {e}")
+                messages.error(
                     request,
-                    f'¡Orden realizada exitosamente! Número de orden: {order.order_number}. '
-                    'Sin embargo, hubo un problema al enviar el email de confirmación.'
+                    'Ocurrió un error procesando tu orden. Por favor intenta nuevamente. '
+                    'Si el problema persiste, contacta con soporte.'
                 )
-            
-            return redirect('shop:order_detail', order_id=order.id)
     else:
-        # Pre-llenar con datos del perfil
+        # ==========================================
+        # GET: Pre-llenar con datos del perfil
+        # ==========================================
         initial_data = {}
         if hasattr(request.user, 'profile'):
             profile = request.user.profile

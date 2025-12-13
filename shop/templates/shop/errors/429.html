@@ -1,0 +1,29 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Demasiados Intentos - 429{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <i class="bi bi-clock-history text-warning" style="font-size: 8rem;"></i>
+    <h1 class="mt-4">Demasiados Intentos</h1>
+    <p class="lead text-muted">
+        Has excedido el límite de intentos permitidos.
+        <br>
+        Por favor espera unos minutos antes de intentar nuevamente.
+    </p>
+    
+    <div class="alert alert-info mt-4 d-inline-block">
+        <i class="bi bi-shield-check"></i>
+        <strong>Medida de Seguridad</strong>
+        <p class="mb-0 small">
+            Esto protege tu cuenta de accesos no autorizados.
+        </p>
+    </div>
+    
+    <div class="mt-5">
+        <a href="{% url 'shop:home' %}" class="btn btn-primary btn-lg">
+            <i class="bi bi-house"></i> Volver al Inicio
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -27,3 +27,10 @@ urlpatterns = [
 # Servir archivos de media en desarrollo
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# ==========================================
+# HANDLERS DE ERROR PERSONALIZADOS
+# ==========================================
+handler404 = 'shop.views_errors.handler404'
+handler500 = 'shop.views_errors.handler500'
+handler429 = 'shop.views_errors.handler429'
