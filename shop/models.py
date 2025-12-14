@@ -111,7 +111,7 @@ class UserProfile(models.Model):
         super().save(*args, **kwargs)
         
     address = models.TextField(blank=True, verbose_name="Dirección")
-    city = models.CharField(max_length=100, blank=True, verbose_name="Ciudad")
+    city = models.CharField(max_length=100, blank=True, verbose_name="Municipio")
     province = models.CharField(max_length=100, blank=True, verbose_name="Provincia")
     email_verified = models.BooleanField(
         default=False, 
@@ -186,7 +186,7 @@ class Order(models.Model):
     
     # Información de contacto y entrega
     delivery_address = models.TextField(verbose_name="Dirección de entrega")
-    delivery_city = models.CharField(max_length=100, verbose_name="Ciudad")
+    delivery_city = models.CharField(max_length=100, verbose_name="Municipio")
     delivery_province = models.CharField(max_length=100, verbose_name="Provincia")
     contact_phone = models.CharField(max_length=17, verbose_name="Teléfono de contacto")
     delivery_date = models.DateField(verbose_name="Fecha de entrega", db_index=True)  # ✅ ÍNDICE: Para reportes por fecha

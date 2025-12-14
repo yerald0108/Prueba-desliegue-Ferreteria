@@ -86,7 +86,7 @@ class UserProfileForm(forms.ModelForm):
             }),
             'city': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Ciudad',
+                'placeholder': 'Municipio',
                 'required': True
             }),
             'province': forms.TextInput(attrs={
@@ -146,7 +146,7 @@ class CheckoutForm(forms.ModelForm):
             }),
             'delivery_city': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Ciudad',
+                'placeholder': 'Municipio',
                 'required': True
             }),
             'delivery_province': forms.TextInput(attrs={
