@@ -1,12 +1,7 @@
 """
 Vistas de gestión del carrito de compras.
 
-Maneja:
-- Visualización del carrito
-- Agregar productos
-- Actualizar cantidades
-- Eliminar productos
-- Vaciar carrito
+CORRECCIÓN: Race condition en add_to_cart usando select_for_update()
 """
 
 from django.shortcuts import render, get_object_or_404
@@ -33,47 +28,86 @@ def cart_view(request):
 @require_POST
 def add_to_cart(request, product_id):
     """
-    Agregar producto al carrito con validación de stock.
+    Agregar producto al carrito con validación de stock THREAD-SAFE.
     
-    TODO: Implementar select_for_update() para prevenir race conditions
-    en ambientes de alta concurrencia.
+    CORRECCIÓN: Usa select_for_update() para prevenir race conditions.
+    
+    Flujo:
+    1. Bloquea el producto con select_for_update()
+    2. Verifica stock disponible
+    3. Crea/actualiza item del carrito
+    4. Todo dentro de una transacción atómica
+    
+    Si dos usuarios compran simultáneamente, el segundo esperará
+    hasta que el primero termine, garantizando datos consistentes.
     """
-    product = get_object_or_404(Product, pk=product_id, is_active=True)
-    quantity = int(request.POST.get('quantity', 1))
-    
-    # Validación básica de cantidad
-    if quantity <= 0:
+    try:
+        quantity = int(request.POST.get('quantity', 1))
+    except (ValueError, TypeError):
         return JsonResponse({
             'success': False,
             'message': 'Cantidad inválida'
         })
     
-    # Validar stock disponible
-    if quantity > product.stock:
+    # Validación básica
+    if quantity <= 0:
         return JsonResponse({
             'success': False,
-            'message': f'Solo hay {product.stock} unidades disponibles'
+            'message': 'Cantidad debe ser mayor a 0'
         })
     
-    # Usar transacción para operaciones atómicas
+    # ==========================================
+    # TRANSACCIÓN ATÓMICA CON LOCK PESIMISTA
+    # ==========================================
     with transaction.atomic():
+        # PASO 1: Bloquear el producto para esta transacción
+        # select_for_update() evita que otros procesos lean/modifiquen
+        # este producto hasta que terminemos
+        try:
+            product = Product.objects.select_for_update().get(
+                pk=product_id,
+                is_active=True
+            )
+        except Product.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': 'Producto no disponible'
+            })
+        
+        # PASO 2: Verificar stock (ahora es thread-safe)
+        if quantity > product.stock:
+            return JsonResponse({
+                'success': False,
+                'message': f'Solo hay {product.stock} unidades disponibles'
+            })
+        
+        # PASO 3: Obtener o crear carrito
         cart, created = Cart.objects.get_or_create(user=request.user)
-        cart_item, created = CartItem.objects.get_or_create(
+        
+        # PASO 4: Obtener o crear item del carrito
+        cart_item, item_created = CartItem.objects.get_or_create(
             cart=cart,
             product=product,
             defaults={'quantity': quantity}
         )
         
-        if not created:
-            # Item ya existe, incrementar cantidad
+        if not item_created:
+            # Item ya existe, verificar que podemos agregar más
             new_quantity = cart_item.quantity + quantity
+            
             if new_quantity > product.stock:
                 return JsonResponse({
                     'success': False,
-                    'message': f'Solo hay {product.stock} unidades disponibles'
+                    'message': f'Solo hay {product.stock} unidades disponibles. '
+                            f'Ya tienes {cart_item.quantity} en tu carrito.'
                 })
+            
             cart_item.quantity = new_quantity
             cart_item.save()
+    
+    # ==========================================
+    # FIN DE TRANSACCIÓN ATÓMICA
+    # ==========================================
     
     return JsonResponse({
         'success': True,
@@ -85,9 +119,12 @@ def add_to_cart(request, product_id):
 @login_required
 @require_POST
 def update_cart_item(request, item_id):
-    """Actualizar cantidad de un item en el carrito"""
-    cart_item = get_object_or_404(CartItem, pk=item_id, cart__user=request.user)
+    """
+    Actualizar cantidad de un item en el carrito.
     
+    CORRECCIÓN: También usa select_for_update() para prevenir
+    problemas de concurrencia al actualizar cantidades.
+    """
     try:
         quantity = int(request.POST.get('quantity', 1))
     except (ValueError, TypeError):
@@ -96,9 +133,9 @@ def update_cart_item(request, item_id):
             'message': 'Cantidad inválida'
         })
     
-    # Validar cantidad positiva
+    # Si la cantidad es 0 o negativa, eliminar el item
     if quantity <= 0:
-        # Si es 0 o negativo, eliminar el item
+        cart_item = get_object_or_404(CartItem, pk=item_id, cart__user=request.user)
         cart_item.delete()
         cart = Cart.objects.get(user=request.user)
         return JsonResponse({
@@ -108,17 +145,28 @@ def update_cart_item(request, item_id):
             'cart_count': cart.items_count
         })
     
-    # Validar stock disponible
-    if quantity > cart_item.product.stock:
-        return JsonResponse({
-            'success': False,
-            'message': f'Solo hay {cart_item.product.stock} unidades disponibles'
-        })
+    # ==========================================
+    # TRANSACCIÓN ATÓMICA CON LOCK
+    # ==========================================
+    with transaction.atomic():
+        # Bloquear el cart_item y su producto relacionado
+        cart_item = CartItem.objects.select_related('product').select_for_update().get(
+            pk=item_id,
+            cart__user=request.user
+        )
+        
+        # Verificar stock disponible
+        if quantity > cart_item.product.stock:
+            return JsonResponse({
+                'success': False,
+                'message': f'Solo hay {cart_item.product.stock} unidades disponibles'
+            })
+        
+        # Actualizar cantidad
+        cart_item.quantity = quantity
+        cart_item.save()
     
-    # Actualizar cantidad
-    cart_item.quantity = quantity
-    cart_item.save()
-    
+    # Calcular nuevos totales
     cart = cart_item.cart
     return JsonResponse({
         'success': True,
