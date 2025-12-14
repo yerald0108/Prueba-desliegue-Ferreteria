@@ -66,7 +66,8 @@ def checkout(request):
                     # VALIDACIÓN 2: Verificar stock con LOCK
                     # select_for_update() bloquea los registros
                     # ==========================================
-                    cart_items = cart.items.select_for_update().select_related('product')
+                    # Agregar nowait=True para fallar rápido si hay contención
+                    cart_items = cart.items.select_for_update(nowait=True).select_related('product')
                     
                     insufficient_stock = []
                     for item in cart_items:
