@@ -196,7 +196,7 @@
 {% block extra_js %}
 <script>
 $(document).ready(function() {
-    // Interceptar el envío del formulario para mostrar feedback visual
+    // Interceptar el envío del formulario
     $('#profileForm').on('submit', function(e) {
         var $form = $(this);
         var $submitBtn = $form.find('button[type="submit"]');
@@ -205,8 +205,15 @@ $(document).ready(function() {
         // Deshabilitar botón y mostrar loading
         $submitBtn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Guardando...');
         
-        // El formulario se enviará normalmente, pero el mensaje de éxito se mostrará después de la recarga
-        // No prevenimos el submit para que Django procese el formulario normalmente
+        // ⭐ TOAST DE LOADING ⭐
+        Toast.info('Guardando cambios', 'Por favor espera...', {
+            duration: 2000,
+            closeButton: false
+        });
+        
+        // Permitir que el formulario se envíe normalmente
+        // Guardar mensaje en sessionStorage para después de la recarga
+        sessionStorage.setItem('successNotification', 'Perfil actualizado exitosamente');
     });
 });
 </script>

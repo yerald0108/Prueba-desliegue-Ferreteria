@@ -22,12 +22,12 @@
                                 <i class="bi bi-envelope"></i> Correo electrónico
                             </label>
                             <input type="email" 
-                                   class="form-control form-control-lg" 
-                                   id="email" 
-                                   name="email" 
-                                   placeholder="tu-correo@gmail.com"
-                                   required
-                                   autofocus>
+                                class="form-control form-control-lg" 
+                                id="email" 
+                                name="email" 
+                                placeholder="tu-correo@gmail.com"
+                                required
+                                autofocus>
                         </div>
                         
                         <div class="mb-4">
@@ -80,6 +80,7 @@
 {% block extra_js %}
 <script>
 $(document).ready(function() {
+    // Toggle password visibility
     $('#toggleLoginPassword').on('click', function() {
         var targetId = $(this).data('target');
         var $input = $('#' + targetId);
@@ -91,6 +92,8 @@ $(document).ready(function() {
         }
         $icon.toggleClass('bi-eye bi-eye-slash');
     });
+    
+    // Login con AJAX y Toast
     $('#loginForm').on('submit', function(e) {
         e.preventDefault();
         
@@ -114,10 +117,7 @@ $(document).ready(function() {
             data: $form.serialize(),
             success: function(response) {
                 if (response && response.success) {
-                    // Guardar mensaje en sessionStorage para mostrar después de la redirección
-                    sessionStorage.setItem('successNotification', 'Sesión iniciada exitosamente');
-                    
-                    // Redirigir inmediatamente
+                    sessionStorage.setItem('successNotification', 'Sesión iniciada correctamente');
                     var nextUrl = new URLSearchParams(window.location.search).get('next');
                     if (nextUrl) {
                         window.location.href = nextUrl;
@@ -130,15 +130,24 @@ $(document).ready(function() {
                 // Restaurar botón
                 $btn.prop('disabled', false).html(originalText);
                 
-                // Mostrar error
-                if (xhr.responseJSON && xhr.responseJSON.error) {
-                    $error.text(xhr.responseJSON.error).show();
-                } else {
-                    // Si la respuesta es HTML (redirección de Django), extraer el mensaje de error
+                // ⭐ TOAST DE ERROR ⭐
+                var errorMsg = 'Usuario o contraseña incorrectos';
+                
+                if (xhr.status === 429) {
+                    errorMsg = 'Demasiados intentos. Espera unos minutos.';
+                } else if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMsg = xhr.responseJSON.error;
+                } else if (xhr.responseText) {
                     var $response = $(xhr.responseText);
-                    var errorMsg = $response.find('.alert-danger').text() || 'Usuario o contraseña incorrectos';
-                    $error.text(errorMsg.trim()).show();
+                    var extractedError = $response.find('.alert-danger').text();
+                    if (extractedError) {
+                        errorMsg = extractedError.trim();
+                    }
                 }
+                
+                Toast.error('Error de inicio de sesión', errorMsg, {
+                    duration: 5000
+                });
             }
         });
     });

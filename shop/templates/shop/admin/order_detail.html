@@ -287,7 +287,7 @@ $(document).ready(function() {
             if (cancellationModal) {
                 cancellationModal.show();
             }
-            return; // No continuar con el submit
+            return;
         }
         
         // Para otros estados, procesar normalmente
@@ -301,6 +301,10 @@ $(document).ready(function() {
         // Validar que haya un motivo
         if (!reason) {
             $('#cancellationReason').addClass('is-invalid');
+            // ⭐ TOAST DE ERROR ⭐
+            Toast.error('Campo requerido', 'Debes proporcionar un motivo de cancelación', {
+                duration: 4000
+            });
             return;
         }
         
@@ -333,6 +337,12 @@ $(document).ready(function() {
         // Deshabilitar botón y mostrar loading
         $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Actualizando...');
         
+        // ⭐ TOAST DE LOADING ⭐
+        Toast.info('Actualizando estado', 'Por favor espera...', {
+            duration: 2000,
+            closeButton: false
+        });
+        
         // Preparar datos
         const formData = $form.serialize() + '&status=' + status;
         const postData = cancellationReason 
@@ -356,17 +366,25 @@ $(document).ready(function() {
                         response = JSON.parse(response);
                     } catch (e) {
                         console.error('Error al parsear respuesta como JSON:', e);
-                        window.location.reload();
+                        // ⭐ TOAST DE ÉXITO (fallback) ⭐
+                        Toast.success('Estado actualizado', `Orden cambiada a: ${selectedStatusText}`, {
+                            duration: 4000
+                        });
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 1500);
                         return;
                     }
                 }
                 
                 // Manejar respuesta JSON
                 let message = 'Estado actualizado exitosamente';
+                let emailNotification = '';
+                
                 if (response && response.message) {
                     message = response.message;
                     if (response.email_sent) {
-                        message += ' (Email enviado al cliente)';
+                        emailNotification = ' (Email enviado al cliente)';
                     }
                 } else {
                     message += ' a: ' + selectedStatusText;
@@ -397,19 +415,20 @@ $(document).ready(function() {
                                'bg-danger'
                            );
                 
-                // Si hay motivo de cancelación, mostrar alert o recargar
-                if (statusValue === 'cancelled' && cancellationReason) {
-                    // Recargar la página para mostrar el motivo de cancelación
-                    setTimeout(function() {
-                        window.location.reload();
-                    }, 1500);
-                }
-                
-                // Restaurar botón inmediatamente
+                // Restaurar botón
                 $btn.prop('disabled', false).html(originalText);
                 
-                // Mostrar mensaje de éxito
-                alert(message);
+                // ⭐ TOAST DE ÉXITO ⭐
+                Toast.success('¡Estado actualizado!', message + emailNotification, {
+                    duration: 5000
+                });
+                
+                // Si hay motivo de cancelación, recargar para mostrarlo
+                if (statusValue === 'cancelled' && cancellationReason) {
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 2000);
+                }
             },
             error: function(xhr, status, error) {
                 console.error('Error en AJAX:', status, error, xhr);
@@ -425,7 +444,13 @@ $(document).ready(function() {
                         }
                     } else if (xhr.responseText) {
                         console.warn('Respuesta HTML recibida en lugar de JSON');
-                        window.location.reload();
+                        // ⭐ TOAST DE ERROR ⭐
+                        Toast.error('Error inesperado', 'Se produjo un error al procesar la solicitud', {
+                            duration: 5000
+                        });
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 2000);
                         return;
                     }
                 } catch (e) {
@@ -435,7 +460,10 @@ $(document).ready(function() {
                 // Restaurar botón
                 $btn.prop('disabled', false).html(originalText);
                 
-                alert(errorMessage);
+                // ⭐ TOAST DE ERROR ⭐
+                Toast.error('Error', errorMessage, {
+                    duration: 5000
+                });
             }
         });
     }

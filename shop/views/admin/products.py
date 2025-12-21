@@ -126,21 +126,24 @@ def admin_product_create(request):
             
             product.save()
             
-            # Mensaje según el estado del producto
+            # ✅ Mensaje según el estado del producto
             if product.is_active:
                 messages.success(
                     request, 
-                    f'✅ ¡Producto "{product.name}" publicado exitosamente! '
-                    f'Ya está visible para los clientes.'
+                    f'Producto "{product.name}" publicado exitosamente'
                 )
             else:
                 messages.success(
                     request,
-                    f'✅ Producto "{product.name}" guardado como borrador. '
-                    f'Actívalo cuando quieras publicarlo.'
+                    f'Producto "{product.name}" guardado como borrador'
                 )
             
             return redirect('shop:admin_product_detail', product_id=product.id)
+        else:
+            # ✅ Mostrar errores del formulario
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
     else:
         form = ProductForm()
     

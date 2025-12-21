@@ -1,0 +1,224 @@
+/* ================================================================
+   SISTEMA DE NOTIFICACIONES TOAST PROFESIONAL
+   ================================================================ */
+
+/* Contenedor principal de toasts */
+.toast-container {
+    position: fixed;
+    top: 80px; /* Debajo del navbar */
+    right: 20px;
+    z-index: 9999;
+    pointer-events: none;
+    max-width: 400px;
+}
+
+/* Toast individual */
+.toast-notification {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 15px;
+    padding: 16px 20px;
+    pointer-events: auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 320px;
+    max-width: 400px;
+    position: relative;
+    overflow: hidden;
+    transform: translateX(500px);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Animación de entrada */
+.toast-notification.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+/* Animación de salida */
+.toast-notification.hide {
+    transform: translateX(500px);
+    opacity: 0;
+    transition: all 0.3s ease-in;
+}
+
+/* Barra de progreso */
+.toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 4px;
+    background: currentColor;
+    opacity: 0.3;
+    transition: width linear;
+}
+
+/* Icono del toast */
+.toast-icon {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+/* Contenido del toast */
+.toast-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.toast-title {
+    font-weight: 600;
+    font-size: 14px;
+    margin: 0 0 4px 0;
+    color: #1a1a2e;
+    line-height: 1.4;
+}
+
+.toast-message {
+    font-size: 13px;
+    margin: 0;
+    color: #666;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+/* Botón de cerrar */
+.toast-close {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+    font-size: 18px;
+    line-height: 1;
+    margin-top: -2px;
+}
+
+.toast-close:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #666;
+}
+
+/* ================================================================
+   TIPOS DE TOAST
+   ================================================================ */
+
+/* Success */
+.toast-success {
+    border-left: 4px solid #10b981;
+}
+
+.toast-success .toast-icon {
+    color: #10b981;
+}
+
+.toast-success .toast-progress {
+    background: #10b981;
+}
+
+/* Error */
+.toast-error {
+    border-left: 4px solid #ef4444;
+}
+
+.toast-error .toast-icon {
+    color: #ef4444;
+}
+
+.toast-error .toast-progress {
+    background: #ef4444;
+}
+
+/* Warning */
+.toast-warning {
+    border-left: 4px solid #f59e0b;
+}
+
+.toast-warning .toast-icon {
+    color: #f59e0b;
+}
+
+.toast-warning .toast-progress {
+    background: #f59e0b;
+}
+
+/* Info */
+.toast-info {
+    border-left: 4px solid #3b82f6;
+}
+
+.toast-info .toast-icon {
+    color: #3b82f6;
+}
+
+.toast-info .toast-progress {
+    background: #3b82f6;
+}
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+
+@media (max-width: 768px) {
+    .toast-container {
+        right: 10px;
+        left: 10px;
+        top: 70px;
+        max-width: none;
+    }
+    
+    .toast-notification {
+        min-width: auto;
+        max-width: none;
+    }
+}
+
+/* ================================================================
+   ANIMACIONES ADICIONALES
+   ================================================================ */
+
+/* Efecto de hover */
+.toast-notification:hover {
+    transform: translateX(0) scale(1.02);
+    box-shadow: 0 12px 45px rgba(0, 0, 0, 0.18), 0 6px 15px rgba(0, 0, 0, 0.12);
+}
+
+.toast-notification:hover .toast-progress {
+    animation-play-state: paused !important;
+}
+
+/* Shake para errores */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.toast-error.show {
+    animation: shake 0.5s ease-in-out;
+}
+
+/* Bounce para success */
+@keyframes bounce {
+    0%, 100% { transform: translateX(0) scale(1); }
+    50% { transform: translateX(0) scale(1.05); }
+}
+
+.toast-success.show {
+    animation: bounce 0.6s ease-in-out;
+}

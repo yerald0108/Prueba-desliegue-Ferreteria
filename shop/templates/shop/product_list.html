@@ -580,7 +580,8 @@ $(document).ready(function() {
         $('.quick-add-btn').off('click').on('click', function() {
             const productId = $(this).data('product-id');
             const button = $(this);
-            
+            const productName = button.closest('.card').find('.card-title').text().trim();
+        
             $.ajax({
                 url: "{% url 'shop:add_to_cart' 0 %}".replace('0', productId),
                 method: 'POST',
@@ -590,27 +591,35 @@ $(document).ready(function() {
                 },
                 success: function(response) {
                     if (response.success) {
+                        // Actualizar badge
                         $('.cart-badge').text(response.cart_count).show();
-                        
+                    
+                        // Animación
                         if (window.animateAddToCart) {
                             window.animateAddToCart(button);
                         }
-                        
-                        
-                        
+                    
+                        // ⭐ TOAST DE ÉXITO ⭐
+                        Toast.success('¡Agregado!', `${productName} agregado al carrito`, {
+                            duration: 3000
+                        });
+                    
+                        // Cambiar botón temporalmente
                         button.html('<i class="bi bi-check-circle"></i>');
                         button.removeClass('btn-primary').addClass('btn-success');
-                        
+                    
                         setTimeout(function() {
                             button.html('<i class="bi bi-cart-plus"></i>');
                             button.removeClass('btn-success').addClass('btn-primary');
                         }, 1500);
                     } else {
-                        alert(response.message);
+                        // ⭐ TOAST DE ERROR ⭐
+                        Toast.error('Error', response.message || 'No se pudo agregar el producto');
                     }
                 },
                 error: function() {
-                    alert('Error al agregar el producto al carrito');
+                    // ⭐ TOAST DE ERROR ⭐
+                    Toast.error('Error de conexión', 'No se pudo agregar el producto al carrito');
                 }
             });
         });

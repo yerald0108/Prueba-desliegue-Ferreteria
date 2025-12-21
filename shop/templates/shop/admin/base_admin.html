@@ -11,6 +11,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!--  SISTEMA DE TOAST  -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/toast.css' %}">
     
     <style>
         :root {
@@ -285,6 +289,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!--  SISTEMA DE TOAST  -->
+    <script src="{% static 'js/toast.js' %}"></script>
     
     
     
@@ -346,6 +353,56 @@
             };
             modal.show();
         };
+
+        $(document).ready(function() {
+            // Convertir mensajes de Django en Toasts
+            {% if messages %}
+                {% for message in messages %}
+                    {% if message.tags == 'success' %}
+                        Toast.success('¡Éxito!', '{{ message|escapejs }}', {
+                            duration: 4000
+                        });
+                    {% elif message.tags == 'error' or message.tags == 'danger' %}
+                        Toast.error('Error', '{{ message|escapejs }}', {
+                            duration: 5000
+                        });
+                    {% elif message.tags == 'warning' %}
+                        Toast.warning('Atención', '{{ message|escapejs }}', {
+                            duration: 4000
+                        });
+                    {% elif message.tags == 'info' %}
+                        Toast.info('Información', '{{ message|escapejs }}', {
+                            duration: 4000
+                        });
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            
+            // Mostrar notificación si hay mensaje en sessionStorage
+            const successMsg = sessionStorage.getItem('successNotification');
+            if (successMsg) {
+                Toast.success('¡Éxito!', successMsg);
+                sessionStorage.removeItem('successNotification');
+            }
+            
+            const errorMsg = sessionStorage.getItem('errorNotification');
+            if (errorMsg) {
+                Toast.error('Error', errorMsg);
+                sessionStorage.removeItem('errorNotification');
+            }
+            
+            const warningMsg = sessionStorage.getItem('warningNotification');
+            if (warningMsg) {
+                Toast.warning('Atención', warningMsg);
+                sessionStorage.removeItem('warningNotification');
+            }
+            
+            const infoMsg = sessionStorage.getItem('infoNotification');
+            if (infoMsg) {
+                Toast.info('Información', infoMsg);
+                    sessionStorage.removeItem('infoNotification');
+                }
+        });
     </script>
     
     {% block extra_js %}{% endblock %}

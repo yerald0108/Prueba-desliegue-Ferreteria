@@ -193,21 +193,26 @@ $(document).ready(function() {
                 if (response.success) {
                     // Actualizar subtotal del item
                     $(`.cart-item[data-item-id="${itemId}"] .item-subtotal`).text('$' + response.subtotal.toFixed(2));
-                    
+                
                     // Actualizar totales
                     $('#cart-subtotal').text('$' + response.cart_total.toFixed(2));
                     $('#cart-total').text('$' + (response.cart_total + 5).toFixed(2));
-                    
+                
                     // Actualizar badge del navbar
                     $('.cart-badge').text(response.cart_count);
 
-                    
+                    // ⭐ TOAST DE ÉXITO ⭐
+                    Toast.success('Cantidad actualizada', 'Carrito actualizado correctamente', {
+                        duration: 2000
+                    });
                 } else {
-                    alert(response.message);
+                    // ⭐ TOAST DE ERROR ⭐
+                    Toast.error('Error', response.message);
                 }
             },
             error: function() {
-                alert('Error al actualizar el carrito');
+                // ⭐ TOAST DE ERROR ⭐
+                Toast.error('Error', 'No se pudo actualizar el carrito');
             }
         });
     }
@@ -224,28 +229,32 @@ $(document).ready(function() {
                     // Eliminar item del DOM
                     $(`.cart-item[data-item-id="${itemId}"]`).fadeOut(300, function() {
                         $(this).remove();
-                        
+                    
                         // Si no quedan items, mostrar estado vacío sin recargar
                         if ($('.cart-item').length === 0) {
                             showEmptyCartState();
                         }
                     });
-                    
+                
                     // Actualizar totales
                     $('#cart-subtotal').text('$' + response.cart_total.toFixed(2));
                     $('#cart-total').text('$' + (response.cart_total + 5).toFixed(2));
-                    
+                
                     // Actualizar badge del navbar
                     $('.cart-badge').text(response.cart_count);
                     if (response.cart_count === 0) {
                         $('.cart-badge').hide();
                     }
 
-                    
+                    // ⭐ TOAST DE ÉXITO ⭐
+                    Toast.success('Producto eliminado', 'El producto fue eliminado del carrito', {
+                        duration: 3000
+                    });
                 }
             },
             error: function() {
-                alert('Error al eliminar el producto');
+                // ⭐ TOAST DE ERROR ⭐
+                Toast.error('Error', 'No se pudo eliminar el producto');
             }
         });
     }
@@ -272,46 +281,10 @@ $(document).ready(function() {
         `);
     }
 
-    // Vaciar carrito (usando modal de confirmación)
+    // Vaciar carrito con Toast (versión corregida)
     $('.clear-cart').on('click', function() {
-        if (window.showConfirmModal) {
-            window.showConfirmModal({
-                message: '¿Deseas vaciar todo el carrito? Esta acción no se puede deshacer.',
-                confirmText: 'Vaciar carrito',
-                confirmClass: 'btn-danger',
-                onConfirm: function() {
-                    $.ajax({
-                        url: '{% url "shop:clear_cart" %}',
-                        method: 'POST',
-                        data: {
-                            'csrfmiddlewaretoken': '{{ csrf_token }}'
-                        },
-                        success: function(response) {
-                            if (response.success) {
-                                // Actualizar badge del navbar
-                                $('.cart-badge').text('0').hide();
-
-                                
-
-                                // Mostrar estado vacío sin recargar (esperar un poco para que se vea la notificación)
-                                setTimeout(function() {
-                                    showEmptyCartState();
-                                }, 500);
-                            } else {
-                                alert(response.message || 'No se pudo vaciar el carrito');
-                            }
-                        },
-                        error: function() {
-                            alert('Error al vaciar el carrito');
-                        }
-                    });
-                }
-            });
-        } else {
-            // Fallback por si falla el modal
-            if (!confirm('¿Deseas vaciar todo el carrito?')) {
-                return;
-            }
+        // Función para manejar el vaciado del carrito con toasts
+        function clearCartWithToast() {
             $.ajax({
                 url: '{% url "shop:clear_cart" %}',
                 method: 'POST',
@@ -320,19 +293,61 @@ $(document).ready(function() {
                 },
                 success: function(response) {
                     if (response.success) {
+                        // Actualizar badge del navbar
                         $('.cart-badge').text('0').hide();
-                        
+
+                        // ⭐ TOAST DE ÉXITO ⭐
+                        if (typeof Toast !== 'undefined' && Toast.success) {
+                            Toast.success('Carrito vaciado', 'Todos los productos fueron eliminados', {
+                                duration: 3000
+                            });
+                        } else {
+                            // Fallback si Toast no está disponible
+                            alert('Carrito vaciado exitosamente');
+                        }
+
+                        // Mostrar estado vacío
                         setTimeout(function() {
                             showEmptyCartState();
                         }, 500);
                     } else {
-                        alert(response.message || 'No se pudo vaciar el carrito');
+                        // ⭐ TOAST DE ERROR ⭐
+                        if (typeof Toast !== 'undefined' && Toast.error) {
+                            Toast.error('Error', response.message || 'No se pudo vaciar el carrito');
+                        } else {
+                            alert(response.message || 'No se pudo vaciar el carrito');
+                        }
                     }
                 },
-                error: function() {
-                    alert('Error al vaciar el carrito');
+                error: function(xhr, status, error) {
+                    // ⭐ TOAST DE ERROR ⭐
+                    if (typeof Toast !== 'undefined' && Toast.error) {
+                        Toast.error('Error de conexión', 'No se pudo vaciar el carrito');
+                    } else {
+                        alert('Error al vaciar el carrito');
+                    }
+                    console.error('Error AJAX:', error);
                 }
             });
+        }
+
+        // Verificar si showConfirmModal existe como función
+        if (typeof window.showConfirmModal === 'function') {
+            // Usar el modal personalizado
+            window.showConfirmModal({
+                message: '¿Deseas vaciar todo el carrito? Esta acción no se puede deshacer.',
+                confirmText: 'Vaciar carrito',
+                confirmClass: 'btn-danger',
+                onConfirm: function() {
+                    clearCartWithToast();
+                }
+            });
+        } else {
+            // Fallback con confirm nativo
+            if (!confirm('¿Deseas vaciar todo el carrito?')) {
+                return;
+            }
+            clearCartWithToast();
         }
     });
 });

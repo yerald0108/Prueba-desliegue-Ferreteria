@@ -260,10 +260,37 @@ $(document).ready(function() {
     $('#{{ form.image.id_for_label }}').on('change', function(e) {
         const file = e.target.files[0];
         if (file) {
+            // Validar tamaño (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                // ⭐ TOAST DE ERROR ⭐
+                Toast.error('Archivo muy grande', 'La imagen no puede ser mayor a 5MB', {
+                    duration: 4000
+                });
+                $(this).val('');
+                return;
+            }
+            
+            // Validar tipo
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+            if (!validTypes.includes(file.type)) {
+                // ⭐ TOAST DE ERROR ⭐
+                Toast.error('Formato inválido', 'Solo se permiten imágenes JPG, PNG, WEBP o GIF', {
+                    duration: 4000
+                });
+                $(this).val('');
+                return;
+            }
+            
+            // Mostrar preview
             const reader = new FileReader();
             reader.onload = function(e) {
                 $('#imagePreview').attr('src', e.target.result);
                 $('#imagePreviewContainer').show();
+                
+                // ⭐ TOAST DE INFO ⭐
+                Toast.info('Imagen cargada', 'Vista previa generada correctamente', {
+                    duration: 2000
+                });
             };
             reader.readAsDataURL(file);
         } else {
@@ -276,11 +303,69 @@ $(document).ready(function() {
         const $btn = $('#submitBtn');
         const originalText = $btn.html();
         
+        // Validaciones adicionales
+        const name = $('#{{ form.name.id_for_label }}').val().trim();
+        const sku = $('#{{ form.sku.id_for_label }}').val().trim();
+        const price = $('#{{ form.price.id_for_label }}').val();
+        const stock = $('#{{ form.stock.id_for_label }}').val();
+        
+        if (!name) {
+            e.preventDefault();
+            // ⭐ TOAST DE ERROR ⭐
+            Toast.error('Campo requerido', 'El nombre del producto es obligatorio', {
+                duration: 3000
+            });
+            $('#{{ form.name.id_for_label }}').focus();
+            return false;
+        }
+        
+        if (!sku) {
+            e.preventDefault();
+            // ⭐ TOAST DE ERROR ⭐
+            Toast.error('Campo requerido', 'El SKU es obligatorio', {
+                duration: 3000
+            });
+            $('#{{ form.sku.id_for_label }}').focus();
+            return false;
+        }
+        
+        if (!price || price <= 0) {
+            e.preventDefault();
+            // ⭐ TOAST DE ERROR ⭐
+            Toast.error('Precio inválido', 'El precio debe ser mayor a 0', {
+                duration: 3000
+            });
+            $('#{{ form.price.id_for_label }}').focus();
+            return false;
+        }
+        
+        if (stock < 0) {
+            e.preventDefault();
+            // ⭐ TOAST DE ERROR ⭐
+            Toast.error('Stock inválido', 'El stock no puede ser negativo', {
+                duration: 3000
+            });
+            $('#{{ form.stock.id_for_label }}').focus();
+            return false;
+        }
+        
         // Deshabilitar botón y mostrar loading
         $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Guardando...');
         
-        // Permitir que el formulario se envíe normalmente
-        // Si hay errores, Django los manejará
+        // ⭐ TOAST DE LOADING ⭐
+        Toast.info(
+            '{% if is_new %}Creando producto{% else %}Guardando cambios{% endif %}',
+            'Por favor espera...',
+            {
+                duration: 3000,
+                closeButton: false
+            }
+        );
+        
+        // Permitir que el formulario se envíe
+        // Los mensajes de éxito/error los maneja Django con messages
+        sessionStorage.setItem('successNotification', 
+            '{% if is_new %}Producto creado exitosamente{% else %}Producto actualizado exitosamente{% endif %}');
     });
     
     // Generar SKU automático basado en el nombre (opcional)
@@ -296,6 +381,11 @@ $(document).ready(function() {
                 let sku = words.map(w => w.substring(0, 3).toUpperCase()).join('-');
                 sku += '-' + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
                 $sku.val(sku);
+                
+                // ⭐ TOAST DE INFO ⭐
+                Toast.info('SKU generado', `SKU sugerido: ${sku}`, {
+                    duration: 3000
+                });
             }
         }
     });
