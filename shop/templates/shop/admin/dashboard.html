@@ -4,10 +4,87 @@
 
 {% block page_title %}Dashboard General{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Animación de entrada */
+    .fade-in {
+        animation: fadeIn 0.5s ease-in;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Tarjetas de estadísticas mejoradas */
+    .stats-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(58, 59, 69, 0.25) !important;
+    }
+    
+    .stats-card .icon {
+        transition: all 0.3s ease;
+    }
+    
+    .stats-card:hover .icon {
+        transform: scale(1.1);
+    }
+    
+    /* Contenedores de gráficos */
+    .chart-container {
+        position: relative;
+        height: 350px;
+        padding: 1rem;
+    }
+    
+    .chart-container-small {
+        position: relative;
+        height: 300px;
+        padding: 1rem;
+    }
+    
+    /* Tarjetas de gráficos */
+    .chart-card {
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .chart-card:hover {
+        box-shadow: 0 0.5rem 2rem 0 rgba(58, 59, 69, 0.25);
+    }
+    
+    /* Badges personalizados */
+    .metric-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-weight: 600;
+    }
+    
+    /* Grid responsive */
+    @media (max-width: 768px) {
+        .chart-container {
+            height: 250px;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="fade-in">
-    <!-- Stats Cards -->
+    <!-- ============================================ -->
+    <!-- TARJETAS DE ESTADÍSTICAS PRINCIPALES -->
+    <!-- ============================================ -->
     <div class="row mb-4">
+        <!-- Ingresos Totales -->
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="card stats-card primary">
                 <div class="card-body">
@@ -15,6 +92,9 @@
                         <div class="col">
                             <div class="text-xs">Ingresos Totales</div>
                             <div class="h5 text-primary">${{ total_revenue|floatformat:2 }}</div>
+                            <div class="metric-badge bg-success-subtle text-success">
+                                <i class="bi bi-arrow-up"></i> Últimos 30 días
+                            </div>
                         </div>
                         <div class="col-auto">
                             <i class="bi bi-currency-dollar icon"></i>
@@ -24,6 +104,7 @@
             </div>
         </div>
         
+        <!-- Total Órdenes -->
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="card stats-card success">
                 <div class="card-body">
@@ -31,6 +112,9 @@
                         <div class="col">
                             <div class="text-xs text-success">Total Órdenes</div>
                             <div class="h5">{{ total_orders }}</div>
+                            <div class="metric-badge bg-info-subtle text-info">
+                                {{ orders_last_month }} este mes
+                            </div>
                         </div>
                         <div class="col-auto">
                             <i class="bi bi-receipt icon"></i>
@@ -40,29 +124,37 @@
             </div>
         </div>
         
+        <!-- Ticket Promedio -->
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stats-card warning">
+            <div class="card stats-card info">
                 <div class="card-body">
                     <div class="row align-items-center">
                         <div class="col">
-                            <div class="text-xs text-warning">Órdenes Pendientes</div>
-                            <div class="h5">{{ pending_orders }}</div>
+                            <div class="text-xs text-info">Ticket Promedio</div>
+                            <div class="h5">${{ avg_order_value|floatformat:2 }}</div>
+                            <div class="metric-badge bg-primary-subtle text-primary">
+                                <i class="bi bi-graph-up"></i> Por orden
+                            </div>
                         </div>
                         <div class="col-auto">
-                            <i class="bi bi-clock-history icon"></i>
+                            <i class="bi bi-cart-check icon"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         
+        <!-- Total Usuarios -->
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stats-card info">
+            <div class="card stats-card warning">
                 <div class="card-body">
                     <div class="row align-items-center">
                         <div class="col">
-                            <div class="text-xs text-info">Total Usuarios</div>
+                            <div class="text-xs text-warning">Total Usuarios</div>
                             <div class="h5">{{ total_users }}</div>
+                            <div class="metric-badge bg-warning-subtle text-warning">
+                                +{{ new_users_last_month }} nuevos
+                            </div>
                         </div>
                         <div class="col-auto">
                             <i class="bi bi-people icon"></i>
@@ -73,11 +165,25 @@
         </div>
     </div>
     
-    <!-- Alerts Row -->
+    <!-- ============================================ -->
+    <!-- ALERTAS -->
+    <!-- ============================================ -->
     <div class="row mb-4">
+        {% if pending_orders > 0 %}
+        <div class="col-md-4 mb-3">
+            <div class="alert alert-warning d-flex align-items-center mb-0" role="alert">
+                <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+                <div>
+                    <strong>{{ pending_orders }}</strong> orden{{ pending_orders|pluralize:"es" }} pendiente{{ pending_orders|pluralize }}
+                    <a href="{% url 'shop:admin_orders' %}?status=pending" class="alert-link ms-2">Ver ahora</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
         {% if low_stock_products > 0 %}
-        <div class="col-md-6 mb-3">
-            <div class="alert alert-warning d-flex align-items-center" role="alert">
+        <div class="col-md-4 mb-3">
+            <div class="alert alert-warning d-flex align-items-center mb-0" role="alert">
                 <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
                 <div>
                     <strong>{{ low_stock_products }}</strong> producto{{ low_stock_products|pluralize }} con bajo stock
@@ -88,8 +194,8 @@
         {% endif %}
         
         {% if out_of_stock > 0 %}
-        <div class="col-md-6 mb-3">
-            <div class="alert alert-danger d-flex align-items-center" role="alert">
+        <div class="col-md-4 mb-3">
+            <div class="alert alert-danger d-flex align-items-center mb-0" role="alert">
                 <i class="bi bi-x-circle-fill fs-4 me-3"></i>
                 <div>
                     <strong>{{ out_of_stock }}</strong> producto{{ out_of_stock|pluralize }} agotado{{ out_of_stock|pluralize }}
@@ -100,51 +206,120 @@
         {% endif %}
     </div>
     
-    <!-- Charts Row -->
+    <!-- ============================================ -->
+    <!-- GRÁFICOS PRINCIPALES -->
+    <!-- ============================================ -->
     <div class="row mb-4">
+        <!-- Gráfico de Ventas Diarias (Líneas) -->
         <div class="col-xl-8 mb-4">
-            <div class="card shadow">
+            <div class="chart-card">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
                     <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="bi bi-graph-up"></i> Ventas de los Últimos 7 Días
+                        <i class="bi bi-graph-up"></i> Evolución de Ventas (Últimos 30 Días)
                     </h6>
                 </div>
                 <div class="card-body">
-                    <canvas id="salesChart" height="80"></canvas>
+                    <div class="chart-container">
+                        <canvas id="salesChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
         
+        <!-- Gráfico de Categorías (Pastel) -->
         <div class="col-xl-4 mb-4">
-            <div class="card shadow">
+            <div class="chart-card">
                 <div class="card-header py-3">
                     <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="bi bi-pie-chart"></i> Productos Más Vendidos
+                        <i class="bi bi-pie-chart"></i> Ventas por Categoría
                     </h6>
                 </div>
                 <div class="card-body">
-                    {% if top_products %}
-                        <div class="list-group list-group-flush">
-                            {% for product in top_products %}
-                            <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                <div>
-                                    <strong>{{ product.product__name|truncatewords:4 }}</strong>
-                                    <br>
-                                    <small class="text-muted">{{ product.total_sold }} unidades</small>
-                                </div>
-                                <span class="badge bg-primary rounded-pill">${{ product.revenue|floatformat:0 }}</span>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="text-muted text-center">No hay datos disponibles</p>
-                    {% endif %}
+                    <div class="chart-container-small">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- Recent Orders -->
+    <!-- ============================================ -->
+    <!-- SEGUNDA FILA DE GRÁFICOS -->
+    <!-- ============================================ -->
+    <div class="row mb-4">
+        <!-- Top 10 Productos (Barras) -->
+        <div class="col-xl-6 mb-4">
+            <div class="chart-card">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-bar-chart"></i> Top 10 Productos Más Vendidos
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="productsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Órdenes por Estado (Donut) -->
+        <div class="col-xl-6 mb-4">
+            <div class="chart-card">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-circle"></i> Distribución de Órdenes por Estado
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container-small">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ============================================ -->
+    <!-- TERCERA FILA DE GRÁFICOS -->
+    <!-- ============================================ -->
+    <div class="row mb-4">
+        <!-- Usuarios Registrados (Área) -->
+        <div class="col-xl-6 mb-4">
+            <div class="chart-card">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-people"></i> Crecimiento de Usuarios
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container-small">
+                        <canvas id="usersChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Métodos de Pago (Barras Horizontales) -->
+        <div class="col-xl-6 mb-4">
+            <div class="chart-card">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-wallet2"></i> Ventas por Método de Pago
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container-small">
+                        <canvas id="paymentChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ============================================ -->
+    <!-- ÓRDENES RECIENTES -->
+    <!-- ============================================ -->
     <div class="row">
         <div class="col-12">
             <div class="card shadow mb-4">
@@ -207,110 +382,346 @@
             </div>
         </div>
     </div>
-    
-    <!-- Sales by Category -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="bi bi-tags"></i> Ventas por Categoría
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Categoría</th>
-                                    <th class="text-end">Unidades Vendidas</th>
-                                    <th class="text-end">Ingresos</th>
-                                    <th style="width: 40%;"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for category in sales_by_category %}
-                                <tr>
-                                    <td><strong>{{ category.product__category__name }}</strong></td>
-                                    <td class="text-end">{{ category.total_sold }}</td>
-                                    <td class="text-end"><strong class="text-primary">${{ category.revenue|floatformat:2 }}</strong></td>
-                                    <td>
-                                        <div class="progress" style="height: 20px;">
-                                            <div class="progress-bar bg-primary" 
-                                                role="progressbar" 
-                                                style="width: {{ category.revenue|floatformat:0 }}%"
-                                                aria-valuenow="{{ category.revenue }}" 
-                                                aria-valuemin="0" 
-                                                aria-valuemax="100">
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="4" class="text-center text-muted">No hay datos disponibles</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // Gráfico de ventas
-    const ctx = document.getElementById('salesChart');
-    if (ctx) {
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: {{ chart_labels|safe }},
-                datasets: [{
-                    label: 'Ventas ($)',
-                    data: {{ chart_data|safe }},
-                    borderColor: 'rgb(78, 115, 223)',
-                    backgroundColor: 'rgba(78, 115, 223, 0.05)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 5,
-                    pointBackgroundColor: 'rgb(78, 115, 223)',
-                    pointBorderColor: 'white',
-                    pointBorderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return 'Ventas: $' + context.parsed.y.toFixed(2);
-                            }
+// Configuración global de Chart.js
+Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.color = '#5a5c69';
+
+// ============================================
+// GRÁFICO 1: VENTAS DIARIAS (Líneas)
+// ============================================
+const salesCtx = document.getElementById('salesChart');
+if (salesCtx) {
+    new Chart(salesCtx, {
+        type: 'line',
+        data: {
+            labels: {{ sales_labels|safe }},
+            datasets: [{
+                label: 'Ventas ($)',
+                data: {{ sales_data|safe }},
+                borderColor: 'rgb(78, 115, 223)',
+                backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 5,
+                pointBackgroundColor: 'rgb(78, 115, 223)',
+                pointBorderColor: 'white',
+                pointBorderWidth: 2,
+                pointHoverRadius: 7
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: { size: 14, weight: 'bold' },
+                    bodyFont: { size: 13 },
+                    callbacks: {
+                        label: function(context) {
+                            return 'Ventas: $' + context.parsed.y.toFixed(2);
                         }
                     }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value;
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return '$' + value;
-                            }
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+}
+
+// ============================================
+// GRÁFICO 2: CATEGORÍAS (Pastel)
+// ============================================
+const categoryCtx = document.getElementById('categoryChart');
+if (categoryCtx) {
+    new Chart(categoryCtx, {
+        type: 'pie',
+        data: {
+            labels: {{ category_labels|safe }},
+            datasets: [{
+                data: {{ category_data|safe }},
+                backgroundColor: [
+                    'rgba(78, 115, 223, 0.8)',
+                    'rgba(28, 200, 138, 0.8)',
+                    'rgba(54, 185, 204, 0.8)',
+                    'rgba(246, 194, 62, 0.8)',
+                    'rgba(231, 74, 59, 0.8)',
+                    'rgba(133, 135, 150, 0.8)'
+                ],
+                borderColor: 'white',
+                borderWidth: 3,
+                hoverOffset: 15
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 15,
+                        usePointStyle: true,
+                        font: { size: 11 }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return label + ': $' + value.toFixed(2) + ' (' + percentage + '%)';
                         }
                     }
                 }
             }
-        });
-    }
+        }
+    });
+}
+
+// ============================================
+// GRÁFICO 3: TOP PRODUCTOS (Barras)
+// ============================================
+const productsCtx = document.getElementById('productsChart');
+if (productsCtx) {
+    new Chart(productsCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ products_labels|safe }},
+            datasets: [{
+                label: 'Ingresos ($)',
+                data: {{ products_revenue|safe }},
+                backgroundColor: 'rgba(28, 200, 138, 0.8)',
+                borderColor: 'rgba(28, 200, 138, 1)',
+                borderWidth: 2,
+                borderRadius: 8,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Ingresos: $' + context.parsed.y.toFixed(2);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value;
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                }
+            }
+        }
+    });
+}
+
+// ============================================
+// GRÁFICO 4: ESTADO DE ÓRDENES (Donut)
+// ============================================
+const statusCtx = document.getElementById('statusChart');
+if (statusCtx) {
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ status_labels|safe }},
+            datasets: [{
+                data: {{ status_data|safe }},
+                backgroundColor: {{ status_colors|safe }},
+                borderColor: 'white',
+                borderWidth: 3,
+                hoverOffset: 15
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 15,
+                        usePointStyle: true,
+                        font: { size: 11 }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': ' + context.parsed + ' órdenes';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// ============================================
+// GRÁFICO 5: USUARIOS (Área)
+// ============================================
+const usersCtx = document.getElementById('usersChart');
+if (usersCtx) {
+    new Chart(usersCtx, {
+        type: 'line',
+        data: {
+            labels: {{ users_labels|safe }},
+            datasets: [{
+                label: 'Nuevos Usuarios',
+                data: {{ users_data|safe }},
+                borderColor: 'rgba(246, 194, 62, 1)',
+                backgroundColor: 'rgba(246, 194, 62, 0.2)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 6,
+                pointBackgroundColor: 'rgba(246, 194, 62, 1)',
+                pointBorderColor: 'white',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Usuarios: ' + context.parsed.y;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+}
+
+// ============================================
+// GRÁFICO 6: MÉTODOS DE PAGO (Barras Horizontales)
+// ============================================
+const paymentCtx = document.getElementById('paymentChart');
+if (paymentCtx) {
+    new Chart(paymentCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ payment_labels|safe }},
+            datasets: [{
+                label: 'Ingresos ($)',
+                data: {{ payment_data|safe }},
+                backgroundColor: 'rgba(54, 185, 204, 0.8)',
+                borderColor: 'rgba(54, 185, 204, 1)',
+                borderWidth: 2,
+                borderRadius: 8
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Total: $' + context.parsed.x.toFixed(2);
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value;
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                y: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+}
 </script>
 {% endblock %}
