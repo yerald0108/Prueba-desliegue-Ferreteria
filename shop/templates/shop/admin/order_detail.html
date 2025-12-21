@@ -260,220 +260,220 @@
 
 {% block extra_js %}
 <script>
-$(document).ready(function() {
-    let pendingStatus = null;
-    let cancellationModal = null;
+    $(document).ready(function() {
+        let pendingStatus = null;
+        let cancellationModal = null;
     
-    // Inicializar el modal
-    const cancellationModalElement = document.getElementById('cancellationModal');
-    if (cancellationModalElement) {
-        cancellationModal = new bootstrap.Modal(cancellationModalElement);
-    }
+         // Inicializar el modal
+        const cancellationModalElement = document.getElementById('cancellationModal');
+        if (cancellationModalElement) {
+            cancellationModal = new bootstrap.Modal(cancellationModalElement);
+        }
     
-    // Manejar cambio de estado
-    $('#updateStatusForm').on('submit', function(e) {
-        e.preventDefault();
+        // Manejar cambio de estado
+        $('#updateStatusForm').on('submit', function(e) {
+            e.preventDefault();
         
-        const selectedStatus = $('#statusSelect').val();
+            const selectedStatus = $('#statusSelect').val();
         
-        // Si el estado es "cancelled", mostrar modal primero
-        if (selectedStatus === 'cancelled') {
-            pendingStatus = selectedStatus;
+            // Si el estado es "cancelled", mostrar modal primero
+            if (selectedStatus === 'cancelled') {
+                pendingStatus = selectedStatus;
             
-            // Limpiar formulario de cancelación
-            $('#cancellationReason').val('').removeClass('is-invalid');
+                // Limpiar formulario de cancelación
+                $('#cancellationReason').val('').removeClass('is-invalid');
             
-            // Mostrar modal
-            if (cancellationModal) {
-                cancellationModal.show();
+                // Mostrar modal
+                if (cancellationModal) {
+                    cancellationModal.show();
+                }
+                return;
             }
-            return;
-        }
         
-        // Para otros estados, procesar normalmente
-        updateOrderStatus(selectedStatus, null);
-    });
-    
-    // Confirmar cancelación desde el modal
-    $('#confirmCancellationBtn').on('click', function() {
-        const reason = $('#cancellationReason').val().trim();
-        
-        // Validar que haya un motivo
-        if (!reason) {
-            $('#cancellationReason').addClass('is-invalid');
-            // ⭐ TOAST DE ERROR ⭐
-            Toast.error('Campo requerido', 'Debes proporcionar un motivo de cancelación', {
-                duration: 4000
-            });
-            return;
-        }
-        
-        // Ocultar modal
-        if (cancellationModal) {
-            cancellationModal.hide();
-        }
-        
-        // Actualizar estado con motivo de cancelación
-        updateOrderStatus('cancelled', reason);
-    });
-    
-    // Función para actualizar el estado de la orden
-    function updateOrderStatus(status, cancellationReason = null) {
-        const $form = $('#updateStatusForm');
-        const $btn = $('#updateStatusBtn');
-        const $statusSelect = $('#statusSelect');
-        const $currentStatusDisplay = $('#currentStatusDisplay');
-        const originalText = $btn.html();
-        
-        // Obtener el texto del estado seleccionado
-        const selectedStatusText = $statusSelect.find(`option[value="${status}"]`).text();
-        
-        console.log('Enviando actualización de estado...', {
-            status: status,
-            statusText: selectedStatusText,
-            cancellationReason: cancellationReason
+            // Para otros estados, procesar normalmente
+            updateOrderStatus(selectedStatus, null);
         });
+    
+        // Confirmar cancelación desde el modal
+        $('#confirmCancellationBtn').on('click', function() {
+            const reason = $('#cancellationReason').val().trim();
         
-        // Deshabilitar botón y mostrar loading
-        $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Actualizando...');
-        
-        // ⭐ TOAST DE LOADING ⭐
-        Toast.info('Actualizando estado', 'Por favor espera...', {
-            duration: 2000,
-            closeButton: false
-        });
-        
-        // Preparar datos
-        const formData = $form.serialize() + '&status=' + status;
-        const postData = cancellationReason 
-            ? formData + '&cancellation_reason=' + encodeURIComponent(cancellationReason)
-            : formData;
-        
-        $.ajax({
-            url: window.location.href,
-            method: 'POST',
-            dataType: 'json',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            data: postData,
-            success: function(response, textStatus, xhr) {
-                console.log('Respuesta recibida:', response);
-                
-                // Si la respuesta es un string, intentar parsearlo como JSON
-                if (typeof response === 'string') {
-                    try {
-                        response = JSON.parse(response);
-                    } catch (e) {
-                        console.error('Error al parsear respuesta como JSON:', e);
-                        // ⭐ TOAST DE ÉXITO (fallback) ⭐
-                        Toast.success('Estado actualizado', `Orden cambiada a: ${selectedStatusText}`, {
-                            duration: 4000
-                        });
-                        setTimeout(function() {
-                            window.location.reload();
-                        }, 1500);
-                        return;
-                    }
-                }
-                
-                // Manejar respuesta JSON
-                let message = 'Estado actualizado exitosamente';
-                let emailNotification = '';
-                
-                if (response && response.message) {
-                    message = response.message;
-                    if (response.email_sent) {
-                        emailNotification = ' (Email enviado al cliente)';
-                    }
-                } else {
-                    message += ' a: ' + selectedStatusText;
-                }
-                
-                // Actualizar el texto del estado actual en la página
-                let newStatusText = selectedStatusText;
-                if (response && response.status_display) {
-                    newStatusText = response.status_display;
-                    $currentStatusDisplay.text(newStatusText);
-                } else {
-                    $currentStatusDisplay.text(selectedStatusText);
-                }
-                
-                // Actualizar el badge de estado en el header
-                const $statusBadge = $('.status-badge');
-                $statusBadge.text(newStatusText);
-                
-                // Cambiar color del badge según el estado
-                const statusValue = response && response.status ? response.status : status;
-                $statusBadge.removeClass('bg-warning bg-info bg-primary bg-success bg-danger text-dark')
-                           .addClass(
-                               statusValue === 'pending' ? 'bg-warning text-dark' :
-                               statusValue === 'confirmed' ? 'bg-info' :
-                               statusValue === 'preparing' ? 'bg-primary' :
-                               statusValue === 'in_transit' ? 'bg-info' :
-                               statusValue === 'delivered' ? 'bg-success' :
-                               'bg-danger'
-                           );
-                
-                // Restaurar botón
-                $btn.prop('disabled', false).html(originalText);
-                
-                // ⭐ TOAST DE ÉXITO ⭐
-                Toast.success('¡Estado actualizado!', message + emailNotification, {
-                    duration: 5000
+            // Validar que haya un motivo
+            if (!reason) {
+                $('#cancellationReason').addClass('is-invalid');
+                //  TOAST DE ERROR 
+                Toast.error('Campo requerido', 'Debes proporcionar un motivo de cancelación', {
+                    duration: 4000
                 });
+                return;
+            }
+        
+            // Ocultar modal
+            if (cancellationModal) {
+                cancellationModal.hide();
+            }
+        
+            // Actualizar estado con motivo de cancelación
+            updateOrderStatus('cancelled', reason);
+        });
+    
+        // Función para actualizar el estado de la orden
+        function updateOrderStatus(status, cancellationReason = null) {
+            const $form = $('#updateStatusForm');
+            const $btn = $('#updateStatusBtn');
+            const $statusSelect = $('#statusSelect');
+            const $currentStatusDisplay = $('#currentStatusDisplay');
+            const originalText = $btn.html();
+        
+            // Obtener el texto del estado seleccionado
+            const selectedStatusText = $statusSelect.find(`option[value="${status}"]`).text();
+        
+            console.log('Enviando actualización de estado...', {
+                status: status,
+                statusText: selectedStatusText,
+                cancellationReason: cancellationReason
+            });
+        
+            // Deshabilitar botón y mostrar loading
+            $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Actualizando...');
+        
+            // TOAST DE LOADING 
+            Toast.info('Actualizando estado', 'Por favor espera...', {
+                duration: 2000,
+                closeButton: false
+            });
+        
+            // Preparar datos
+            const formData = $form.serialize() + '&status=' + status;
+            const postData = cancellationReason 
+                ? formData + '&cancellation_reason=' + encodeURIComponent(cancellationReason)
+                : formData;
+        
+            $.ajax({
+                url: window.location.href,
+                method: 'POST',
+                dataType: 'json',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                data: postData,
+                success: function(response, textStatus, xhr) {
+                    console.log('Respuesta recibida:', response);
                 
-                // Si hay motivo de cancelación, recargar para mostrarlo
-                if (statusValue === 'cancelled' && cancellationReason) {
-                    setTimeout(function() {
-                        window.location.reload();
-                    }, 2000);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error en AJAX:', status, error, xhr);
-                
-                let errorMessage = 'Error al actualizar el estado. Por favor intenta de nuevo.';
-                
-                try {
-                    if (xhr.responseJSON) {
-                        if (xhr.responseJSON.error) {
-                            errorMessage = xhr.responseJSON.error;
-                        } else if (xhr.responseJSON.message) {
-                            errorMessage = xhr.responseJSON.message;
+                    // Si la respuesta es un string, intentar parsearlo como JSON
+                    if (typeof response === 'string') {
+                        try {
+                            response = JSON.parse(response);
+                        } catch (e) {
+                            console.error('Error al parsear respuesta como JSON:', e);
+                            // TOAST DE ÉXITO (fallback) 
+                            Toast.success('Estado actualizado', `Orden cambiada a: ${selectedStatusText}`, {
+                                duration: 4000
+                            });
+                            setTimeout(function() {
+                                window.location.reload();
+                            }, 1500);
+                            return;
                         }
-                    } else if (xhr.responseText) {
-                        console.warn('Respuesta HTML recibida en lugar de JSON');
-                        // ⭐ TOAST DE ERROR ⭐
-                        Toast.error('Error inesperado', 'Se produjo un error al procesar la solicitud', {
-                            duration: 5000
-                        });
+                    }
+                
+                    // Manejar respuesta JSON
+                    let message = 'Estado actualizado exitosamente';
+                    let emailNotification = '';
+                
+                    if (response && response.message) {
+                        message = response.message;
+                        if (response.email_sent) {
+                            emailNotification = ' (Email enviado al cliente)';
+                        }
+                    } else {
+                        message += ' a: ' + selectedStatusText;
+                    }
+                
+                    // Actualizar el texto del estado actual en la página
+                    let newStatusText = selectedStatusText;
+                    if (response && response.status_display) {
+                        newStatusText = response.status_display;
+                        $currentStatusDisplay.text(newStatusText);
+                    } else {
+                        $currentStatusDisplay.text(selectedStatusText);
+                    }
+                
+                    // Actualizar el badge de estado en el header
+                    const $statusBadge = $('.status-badge');
+                    $statusBadge.text(newStatusText);
+                
+                    // Cambiar color del badge según el estado
+                    const statusValue = response && response.status ? response.status : status;
+                    $statusBadge.removeClass('bg-warning bg-info bg-primary bg-success bg-danger text-dark')
+                        .addClass(
+                            statusValue === 'pending' ? 'bg-warning text-dark' :
+                            statusValue === 'confirmed' ? 'bg-info' :
+                            statusValue === 'preparing' ? 'bg-primary' :
+                            statusValue === 'in_transit' ? 'bg-info' :
+                            statusValue === 'delivered' ? 'bg-success' :
+                            'bg-danger'
+                        );
+                
+                    // Restaurar botón
+                    $btn.prop('disabled', false).html(originalText);
+                
+                    //  TOAST DE ÉXITO 
+                    Toast.success('¡Estado actualizado!', message + emailNotification, {
+                        duration: 5000
+                    });
+                
+                    // Si hay motivo de cancelación, recargar para mostrarlo
+                    if (statusValue === 'cancelled' && cancellationReason) {
                         setTimeout(function() {
                             window.location.reload();
                         }, 2000);
-                        return;
                     }
-                } catch (e) {
-                    console.error('Error al parsear respuesta:', e);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error en AJAX:', status, error, xhr);
+                
+                    let errorMessage = 'Error al actualizar el estado. Por favor intenta de nuevo.';
+                
+                    try {
+                        if (xhr.responseJSON) {
+                            if (xhr.responseJSON.error) {
+                                errorMessage = xhr.responseJSON.error;
+                            } else if (xhr.responseJSON.message) {
+                                errorMessage = xhr.responseJSON.message;
+                            }
+                        } else if (xhr.responseText) {
+                            console.warn('Respuesta HTML recibida en lugar de JSON');
+                            // TOAST DE ERROR 
+                            Toast.error('Error inesperado', 'Se produjo un error al procesar la solicitud', {
+                                duration: 5000
+                            });
+                            setTimeout(function() {
+                                window.location.reload();
+                            }, 2000);
+                            return;
+                        }
+                    } catch (e) {
+                        console.error('Error al parsear respuesta:', e);
+                    }
+                
+                    // Restaurar botón
+                    $btn.prop('disabled', false).html(originalText);
+                
+                    // TOAST DE ERROR 
+                    Toast.error('Error', errorMessage, {
+                        duration: 5000
+                    });
                 }
-                
-                // Restaurar botón
-                $btn.prop('disabled', false).html(originalText);
-                
-                // ⭐ TOAST DE ERROR ⭐
-                Toast.error('Error', errorMessage, {
-                    duration: 5000
-                });
+            });
+        }
+    
+        // Validación del textarea en tiempo real
+        $('#cancellationReason').on('input', function() {
+            if ($(this).val().trim()) {
+                $(this).removeClass('is-invalid');
             }
         });
-    }
-    
-    // Validación del textarea en tiempo real
-    $('#cancellationReason').on('input', function() {
-        if ($(this).val().trim()) {
-            $(this).removeClass('is-invalid');
-        }
     });
-});
 </script>
 {% endblock %}

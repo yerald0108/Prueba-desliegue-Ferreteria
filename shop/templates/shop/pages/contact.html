@@ -1,0 +1,215 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Contacto - Ferretería{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h2 class="mb-4">
+                        <i class="bi bi-envelope"></i> Envíanos un Mensaje
+                    </h2>
+                    
+                    <p class="text-muted mb-4">
+                        ¿Tienes alguna pregunta o comentario? Estamos aquí para ayudarte. 
+                        Completa el formulario y te responderemos a la brevedad posible.
+                    </p>
+                    
+                    <form method="post" id="contactForm">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="name" class="form-label fw-bold">
+                                    <i class="bi bi-person"></i> Nombre Completo *
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="name" 
+                                       name="name" 
+                                       placeholder="Tu nombre"
+                                       required
+                                       value="{{ request.user.get_full_name|default:'' }}">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label fw-bold">
+                                    <i class="bi bi-envelope"></i> Email *
+                                </label>
+                                <input type="email" 
+                                       class="form-control" 
+                                       id="email" 
+                                       name="email" 
+                                       placeholder="tu-email@ejemplo.com"
+                                       required
+                                       value="{{ request.user.email|default:'' }}">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="subject" class="form-label fw-bold">
+                                <i class="bi bi-chat-left-text"></i> Asunto *
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="subject" 
+                                   name="subject" 
+                                   placeholder="¿De qué se trata tu mensaje?"
+                                   required>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="message" class="form-label fw-bold">
+                                <i class="bi bi-chat-dots"></i> Mensaje *
+                            </label>
+                            <textarea class="form-control" 
+                                      id="message" 
+                                      name="message" 
+                                      rows="6" 
+                                      placeholder="Escribe tu mensaje aquí..."
+                                      required></textarea>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Nota:</strong> Los campos marcados con * son obligatorios.
+                            Te responderemos en un plazo máximo de 24 horas.
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-send"></i> Enviar Mensaje
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Información de Contacto -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-4">
+                        <i class="bi bi-info-circle"></i> Información de Contacto
+                    </h5>
+                    
+                    <div class="mb-3">
+                        <h6><i class="bi bi-geo-alt text-primary"></i> Dirección</h6>
+                        <p class="text-muted mb-0">
+                            Calle Principal #123<br>
+                            Tu Municipio, Tu Provincia<br>
+                            Código Postal
+                        </p>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mb-3">
+                        <h6><i class="bi bi-telephone text-primary"></i> Teléfono</h6>
+                        <p class="text-muted mb-0">
+                            <a href="tel:+5312345678" class="text-decoration-none">
+                                +53 1 234 5678
+                            </a>
+                        </p>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mb-3">
+                        <h6><i class="bi bi-envelope text-primary"></i> Email</h6>
+                        <p class="text-muted mb-0">
+                            <a href="mailto:contacto@miferreteria.com" class="text-decoration-none">
+                                contacto@miferreteria.com
+                            </a>
+                        </p>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mb-0">
+                        <h6><i class="bi bi-clock text-primary"></i> Horario</h6>
+                        <p class="text-muted mb-2">
+                            <strong>Lunes a Viernes:</strong> 8:00 AM - 6:00 PM<br>
+                            <strong>Sábados:</strong> 8:00 AM - 2:00 PM<br>
+                            <strong>Domingos:</strong> Cerrado
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Redes Sociales -->
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-4">
+                        <i class="bi bi-share"></i> Síguenos
+                    </h5>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="#" class="btn btn-outline-primary">
+                            <i class="bi bi-facebook"></i> Facebook
+                        </a>
+                        <a href="#" class="btn btn-outline-danger">
+                            <i class="bi bi-instagram"></i> Instagram
+                        </a>
+                        <a href="#" class="btn btn-outline-success">
+                            <i class="bi bi-whatsapp"></i> WhatsApp
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Mapa (opcional) -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div class="ratio ratio-16x9">
+                        <iframe 
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3151.8354345093706!2d144.9537353153167!3d-37.81720997975171!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x6ad65d4c2b349649%3A0xb6899234e561db11!2sEnvato!5e0!3m2!1sen!2sau!4v1589000000000!5m2!1sen!2sau"
+                            style="border:0;" 
+                            allowfullscreen="" 
+                            loading="lazy">
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#contactForm').on('submit', function(e) {
+        const $btn = $(this).find('button[type="submit"]');
+        const originalText = $btn.html();
+        
+        // Validación básica
+        const name = $('#name').val().trim();
+        const email = $('#email').val().trim();
+        const subject = $('#subject').val().trim();
+        const message = $('#message').val().trim();
+        
+        if (!name || !email || !subject || !message) {
+            e.preventDefault();
+            Toast.error('Campos incompletos', 'Por favor completa todos los campos obligatorios', {
+                duration: 3000
+            });
+            return false;
+        }
+        
+        // Deshabilitar botón
+        $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Enviando...');
+        
+        Toast.info('Enviando mensaje', 'Por favor espera...', {
+            duration: 2000,
+            closeButton: false
+        });
+    });
+});
+</script>
+{% endblock %}

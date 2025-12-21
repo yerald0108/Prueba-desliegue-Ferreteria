@@ -331,3 +331,226 @@ class CartItem(models.Model):
     @property
     def subtotal(self):
         return self.quantity * self.product.price
+
+# ==========================================
+# SISTEMA DE REVIEWS/CALIFICACIONES
+# ==========================================
+
+class Review(models.Model):
+    """
+    Sistema de reviews y calificaciones de productos.
+    Solo usuarios que compraron el producto pueden dejar review.
+    """
+    RATING_CHOICES = [
+        (1, '⭐ 1 - Muy malo'),
+        (2, '⭐⭐ 2 - Malo'),
+        (3, '⭐⭐⭐ 3 - Regular'),
+        (4, '⭐⭐⭐⭐ 4 - Bueno'),
+        (5, '⭐⭐⭐⭐⭐ 5 - Excelente'),
+    ]
+    
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='Producto',
+        db_index=True
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='Usuario',
+        db_index=True
+    )
+    rating = models.IntegerField(
+        choices=RATING_CHOICES,
+        verbose_name='Calificación',
+        db_index=True
+    )
+    title = models.CharField(
+        max_length=200,
+        verbose_name='Título del review',
+        blank=True
+    )
+    comment = models.TextField(
+        verbose_name='Comentario',
+        blank=True
+    )
+    
+    # Moderación
+    is_verified_purchase = models.BooleanField(
+        default=False,
+        verbose_name='Compra verificada',
+        db_index=True
+    )
+    is_approved = models.BooleanField(
+        default=True,
+        verbose_name='Aprobado',
+        db_index=True,
+        help_text='El admin puede moderar reviews inapropiados'
+    )
+    
+    # Utilidad del review
+    helpful_count = models.IntegerField(
+        default=0,
+        verbose_name='Votos útiles'
+    )
+    
+    # Timestamps
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        db_index=True
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Review'
+        verbose_name_plural = 'Reviews'
+        ordering = ['-created_at']
+        # Un usuario solo puede hacer un review por producto
+        unique_together = ['product', 'user']
+        indexes = [
+            models.Index(fields=['product', 'is_approved', '-created_at']),
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['rating', 'is_approved']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.product.name} ({self.rating}⭐)"
+    
+    def save(self, *args, **kwargs):
+        """
+        Verificar si el usuario compró el producto antes de guardar.
+        """
+        if not self.pk:  # Solo en creación
+            # Verificar si el usuario tiene órdenes entregadas con este producto
+            has_purchased = OrderItem.objects.filter(
+                order__user=self.user,
+                product=self.product,
+                order__status='delivered'
+            ).exists()
+            
+            self.is_verified_purchase = has_purchased
+        
+        super().save(*args, **kwargs)
+
+
+class ReviewHelpful(models.Model):
+    """
+    Registra qué usuarios marcaron un review como útil.
+    Previene votos duplicados.
+    """
+    review = models.ForeignKey(
+        Review,
+        on_delete=models.CASCADE,
+        related_name='helpful_votes'
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['review', 'user']
+        verbose_name = 'Voto de utilidad'
+        verbose_name_plural = 'Votos de utilidad'
+    
+    def __str__(self):
+        return f"{self.user.username} - Review #{self.review.id}"
+
+
+# ==========================================
+# SISTEMA DE WISHLIST (LISTA DE DESEOS)
+# ==========================================
+
+class Wishlist(models.Model):
+    """
+    Lista de deseos del usuario.
+    Cada usuario tiene una wishlist.
+    """
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='wishlist',
+        verbose_name='Usuario'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True, db_index=True)
+    
+    class Meta:
+        verbose_name = 'Lista de Deseos'
+        verbose_name_plural = 'Listas de Deseos'
+    
+    def __str__(self):
+        return f"Wishlist de {self.user.username}"
+    
+    @property
+    def items_count(self):
+        """Cantidad de productos en la wishlist"""
+        return self.items.count()
+
+
+class WishlistItem(models.Model):
+    """
+    Item individual en la wishlist.
+    """
+    wishlist = models.ForeignKey(
+        Wishlist,
+        on_delete=models.CASCADE,
+        related_name='items',
+        verbose_name='Wishlist'
+    )
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        verbose_name='Producto'
+    )
+    added_at = models.DateTimeField(auto_now_add=True)
+    
+    # Notificaciones
+    notify_price_drop = models.BooleanField(
+        default=True,
+        verbose_name='Notificar bajada de precio'
+    )
+    notify_back_in_stock = models.BooleanField(
+        default=True,
+        verbose_name='Notificar cuando esté disponible'
+    )
+    
+    # Guardar precio original para detectar bajadas
+    original_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name='Precio al agregar'
+    )
+    
+    class Meta:
+        verbose_name = 'Item de Wishlist'
+        verbose_name_plural = 'Items de Wishlist'
+        unique_together = ['wishlist', 'product']
+        ordering = ['-added_at']
+        indexes = [
+            models.Index(fields=['wishlist', 'product']),
+            models.Index(fields=['product', '-added_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.product.name} - Wishlist de {self.wishlist.user.username}"
+    
+    def save(self, *args, **kwargs):
+        """Guardar el precio original al agregar"""
+        if not self.pk:
+            self.original_price = self.product.price
+        super().save(*args, **kwargs)
+    
+    @property
+    def has_price_dropped(self):
+        """Verifica si el precio bajó"""
+        return self.product.price < self.original_price
+    
+    @property
+    def price_difference(self):
+        """Diferencia de precio"""
+        return self.original_price - self.product.price

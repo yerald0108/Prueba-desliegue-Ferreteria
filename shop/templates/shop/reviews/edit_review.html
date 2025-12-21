@@ -1,0 +1,17 @@
+{% extends 'shop/reviews/add_review.html' %}
+
+{% block title %}Editar Opinión - {{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="alert alert-warning">
+                <i class="bi bi-pencil"></i> <strong>Editando tu opinión</strong>
+            </div>
+            
+            {{ block.super }}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -79,78 +79,78 @@
 
 {% block extra_js %}
 <script>
-$(document).ready(function() {
-    // Toggle password visibility
-    $('#toggleLoginPassword').on('click', function() {
-        var targetId = $(this).data('target');
-        var $input = $('#' + targetId);
-        var $icon = $(this).find('i');
-        if ($input.attr('type') === 'password') {
-            $input.attr('type', 'text');
-        } else {
-            $input.attr('type', 'password');
-        }
-        $icon.toggleClass('bi-eye bi-eye-slash');
-    });
-    
-    // Login con AJAX y Toast
-    $('#loginForm').on('submit', function(e) {
-        e.preventDefault();
-        
-        var $form = $(this);
-        var $btn = $('#loginBtn');
-        var $error = $('#loginError');
-        var originalText = $btn.html();
-        
-        // Ocultar errores previos
-        $error.hide();
-        
-        // Deshabilitar botón y mostrar loading
-        $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Iniciando sesión...');
-        
-        $.ajax({
-            url: '{% url "shop:login" %}',
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            data: $form.serialize(),
-            success: function(response) {
-                if (response && response.success) {
-                    sessionStorage.setItem('successNotification', 'Sesión iniciada correctamente');
-                    var nextUrl = new URLSearchParams(window.location.search).get('next');
-                    if (nextUrl) {
-                        window.location.href = nextUrl;
-                    } else {
-                        window.location.href = '{% url "shop:home" %}';
-                    }
-                }
-            },
-            error: function(xhr) {
-                // Restaurar botón
-                $btn.prop('disabled', false).html(originalText);
-                
-                // ⭐ TOAST DE ERROR ⭐
-                var errorMsg = 'Usuario o contraseña incorrectos';
-                
-                if (xhr.status === 429) {
-                    errorMsg = 'Demasiados intentos. Espera unos minutos.';
-                } else if (xhr.responseJSON && xhr.responseJSON.error) {
-                    errorMsg = xhr.responseJSON.error;
-                } else if (xhr.responseText) {
-                    var $response = $(xhr.responseText);
-                    var extractedError = $response.find('.alert-danger').text();
-                    if (extractedError) {
-                        errorMsg = extractedError.trim();
-                    }
-                }
-                
-                Toast.error('Error de inicio de sesión', errorMsg, {
-                    duration: 5000
-                });
+    $(document).ready(function() {
+        // Toggle password visibility
+        $('#toggleLoginPassword').on('click', function() {
+            var targetId = $(this).data('target');
+            var $input = $('#' + targetId);
+            var $icon = $(this).find('i');
+            if ($input.attr('type') === 'password') {
+                $input.attr('type', 'text');
+            } else {
+                $input.attr('type', 'password');
             }
+            $icon.toggleClass('bi-eye bi-eye-slash');
+        });
+    
+        // Login con AJAX y Toast
+        $('#loginForm').on('submit', function(e) {
+            e.preventDefault();
+        
+            var $form = $(this);
+            var $btn = $('#loginBtn');
+            var $error = $('#loginError');
+            var originalText = $btn.html();
+        
+            // Ocultar errores previos
+            $error.hide();
+        
+            // Deshabilitar botón y mostrar loading
+            $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Iniciando sesión...');
+        
+            $.ajax({
+                url: '{% url "shop:login" %}',
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                data: $form.serialize(),
+                success: function(response) {
+                    if (response && response.success) {
+                        sessionStorage.setItem('successNotification', 'Sesión iniciada correctamente');
+                        var nextUrl = new URLSearchParams(window.location.search).get('next');
+                        if (nextUrl) {
+                            window.location.href = nextUrl;
+                        } else {
+                            window.location.href = '{% url "shop:home" %}';
+                        }
+                    }
+                },
+                error: function(xhr) {
+                    // Restaurar botón
+                    $btn.prop('disabled', false).html(originalText);
+                
+                    //  TOAST DE ERROR 
+                    var errorMsg = 'Usuario o contraseña incorrectos';
+                
+                    if (xhr.status === 429) {
+                        errorMsg = 'Demasiados intentos. Espera unos minutos.';
+                    } else if (xhr.responseJSON && xhr.responseJSON.error) {
+                        errorMsg = xhr.responseJSON.error;
+                    } else if (xhr.responseText) {
+                        var $response = $(xhr.responseText);
+                        var extractedError = $response.find('.alert-danger').text();
+                        if (extractedError) {
+                            errorMsg = extractedError.trim();
+                        }
+                    }
+                
+                    Toast.error('Error de inicio de sesión', errorMsg, {
+                        duration: 5000
+                    });
+                }
+            });
         });
     });
-});
 </script>
 {% endblock %}

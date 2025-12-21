@@ -114,25 +114,25 @@
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    function togglePassword(btnId) {
-        var btn = document.getElementById(btnId);
-        if (!btn) return;
-        var targetId = btn.getAttribute('data-target');
-        var input = document.getElementById(targetId);
-        if (!input) return;
-        var icon = btn.querySelector('i');
-        var newType = input.type === 'password' ? 'text' : 'password';
-        input.type = newType;
-        if (icon) {
-            icon.classList.toggle('bi-eye');
-            icon.classList.toggle('bi-eye-slash');
+    document.addEventListener('DOMContentLoaded', function() {
+        function togglePassword(btnId) {
+            var btn = document.getElementById(btnId);
+            if (!btn) return;
+            var targetId = btn.getAttribute('data-target');
+            var input = document.getElementById(targetId);
+            if (!input) return;
+            var icon = btn.querySelector('i');
+            var newType = input.type === 'password' ? 'text' : 'password';
+            input.type = newType;
+            if (icon) {
+                icon.classList.toggle('bi-eye');
+                icon.classList.toggle('bi-eye-slash');
+            }
         }
-    }
-    var t1 = document.getElementById('togglePassword1');
-    var t2 = document.getElementById('togglePassword2');
-    if (t1) t1.addEventListener('click', function() { togglePassword('togglePassword1'); });
-    if (t2) t2.addEventListener('click', function() { togglePassword('togglePassword2'); });
-});
+        var t1 = document.getElementById('togglePassword1');
+        var t2 = document.getElementById('togglePassword2');
+        if (t1) t1.addEventListener('click', function() { togglePassword('togglePassword1'); });
+        if (t2) t2.addEventListener('click', function() { togglePassword('togglePassword2'); });
+    });
 </script>
 {% endblock %}

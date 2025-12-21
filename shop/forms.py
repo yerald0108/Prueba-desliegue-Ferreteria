@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import UserProfile, Order, Product
+from .models import UserProfile, Order, Product, Review
 import datetime
 
 # Reutilizar las opciones del modelo Order
@@ -136,7 +136,7 @@ class CheckoutForm(forms.ModelForm):
     class Meta:
         model = Order
         fields = ['delivery_address', 'delivery_city', 'delivery_province', 'contact_phone', 
-                  'delivery_date', 'delivery_time', 'payment_method', 'notes']
+                    'delivery_date', 'delivery_time', 'payment_method', 'notes']
         widgets = {
             'delivery_address': forms.Textarea(attrs={
                 'class': 'form-control',
@@ -383,3 +383,35 @@ class ChangePasswordForm(forms.Form):
             self.user.save()
         
         return self.user
+
+class ReviewForm(forms.ModelForm):
+    """Formulario para crear/editar reviews"""
+    
+    class Meta:
+        model = Review
+        fields = ['rating', 'title', 'comment']
+        widgets = {
+            'rating': forms.RadioSelect(attrs={
+                'class': 'form-check-input rating-radio'
+            }),
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Título de tu opinión (opcional)',
+                'maxlength': '200'
+            }),
+            'comment': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Cuéntanos sobre tu experiencia con este producto...',
+                'rows': 5
+            }),
+        }
+        labels = {
+            'rating': '¿Cómo calificarías este producto?',
+            'title': 'Título (opcional)',
+            'comment': 'Tu opinión',
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Hacer el comentario obligatorio
+        self.fields['comment'].required = True

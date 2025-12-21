@@ -185,6 +185,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'shop:product_list' %}">Productos</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'shop:about_us' %}">Sobre Nosotros</a>
+                    </li>
                 </ul>
                 
                 <!-- Search form -->
@@ -198,6 +201,13 @@
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
                         <li class="nav-item">
+
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'shop:wishlist' %}">
+                                    <i class="bi bi-heart"></i> Favoritos
+                                </a>
+                            </li>
+
                             <a class="nav-link position-relative" href="{% url 'shop:cart' %}">
                                 <i class="bi bi-cart3"></i> Carrito
                                 {# Siempre renderizamos el badge para que pueda ser actualizado vía JS #}
@@ -288,9 +298,9 @@
                     <h5>Enlaces Rápidos</h5>
                     <ul class="list-unstyled">
                         <li><a href="{% url 'shop:product_list' %}" class="text-white-50">Productos</a></li>
-                        <li><a href="#" class="text-white-50">Sobre Nosotros</a></li>
-                        <li><a href="#" class="text-white-50">Contacto</a></li>
-                        <li><a href="#" class="text-white-50">Preguntas Frecuentes</a></li>
+                        <li><a href="{% url 'shop:about_us' %}" class="text-white-50">Sobre Nosotros</a></li>
+                        <li><a href="{% url 'shop:contact' %}" class="text-white-50">Contacto</a></li>
+                        <li><a href="{% url 'shop:faq' %}" class="text-white-50">Preguntas Frecuentes</a></li>
                     </ul>
                 </div>
                 <div class="col-md-4 mb-4">
@@ -436,7 +446,7 @@
             $('#logoutLink').on('click', function(e) {
                 e.preventDefault();
         
-                // ⭐ TOAST DE LOADING ⭐
+                //  TOAST DE LOADING 
                 Toast.info('Cerrando sesión', 'Por favor espera...', {
                     duration: 0,
                     closeButton: false
@@ -457,7 +467,7 @@
                         window.location.href = '{% url "shop:home" %}';
                     },
                     error: function() {
-                        // ⭐ TOAST DE ERROR ⭐
+                        //  TOAST DE ERROR 
                         Toast.error('Error', 'No se pudo cerrar la sesión correctamente', {
                             duration: 3000
                         });

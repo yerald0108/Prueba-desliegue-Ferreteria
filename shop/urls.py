@@ -49,4 +49,24 @@ urlpatterns = [
     path('admin-panel/producto/<int:product_id>/editar/', views.admin_product_edit, name='admin_product_edit'),
     path('admin-panel/producto/<int:product_id>/detalle/', views.admin_product_detail, name='admin_product_detail'),
     path('admin-panel/producto/<int:product_id>/eliminar/', views.admin_product_delete, name='admin_product_delete'),
+
+    # Reviews
+    path('producto/<int:product_id>/agregar-review/', views.add_review, name='add_review'),
+    path('review/<int:review_id>/editar/', views.edit_review, name='edit_review'),
+    path('review/<int:review_id>/eliminar/', views.delete_review, name='delete_review'),
+    path('review/<int:review_id>/util/', views.mark_review_helpful, name='mark_review_helpful'),
+    path('producto/<int:product_id>/reviews/', views.product_reviews, name='product_reviews'),
+    
+    # Wishlist
+    path('lista-deseos/', views.wishlist_view, name='wishlist'),
+    path('agregar-a-favoritos/<int:product_id>/', views.add_to_wishlist, name='add_to_wishlist'),
+    path('quitar-de-favoritos/<int:item_id>/', views.remove_from_wishlist, name='remove_from_wishlist'),
+    path('toggle-favorito/<int:product_id>/', views.toggle_wishlist, name='toggle_wishlist'),
+    path('mover-al-carrito/<int:item_id>/', views.move_to_cart, name='move_to_cart'),
+    path('vaciar-favoritos/', views.clear_wishlist, name='clear_wishlist'),
+
+    # Páginas estáticas
+    path('sobre-nosotros/', views.about_us, name='about_us'),
+    path('contacto/', views.contact, name='contact'),
+    path('preguntas-frecuentes/', views.faq, name='faq'),
 ]

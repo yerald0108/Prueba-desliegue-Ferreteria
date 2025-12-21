@@ -61,6 +61,35 @@ from .admin.users import (
 )
 
 # ==========================================
+# VISTAS DE REVIEWS Y WISHLIST
+# ==========================================
+from .reviews import (
+    add_review,
+    edit_review,
+    delete_review,
+    mark_review_helpful,
+    product_reviews,
+)
+
+from .wishlist import (
+    wishlist_view,
+    add_to_wishlist,
+    remove_from_wishlist,
+    toggle_wishlist,
+    move_to_cart,
+    clear_wishlist,
+)
+
+# ==========================================
+# PÁGINAS ESTÁTICAS
+# ==========================================
+from .pages import (
+    about_us,
+    contact,
+    faq,
+)
+
+# ==========================================
 # ALL exports (para facilitar imports)
 # ==========================================
 __all__ = [
@@ -97,4 +126,21 @@ __all__ = [
     'admin_users',
     'admin_user_detail',
     'admin_user_online_status',
+    # Reviews
+    'add_review',
+    'edit_review',
+    'delete_review',
+    'mark_review_helpful',
+    'product_reviews',
+    # Wishlist
+    'wishlist_view',
+    'add_to_wishlist',
+    'remove_from_wishlist',
+    'toggle_wishlist',
+    'move_to_cart',
+    'clear_wishlist',
+    # Páginas estáticas
+    'about_us',
+    'contact',
+    'faq',
 ]

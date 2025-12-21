@@ -361,343 +361,343 @@
 
 {% block extra_js %}
 <script>
-$(document).ready(function() {
-    const $productsContainer = $('#productsContainer');
-    const $productsGrid = $('#productsGrid');
-    const $paginationNav = $('#paginationNav');
-    const $paginationWrapper = $('#paginationWrapper');
-    const $loadingOverlay = $('.loading-overlay');
+    $(document).ready(function() {
+        const $productsContainer = $('#productsContainer');
+        const $productsGrid = $('#productsGrid');
+        const $paginationNav = $('#paginationNav');
+        const $paginationWrapper = $('#paginationWrapper');
+        const $loadingOverlay = $('.loading-overlay');
     
-    // Función para cargar productos con AJAX
-    function loadProducts(params = {}) {
-        // Mostrar loading
-        $productsContainer.addClass('products-loading');
-        $loadingOverlay.removeClass('d-none');
+        // Función para cargar productos con AJAX
+        function loadProducts(params = {}) {
+            // Mostrar loading
+            $productsContainer.addClass('products-loading');
+            $loadingOverlay.removeClass('d-none');
         
-        // Scroll suave a la sección de productos
-        $('html, body').animate({
-            scrollTop: $('#products-section').offset().top - 100
-        }, 400);
+            // Scroll suave a la sección de productos
+            $('html, body').animate({
+                scrollTop: $('#products-section').offset().top - 100
+            }, 400);
         
-        // Construir URL con parámetros
-        const urlParams = new URLSearchParams(window.location.search);
-        Object.keys(params).forEach(key => {
-            if (params[key]) {
-                urlParams.set(key, params[key]);
-            } else {
-                urlParams.delete(key);
-            }
-        });
-        
-        const url = '{% url "shop:product_list" %}?' + urlParams.toString();
-        
-        // Realizar petición AJAX
-        $.ajax({
-            url: url,
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            success: function(response) {
-                if (response.success) {
-                    // Actualizar productos
-                    $productsGrid.html(response.html);
-                    
-                    // Actualizar información de resultados
-                    $('#startIndex').text(response.start_index);
-                    $('#endIndex').text(response.end_index);
-                    $('#totalProducts').text(response.total_products);
-                    
-                    // Actualizar paginación
-                    updatePagination(response);
-                    
-                    // Re-inicializar botones de agregar al carrito
-                    initAddToCartButtons();
-                    
-                    // Actualizar URL sin recargar página
-                    window.history.pushState({}, '', url);
-                    
-                    // Ajustar sidebar después de actualizar contenido
-                    setTimeout(function() {
-                        adjustFiltersSidebar();
-                    }, 100);
+            // Construir URL con parámetros
+            const urlParams = new URLSearchParams(window.location.search);
+            Object.keys(params).forEach(key => {
+                if (params[key]) {
+                    urlParams.set(key, params[key]);
+                } else {
+                    urlParams.delete(key);
                 }
-            },
-            error: function() {
-                alert('Error al cargar productos');
-            },
-            complete: function() {
-                // Ocultar loading
-                $productsContainer.removeClass('products-loading');
-                $loadingOverlay.addClass('d-none');
-            }
-        });
-    }
-    
-    // Actualizar paginación
-    function updatePagination(data) {
-        if (data.total_pages <= 1) {
-            $paginationWrapper.hide();
-            return;
-        }
-        
-        $paginationWrapper.show();
-        
-        let paginationHTML = '';
-        
-        // Primera página
-        paginationHTML += `
-            <li class="page-item ${!data.has_previous ? 'disabled' : ''}">
-                <a class="page-link page-nav" href="#" data-page="1" aria-label="Primera">
-                    <i class="bi bi-chevron-double-left"></i>
-                </a>
-            </li>
-        `;
-        
-        // Anterior
-        paginationHTML += `
-            <li class="page-item ${!data.has_previous ? 'disabled' : ''}">
-                <a class="page-link page-nav" href="#" data-page="${data.current_page - 1}" aria-label="Anterior">
-                    <i class="bi bi-chevron-left"></i>
-                </a>
-            </li>
-        `;
-        
-        // Números de página (mostrar 5 páginas alrededor de la actual)
-        const startPage = Math.max(1, data.current_page - 2);
-        const endPage = Math.min(data.total_pages, data.current_page + 2);
-        
-        for (let i = startPage; i <= endPage; i++) {
-            if (i === data.current_page) {
-                paginationHTML += `
-                    <li class="page-item active">
-                        <span class="page-link">${i}</span>
-                    </li>
-                `;
-            } else {
-                paginationHTML += `
-                    <li class="page-item">
-                        <a class="page-link page-nav" href="#" data-page="${i}">${i}</a>
-                    </li>
-                `;
-            }
-        }
-        
-        // Siguiente
-        paginationHTML += `
-            <li class="page-item ${!data.has_next ? 'disabled' : ''}">
-                <a class="page-link page-nav" href="#" data-page="${data.current_page + 1}" aria-label="Siguiente">
-                    <i class="bi bi-chevron-right"></i>
-                </a>
-            </li>
-        `;
-        
-        // Última página
-        paginationHTML += `
-            <li class="page-item ${!data.has_next ? 'disabled' : ''}">
-                <a class="page-link page-nav" href="#" data-page="${data.total_pages}" aria-label="Última">
-                    <i class="bi bi-chevron-double-right"></i>
-                </a>
-            </li>
-        `;
-        
-        $paginationNav.html(paginationHTML);
-        
-        // Actualizar input de ir a página
-        $('#gotoPageInput').attr('max', data.total_pages).attr('placeholder', data.current_page);
-    }
-    
-    // Event listeners para paginación
-    $(document).on('click', '.page-nav', function(e) {
-        e.preventDefault();
-        if ($(this).parent().hasClass('disabled')) return;
-        
-        const page = $(this).data('page');
-        loadProducts({ page: page });
-    });
-    
-    // Ir a página específica
-    $('#gotoPageBtn').on('click', function() {
-        const page = $('#gotoPageInput').val();
-        if (page) {
-            loadProducts({ page: page });
-        }
-    });
-    
-    $('#gotoPageInput').on('keypress', function(e) {
-        if (e.which === 13) {
-            $('#gotoPageBtn').click();
-        }
-    });
-    
-    // Ordenamiento
-    $('#sortSelect').on('change', function() {
-        loadProducts({ 
-            sort: $(this).val(),
-            page: 1  // Volver a la primera página al cambiar orden
-        });
-    });
-    
-    // Productos por página
-    $('#perPageSelect').on('change', function() {
-        loadProducts({ 
-            per_page: $(this).val(),
-            page: 1  // Volver a la primera página al cambiar cantidad
-        });
-    });
-    
-    // Filtro por categoría (con AJAX)
-    $('.category-filter').on('click', function(e) {
-        e.preventDefault();
-        const category = $(this).data('category');
-        loadProducts({ 
-            category: category,
-            page: 1
-        });
-    });
-    
-    // Limpiar filtros
-    $('#clearFiltersBtn').on('click', function() {
-        window.location.href = '{% url "shop:product_list" %}';
-    });
-    
-    // Búsqueda en tiempo real (con debounce)
-    let searchTimeout;
-    $('#searchInput').on('input', function() {
-        clearTimeout(searchTimeout);
-        const query = $(this).val().trim();
-        
-        searchTimeout = setTimeout(function() {
-            loadProducts({ 
-                q: query,
-                page: 1
             });
-        }, 500);  // Esperar 500ms después de dejar de escribir
-    });
-    
-    // Inicializar botones de agregar al carrito
-    function initAddToCartButtons() {
-        $('.quick-add-btn').off('click').on('click', function() {
-            const productId = $(this).data('product-id');
-            const button = $(this);
-            const productName = button.closest('.card').find('.card-title').text().trim();
         
+            const url = '{% url "shop:product_list" %}?' + urlParams.toString();
+        
+            // Realizar petición AJAX
             $.ajax({
-                url: "{% url 'shop:add_to_cart' 0 %}".replace('0', productId),
-                method: 'POST',
-                data: {
-                    'quantity': 1,
-                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                url: url,
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 success: function(response) {
                     if (response.success) {
-                        // Actualizar badge
-                        $('.cart-badge').text(response.cart_count).show();
+                        // Actualizar productos
+                        $productsGrid.html(response.html);
                     
-                        // ⭐ TOAST DE ÉXITO ⭐
-                        Toast.success('¡Agregado!', `${productName} agregado al carrito`, {
-                            duration: 3000
-                        });
+                        // Actualizar información de resultados
+                        $('#startIndex').text(response.start_index);
+                        $('#endIndex').text(response.end_index);
+                        $('#totalProducts').text(response.total_products);
                     
-                        // Cambiar botón temporalmente
-                        button.html('<i class="bi bi-check-circle"></i>');
-                        button.removeClass('btn-primary').addClass('btn-success');
+                        // Actualizar paginación
+                        updatePagination(response);
                     
+                        // Re-inicializar botones de agregar al carrito
+                        initAddToCartButtons();
+                    
+                        // Actualizar URL sin recargar página
+                        window.history.pushState({}, '', url);
+                    
+                        // Ajustar sidebar después de actualizar contenido
                         setTimeout(function() {
-                            button.html('<i class="bi bi-cart-plus"></i>');
-                            button.removeClass('btn-success').addClass('btn-primary');
-                        }, 1500);
-                    } else {
-                        // ⭐ TOAST DE ERROR ⭐
-                        Toast.error('Error', response.message || 'No se pudo agregar el producto');
+                            adjustFiltersSidebar();
+                        }, 100);
                     }
                 },
                 error: function() {
-                    // ⭐ TOAST DE ERROR ⭐
-                    Toast.error('Error de conexión', 'No se pudo agregar el producto al carrito');
+                    alert('Error al cargar productos');
+                },
+                complete: function() {
+                    // Ocultar loading
+                    $productsContainer.removeClass('products-loading');
+                    $loadingOverlay.addClass('d-none');
                 }
             });
+        }
+    
+        // Actualizar paginación
+        function updatePagination(data) {
+            if (data.total_pages <= 1) {
+                $paginationWrapper.hide();
+                return;
+            }
+        
+            $paginationWrapper.show();
+        
+            let paginationHTML = '';
+        
+            // Primera página
+            paginationHTML += `
+                <li class="page-item ${!data.has_previous ? 'disabled' : ''}">
+                    <a class="page-link page-nav" href="#" data-page="1" aria-label="Primera">
+                        <i class="bi bi-chevron-double-left"></i>
+                    </a>
+                </li>
+            `;
+        
+            // Anterior
+            paginationHTML += `
+                <li class="page-item ${!data.has_previous ? 'disabled' : ''}">
+                    <a class="page-link page-nav" href="#" data-page="${data.current_page - 1}" aria-label="Anterior">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+            `;
+        
+            // Números de página (mostrar 5 páginas alrededor de la actual)
+            const startPage = Math.max(1, data.current_page - 2);
+            const endPage = Math.min(data.total_pages, data.current_page + 2);
+        
+            for (let i = startPage; i <= endPage; i++) {
+                if (i === data.current_page) {
+                    paginationHTML += `
+                        <li class="page-item active">
+                            <span class="page-link">${i}</span>
+                        </li>
+                    `;
+                } else {
+                    paginationHTML += `
+                        <li class="page-item">
+                            <a class="page-link page-nav" href="#" data-page="${i}">${i}</a>
+                        </li>
+                    `;
+                }
+            }
+        
+            // Siguiente
+            paginationHTML += `
+                <li class="page-item ${!data.has_next ? 'disabled' : ''}">
+                    <a class="page-link page-nav" href="#" data-page="${data.current_page + 1}" aria-label="Siguiente">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            `;
+        
+            // Última página
+            paginationHTML += `
+                <li class="page-item ${!data.has_next ? 'disabled' : ''}">
+                    <a class="page-link page-nav" href="#" data-page="${data.total_pages}" aria-label="Última">
+                        <i class="bi bi-chevron-double-right"></i>
+                    </a>
+                </li>
+            `;
+        
+            $paginationNav.html(paginationHTML);
+        
+            // Actualizar input de ir a página
+            $('#gotoPageInput').attr('max', data.total_pages).attr('placeholder', data.current_page);
+        }
+    
+        // Event listeners para paginación
+        $(document).on('click', '.page-nav', function(e) {
+            e.preventDefault();
+            if ($(this).parent().hasClass('disabled')) return;
+        
+            const page = $(this).data('page');
+            loadProducts({ page: page });
         });
-    }
     
-    // Inicializar al cargar la página
-    initAddToCartButtons();
+        // Ir a página específica
+        $('#gotoPageBtn').on('click', function() {
+            const page = $('#gotoPageInput').val();
+            if (page) {
+                loadProducts({ page: page });
+            }
+        });
     
-    // ============================================
-    // Gestión inteligente del sidebar de filtros
-    // ============================================
-    function adjustFiltersSidebar() {
-        const $navbar = $('.navbar');
-        const $filtersCard = $('#filtersCard');
-        const $filtersSidebar = $('.filters-sidebar');
-        
-        if ($filtersCard.length === 0 || $navbar.length === 0) return;
-        
-        // Asegurar que el contenedor tenga position relative
-        if ($filtersSidebar.css('position') !== 'relative') {
-            $filtersSidebar.css('position', 'relative');
-        }
-        
-        // Calcular altura del navbar dinámicamente
-        const navbarHeight = $navbar.outerHeight(true);
-        const scrollTop = $(window).scrollTop();
-        const windowHeight = $(window).height();
-        
-        // Obtener posición inicial del sidebar (sin scroll)
-        const sidebarInitialTop = $filtersSidebar.offset().top;
-        const sidebarHeight = $filtersCard.outerHeight(true);
-        
-        // Calcular posición del footer (si existe)
-        const $footer = $('.footer');
-        let footerTop = document.body.scrollHeight;
-        if ($footer.length > 0) {
-            footerTop = $footer.offset().top;
-        }
-        
-        // Calcular cuánto espacio hay desde el inicio del sidebar hasta el footer
-        const availableHeight = footerTop - sidebarInitialTop;
-        
-        // Calcular la posición actual del viewport relativa al sidebar
-        const viewportBottom = scrollTop + windowHeight;
-        const sidebarBottomPosition = sidebarInitialTop + availableHeight;
-        
-        // Si el viewport está cerca del footer o el sidebar se saldría del contenedor
-        if (viewportBottom >= sidebarBottomPosition - 50) {
-            // Cambiar a posición absoluta, anclado al final del contenedor
-            const remainingSpace = footerTop - sidebarInitialTop - 20; // 20px de margen
-            $filtersCard.css({
-                'position': 'absolute',
-                'top': 'auto',
-                'bottom': '0',
-                'max-height': Math.min(remainingSpace, windowHeight - navbarHeight - 30) + 'px'
+        $('#gotoPageInput').on('keypress', function(e) {
+            if (e.which === 13) {
+                $('#gotoPageBtn').click();
+            }
+        });
+    
+        // Ordenamiento
+        $('#sortSelect').on('change', function() {
+            loadProducts({ 
+                sort: $(this).val(),
+                page: 1  // Volver a la primera página al cambiar orden
             });
-        } else {
-            // Mantener sticky con el top calculado dinámicamente
-            const topOffset = navbarHeight + 10; // 10px de margen adicional
-            $filtersCard.css({
-                'position': 'sticky',
-                'top': topOffset + 'px',
-                'bottom': 'auto',
-                'max-height': 'calc(100vh - ' + (topOffset + 20) + 'px)'
+        });
+    
+        // Productos por página
+        $('#perPageSelect').on('change', function() {
+            loadProducts({ 
+                per_page: $(this).val(),
+                page: 1  // Volver a la primera página al cambiar cantidad
+            });
+        });
+    
+        // Filtro por categoría (con AJAX)
+        $('.category-filter').on('click', function(e) {
+            e.preventDefault();
+            const category = $(this).data('category');
+            loadProducts({ 
+                category: category,
+                page: 1
+            });
+        });
+    
+        // Limpiar filtros
+        $('#clearFiltersBtn').on('click', function() {
+            window.location.href = '{% url "shop:product_list" %}';
+        });
+    
+        // Búsqueda en tiempo real (con debounce)
+        let searchTimeout;
+        $('#searchInput').on('input', function() {
+            clearTimeout(searchTimeout);
+            const query = $(this).val().trim();
+        
+            searchTimeout = setTimeout(function() {
+                loadProducts({ 
+                    q: query,
+                    page: 1
+                });
+            }, 500);  // Esperar 500ms después de dejar de escribir
+        });
+    
+        // Inicializar botones de agregar al carrito
+        function initAddToCartButtons() {
+            $('.quick-add-btn').off('click').on('click', function() {
+                const productId = $(this).data('product-id');
+                const button = $(this);
+                const productName = button.closest('.card').find('.card-title').text().trim();
+        
+                $.ajax({
+                    url: "{% url 'shop:add_to_cart' 0 %}".replace('0', productId),
+                    method: 'POST',
+                    data: {
+                        'quantity': 1,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Actualizar badge
+                            $('.cart-badge').text(response.cart_count).show();
+                    
+                            // ⭐ TOAST DE ÉXITO ⭐
+                            Toast.success('¡Agregado!', `${productName} agregado al carrito`, {
+                                duration: 3000
+                            });
+                    
+                            // Cambiar botón temporalmente
+                            button.html('<i class="bi bi-check-circle"></i>');
+                            button.removeClass('btn-primary').addClass('btn-success');
+                    
+                            setTimeout(function() {
+                                button.html('<i class="bi bi-cart-plus"></i>');
+                                button.removeClass('btn-success').addClass('btn-primary');
+                            }, 1500);
+                        } else {
+                            //  TOAST DE ERROR 
+                            Toast.error('Error', response.message || 'No se pudo agregar el producto');
+                        }
+                    },
+                    error: function() {
+                        //  TOAST DE ERROR 
+                        Toast.error('Error de conexión', 'No se pudo agregar el producto al carrito');
+                    }
+                });
             });
         }
-    }
     
-    // Ajustar sidebar al cargar y al hacer scroll (con debounce para mejor performance)
-    let sidebarAdjustTimeout;
-    function debouncedAdjustSidebar() {
-        clearTimeout(sidebarAdjustTimeout);
-        sidebarAdjustTimeout = setTimeout(function() {
+        // Inicializar al cargar la página
+        initAddToCartButtons();
+    
+        // ============================================
+        // Gestión inteligente del sidebar de filtros
+        // ============================================
+        function adjustFiltersSidebar() {
+            const $navbar = $('.navbar');
+            const $filtersCard = $('#filtersCard');
+            const $filtersSidebar = $('.filters-sidebar');
+        
+            if ($filtersCard.length === 0 || $navbar.length === 0) return;
+        
+            // Asegurar que el contenedor tenga position relative
+            if ($filtersSidebar.css('position') !== 'relative') {
+                $filtersSidebar.css('position', 'relative');
+            }
+        
+            // Calcular altura del navbar dinámicamente
+            const navbarHeight = $navbar.outerHeight(true);
+            const scrollTop = $(window).scrollTop();
+            const windowHeight = $(window).height();
+        
+            // Obtener posición inicial del sidebar (sin scroll)
+            const sidebarInitialTop = $filtersSidebar.offset().top;
+            const sidebarHeight = $filtersCard.outerHeight(true);
+        
+            // Calcular posición del footer (si existe)
+            const $footer = $('.footer');
+            let footerTop = document.body.scrollHeight;
+            if ($footer.length > 0) {
+                footerTop = $footer.offset().top;
+            }
+        
+            // Calcular cuánto espacio hay desde el inicio del sidebar hasta el footer
+            const availableHeight = footerTop - sidebarInitialTop;
+        
+            // Calcular la posición actual del viewport relativa al sidebar
+            const viewportBottom = scrollTop + windowHeight;
+            const sidebarBottomPosition = sidebarInitialTop + availableHeight;
+        
+            // Si el viewport está cerca del footer o el sidebar se saldría del contenedor
+            if (viewportBottom >= sidebarBottomPosition - 50) {
+                // Cambiar a posición absoluta, anclado al final del contenedor
+                const remainingSpace = footerTop - sidebarInitialTop - 20; // 20px de margen
+                $filtersCard.css({
+                    'position': 'absolute',
+                    'top': 'auto',
+                    'bottom': '0',
+                    'max-height': Math.min(remainingSpace, windowHeight - navbarHeight - 30) + 'px'
+                });
+            } else {
+                // Mantener sticky con el top calculado dinámicamente
+                const topOffset = navbarHeight + 10; // 10px de margen adicional
+                $filtersCard.css({
+                    'position': 'sticky',
+                    'top': topOffset + 'px',
+                    'bottom': 'auto',
+                    'max-height': 'calc(100vh - ' + (topOffset + 20) + 'px)'
+                });
+            }
+        }
+    
+        // Ajustar sidebar al cargar y al hacer scroll (con debounce para mejor performance)
+        let sidebarAdjustTimeout;
+        function debouncedAdjustSidebar() {
+            clearTimeout(sidebarAdjustTimeout);
+            sidebarAdjustTimeout = setTimeout(function() {
+                adjustFiltersSidebar();
+            }, 10);
+        }
+    
+        $(window).on('scroll resize', debouncedAdjustSidebar);
+    
+        // Ajustar inicialmente
+        setTimeout(function() {
             adjustFiltersSidebar();
-        }, 10);
-    }
-    
-    $(window).on('scroll resize', debouncedAdjustSidebar);
-    
-    // Ajustar inicialmente
-    setTimeout(function() {
-        adjustFiltersSidebar();
-    }, 100);
-});
+        }, 100);
+    });
 </script>
 {% endblock %}

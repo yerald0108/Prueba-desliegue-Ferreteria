@@ -278,137 +278,178 @@
 
 {% block extra_js %}
 <script>
-$(document).ready(function() {
-    // Toggle estado activo/inactivo
-    $('.toggle-status-btn').on('click', function() {
-        const productId = $(this).data('product-id');
-        const $btn = $(this);
-        const isActivating = $btn.text().includes('Publicar');
+    $(document).ready(function() {
+        // Toggle estado activo/inactivo
+        $('.toggle-status-btn').on('click', function() {
+            const productId = $(this).data('product-id');
+            const $btn = $(this);
+            const isActivating = $btn.text().includes('Publicar');
         
-        // ⭐ TOAST DE LOADING ⭐
-        Toast.info(
-            isActivating ? 'Publicando producto' : 'Ocultando producto',
-            'Por favor espera...',
-            {
-                duration: 2000,
-                closeButton: false
-            }
-        );
-        
-        $.ajax({
-            url: `/admin-panel/producto/${productId}/toggle/`,
-            method: 'POST',
-            data: {
-                'csrfmiddlewaretoken': '{{ csrf_token }}'
-            },
-            success: function(response) {
-                if (response.success) {
-                    // ⭐ TOAST DE ÉXITO ⭐
-                    Toast.success(
-                        '¡Producto actualizado!',
-                        isActivating ? 'Producto ahora visible para los clientes' : 'Producto ocultado de la tienda',
-                        {
-                            duration: 3000
-                        }
-                    );
-                    
-                    // Recargar para actualizar estado
-                    setTimeout(function() {
-                        window.location.reload();
-                    }, 1500);
+            // TOAST DE LOADING 
+            Toast.info(
+                isActivating ? 'Publicando producto' : 'Ocultando producto',
+                'Por favor espera...',
+                {
+                    duration: 2000,
+                    closeButton: false
                 }
-            },
-            error: function() {
-                // ⭐ TOAST DE ERROR ⭐
-                Toast.error('Error', 'No se pudo actualizar el estado', {
-                    duration: 4000
-                });
-            }
-        });
-    });
-    
-    // Actualizar stock
-    $('#saveStockBtn').on('click', function() {
-        const newStock = $('#newStock').val();
+            );
         
-        if (newStock === '' || newStock < 0) {
-            // ⭐ TOAST DE ERROR ⭐
-            Toast.error('Cantidad inválida', 'Por favor ingresa una cantidad válida', {
-                duration: 3000
-            });
-            return;
-        }
-        
-        const $btn = $(this);
-        const originalText = $btn.html();
-        $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Guardando...');
-        
-        // ⭐ TOAST DE LOADING ⭐
-        Toast.info('Actualizando stock', 'Por favor espera...', {
-            duration: 2000,
-            closeButton: false
-        });
-        
-        $.ajax({
-            url: `/admin-panel/producto/{{ product.id }}/stock/`,
-            method: 'POST',
-            data: {
-                'action': 'set',
-                'quantity': newStock,
-                'csrfmiddlewaretoken': '{{ csrf_token }}'
-            },
-            success: function(response) {
-                if (response.success) {
-                    // Cerrar modal
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('stockModal'));
-                    modal.hide();
+            $.ajax({
+                url: `/admin-panel/producto/${productId}/toggle/`,
+                method: 'POST',
+                data: {
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // TOAST DE ÉXITO 
+                        Toast.success(
+                            '¡Producto actualizado!',
+                            isActivating ? 'Producto ahora visible para los clientes' : 'Producto ocultado de la tienda',
+                            {
+                                duration: 3000
+                            }
+                        );
                     
-                    // ⭐ TOAST DE ÉXITO ⭐
-                    Toast.success('¡Stock actualizado!', `Nuevo stock: ${newStock} unidades`, {
-                        duration: 3000
-                    });
-                    
-                    // Recargar página
-                    setTimeout(function() {
-                        window.location.reload();
-                    }, 1000);
-                } else {
-                    $btn.prop('disabled', false).html(originalText);
-                    
-                    // ⭐ TOAST DE ERROR ⭐
-                    Toast.error('Error', response.message || 'No se pudo actualizar el stock', {
+                        // Recargar para actualizar estado
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 1500);
+                    }
+                },
+                error: function() {
+                    // TOAST DE ERROR 
+                    Toast.error('Error', 'No se pudo actualizar el estado', {
                         duration: 4000
                     });
                 }
-            },
-            error: function() {
-                $btn.prop('disabled', false).html(originalText);
-                
-                // ⭐ TOAST DE ERROR ⭐
-                Toast.error('Error de conexión', 'No se pudo actualizar el stock', {
-                    duration: 4000
-                });
-            }
+            });
         });
-    });
     
-    // Eliminar producto
-    $('.delete-product-btn').on('click', function() {
-        const productId = $(this).data('product-id');
-        const productName = '{{ product.name|escapejs }}';
+        // Actualizar stock
+        $('#saveStockBtn').on('click', function() {
+            const newStock = $('#newStock').val();
         
-        if (window.showConfirmModal) {
-            window.showConfirmModal({
-                message: '¿Estás seguro de eliminar este producto? Esta acción no se puede deshacer.',
-                confirmText: 'Eliminar',
-                confirmClass: 'btn-danger',
-                onConfirm: function() {
-                    // ⭐ TOAST DE LOADING ⭐
+            if (newStock === '' || newStock < 0) {
+                // TOAST DE ERROR 
+                Toast.error('Cantidad inválida', 'Por favor ingresa una cantidad válida', {
+                    duration: 3000
+                });
+                return;
+            }
+        
+            const $btn = $(this);
+            const originalText = $btn.html();
+            $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Guardando...');
+        
+            // TOAST DE LOADING 
+            Toast.info('Actualizando stock', 'Por favor espera...', {
+                duration: 2000,
+                closeButton: false
+            });
+        
+            $.ajax({
+                url: `/admin-panel/producto/{{ product.id }}/stock/`,
+                method: 'POST',
+                data: {
+                    'action': 'set',
+                    'quantity': newStock,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Cerrar modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('stockModal'));
+                        modal.hide();
+                    
+                        // TOAST DE ÉXITO 
+                        Toast.success('¡Stock actualizado!', `Nuevo stock: ${newStock} unidades`, {
+                            duration: 3000
+                        });
+                    
+                        // Recargar página
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        $btn.prop('disabled', false).html(originalText);
+                    
+                        // TOAST DE ERROR 
+                        Toast.error('Error', response.message || 'No se pudo actualizar el stock', {
+                            duration: 4000
+                        });
+                    }
+                },
+                error: function() {
+                    $btn.prop('disabled', false).html(originalText);
+            
+                    // TOAST DE ERROR 
+                    Toast.error('Error de conexión', 'No se pudo actualizar el stock', {
+                        duration: 4000
+                    });
+                }
+            });
+        });
+    
+        // Eliminar producto
+        $('.delete-product-btn').on('click', function() {
+            const productId = $(this).data('product-id');
+            const productName = '{{ product.name|escapejs }}';
+        
+            if (window.showConfirmModal) {
+                window.showConfirmModal({
+                    message: '¿Estás seguro de eliminar este producto? Esta acción no se puede deshacer.',
+                    confirmText: 'Eliminar',
+                    confirmClass: 'btn-danger',
+                    onConfirm: function() {
+                        // TOAST DE LOADING 
+                        Toast.info('Eliminando producto', 'Por favor espera...', {
+                            duration: 2000,
+                            closeButton: false
+                        });
+                    
+                        $.ajax({
+                            url: `/admin-panel/producto/${productId}/eliminar/`,
+                            method: 'POST',
+                            data: {
+                                'csrfmiddlewaretoken': '{{ csrf_token }}'
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    // TOAST DE ÉXITO 
+                                    Toast.success('¡Producto eliminado!', `${productName} fue eliminado correctamente`, {
+                                        duration: 3000
+                                    });
+                                
+                                    // Redirigir después de un momento
+                                    setTimeout(function() {
+                                        window.location.href = '{% url "shop:admin_products" %}';
+                                    }, 1500);
+                                } else {
+                                    // TOAST DE ERROR 
+                                    Toast.error('No se puede eliminar', response.message || 'Este producto tiene órdenes asociadas', {
+                                        duration: 5000
+                                    });
+                                }
+                            },
+                            error: function() {
+                                // TOAST DE ERROR 
+                                Toast.error('Error de conexión', 'No se pudo eliminar el producto', {
+                                    duration: 4000
+                                });
+                            }
+                        });
+                    }
+                });
+            } else {
+                // Fallback sin modal
+                if (confirm('¿Estás seguro de eliminar este producto?')) {
                     Toast.info('Eliminando producto', 'Por favor espera...', {
                         duration: 2000,
                         closeButton: false
                     });
-                    
+                
                     $.ajax({
                         url: `/admin-panel/producto/${productId}/eliminar/`,
                         method: 'POST',
@@ -417,68 +458,27 @@ $(document).ready(function() {
                         },
                         success: function(response) {
                             if (response.success) {
-                                // ⭐ TOAST DE ÉXITO ⭐
-                                Toast.success('¡Producto eliminado!', `${productName} fue eliminado correctamente`, {
+                                Toast.success('¡Producto eliminado!', response.message, {
                                     duration: 3000
                                 });
-                                
-                                // Redirigir después de un momento
                                 setTimeout(function() {
                                     window.location.href = '{% url "shop:admin_products" %}';
                                 }, 1500);
                             } else {
-                                // ⭐ TOAST DE ERROR ⭐
-                                Toast.error('No se puede eliminar', response.message || 'Este producto tiene órdenes asociadas', {
+                                Toast.error('No se puede eliminar', response.message, {
                                     duration: 5000
                                 });
                             }
                         },
                         error: function() {
-                            // ⭐ TOAST DE ERROR ⭐
                             Toast.error('Error de conexión', 'No se pudo eliminar el producto', {
                                 duration: 4000
                             });
                         }
                     });
                 }
-            });
-        } else {
-            // Fallback sin modal
-            if (confirm('¿Estás seguro de eliminar este producto?')) {
-                Toast.info('Eliminando producto', 'Por favor espera...', {
-                    duration: 2000,
-                    closeButton: false
-                });
-                
-                $.ajax({
-                    url: `/admin-panel/producto/${productId}/eliminar/`,
-                    method: 'POST',
-                    data: {
-                        'csrfmiddlewaretoken': '{{ csrf_token }}'
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            Toast.success('¡Producto eliminado!', response.message, {
-                                duration: 3000
-                            });
-                            setTimeout(function() {
-                                window.location.href = '{% url "shop:admin_products" %}';
-                            }, 1500);
-                        } else {
-                            Toast.error('No se puede eliminar', response.message, {
-                                duration: 5000
-                            });
-                        }
-                    },
-                    error: function() {
-                        Toast.error('Error de conexión', 'No se pudo eliminar el producto', {
-                            duration: 4000
-                        });
-                    }
-                });
             }
-        }
+        });
     });
-});
 </script>
 {% endblock %}

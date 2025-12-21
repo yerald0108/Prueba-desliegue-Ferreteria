@@ -1,0 +1,222 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Preguntas Frecuentes - Ferretería{% endblock %}
+
+{% block extra_css %}
+<style>
+    .faq-category {
+        margin-bottom: 3rem;
+    }
+    
+    .faq-item {
+        border-left: 4px solid var(--primary-color);
+        transition: all 0.3s;
+    }
+    
+    .faq-item:hover {
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        border-left-width: 6px;
+    }
+    
+    .faq-question {
+        cursor: pointer;
+        user-select: none;
+    }
+    
+    .faq-question:hover {
+        background-color: rgba(255, 107, 53, 0.05);
+    }
+    
+    .faq-answer {
+        background-color: #f8f9fa;
+    }
+    
+    .search-box {
+        background: linear-gradient(135deg, var(--secondary-color) 0%, var(--dark-color) 100%);
+        color: white;
+        padding: 60px 0;
+        margin-bottom: 50px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero con Búsqueda -->
+<section class="search-box">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h1 class="display-4 fw-bold mb-4">
+                    <i class="bi bi-question-circle"></i> Preguntas Frecuentes
+                </h1>
+                <p class="lead mb-4">
+                    Encuentra respuestas a las preguntas más comunes
+                </p>
+                
+                <!-- Buscador de FAQs -->
+                <div class="input-group input-group-lg shadow">
+                    <input type="text" 
+                           class="form-control" 
+                           id="faqSearch" 
+                           placeholder="Buscar pregunta...">
+                    <button class="btn btn-primary" type="button">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container pb-5">
+    <!-- Navegación por Categorías -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="d-flex flex-wrap gap-2 justify-content-center">
+                <button class="btn btn-outline-primary category-filter" data-category="all">
+                    <i class="bi bi-grid"></i> Todas
+                </button>
+                {% for category, questions in faqs.items %}
+                    <button class="btn btn-outline-primary category-filter" data-category="{{ forloop.counter0 }}">
+                        <i class="bi bi-tag"></i> {{ category }}
+                    </button>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- FAQs por Categoría -->
+    {% for category, questions in faqs.items %}
+        <div class="faq-category" data-category-index="{{ forloop.counter0 }}">
+            <h2 class="mb-4">
+                <i class="bi bi-folder text-primary"></i> {{ category }}
+            </h2>
+            
+            <div class="accordion" id="accordion{{ forloop.counter0 }}">
+                {% for faq in questions %}
+                    <div class="faq-item card mb-3 shadow-sm">
+                        <div class="card-header faq-question" 
+                             data-bs-toggle="collapse" 
+                             data-bs-target="#faq{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}"
+                             aria-expanded="false">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 py-2">
+                                    <i class="bi bi-question-circle text-primary me-2"></i>
+                                    {{ faq.question }}
+                                </h6>
+                                <i class="bi bi-chevron-down"></i>
+                            </div>
+                        </div>
+                        
+                        <div id="faq{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}" 
+                             class="collapse" 
+                             data-bs-parent="#accordion{{ forloop.parentloop.counter0 }}">
+                            <div class="card-body faq-answer">
+                                <p class="mb-0">
+                                    <i class="bi bi-arrow-right-circle text-success me-2"></i>
+                                    {{ faq.answer }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+    
+    <!-- ¿No encontraste respuesta? -->
+    <div class="card bg-primary text-white shadow mt-5">
+        <div class="card-body text-center p-5">
+            <h3 class="mb-3">¿No encontraste lo que buscabas?</h3>
+            <p class="lead mb-4">
+                Nuestro equipo está listo para ayudarte
+            </p>
+            <div class="d-flex gap-3 justify-content-center flex-wrap">
+                <a href="{% url 'shop:contact' %}" class="btn btn-light btn-lg">
+                    <i class="bi bi-envelope"></i> Contactar
+                </a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'shop:home' %}" class="btn btn-outline-light btn-lg">
+                        <i class="bi bi-house"></i> Ir al Inicio
+                    </a>
+                {% else %}
+                    <a href="{% url 'shop:register' %}" class="btn btn-outline-light btn-lg">
+                        <i class="bi bi-person-plus"></i> Crear Cuenta
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Búsqueda en tiempo real
+    $('#faqSearch').on('input', function() {
+        const searchTerm = $(this).val().toLowerCase();
+        
+        if (searchTerm === '') {
+            $('.faq-item').show();
+            $('.faq-category').show();
+            return;
+        }
+        
+        $('.faq-item').each(function() {
+            const question = $(this).find('.faq-question h6').text().toLowerCase();
+            const answer = $(this).find('.faq-answer p').text().toLowerCase();
+            
+            if (question.includes(searchTerm) || answer.includes(searchTerm)) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+        
+        // Ocultar categorías vacías
+        $('.faq-category').each(function() {
+            const visibleItems = $(this).find('.faq-item:visible').length;
+            if (visibleItems === 0) {
+                $(this).hide();
+            } else {
+                $(this).show();
+            }
+        });
+    });
+    
+    // Filtrar por categoría
+    $('.category-filter').on('click', function() {
+        const category = $(this).data('category');
+        
+        // Actualizar botones activos
+        $('.category-filter').removeClass('active');
+        $(this).addClass('active');
+        
+        if (category === 'all') {
+            $('.faq-category').show();
+        } else {
+            $('.faq-category').hide();
+            $(`.faq-category[data-category-index="${category}"]`).show();
+        }
+        
+        // Scroll suave
+        $('html, body').animate({
+            scrollTop: $('.faq-category:visible:first').offset().top - 100
+        }, 300);
+    });
+    
+    // Rotar icono al expandir/colapsar
+    $('.faq-question').on('click', function() {
+        const icon = $(this).find('.bi-chevron-down');
+        const isExpanded = $(this).attr('aria-expanded') === 'true';
+        
+        if (!isExpanded) {
+            icon.css('transform', 'rotate(180deg)');
+        } else {
+            icon.css('transform', 'rotate(0deg)');
+        }
+    });
+});
+</script>
+{% endblock %}

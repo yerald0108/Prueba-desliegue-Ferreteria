@@ -2,6 +2,36 @@
 
 {% block title %}{{ product.name }} - Ferretería{% endblock %}
 
+{% block extra_css %}
+<style>
+    .review-stars {
+        color: #fbbf24;
+        font-size: 1rem;
+    }
+    
+    .review-card {
+        border-left: 3px solid var(--primary-color);
+        transition: all 0.3s;
+    }
+    
+    .review-card:hover {
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .wishlist-btn {
+        position: relative;
+    }
+    
+    .wishlist-btn.in-wishlist {
+        color: #dc3545;
+    }
+    
+    .wishlist-btn:not(.in-wishlist) {
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container py-5">
     <!-- Breadcrumb -->
@@ -38,8 +68,39 @@
                             <span class="badge bg-warning">Destacado</span>
                         {% endif %}
                     </div>
+
+                    <!-- Botón de Wishlist -->
+                        {% if user.is_authenticated %}
+                            <button class="btn btn-link wishlist-btn {% if product in user.wishlist.items.all %}in-wishlist{% endif %}"
+                                    data-product-id="{{ product.id }}"
+                                    title="Agregar a favoritos">
+                                <i class="bi bi-heart-fill fs-4"></i>
+                            </button>
+                        {% endif %}
+                    </div>
                     
                     <h2 class="mb-3">{{ product.name }}</h2>
+
+                    <!-- Calificaciones -->
+                    {% if product.reviews.exists %}
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="review-stars">
+                                    {% with avg_rating=product.reviews.aggregate|default:0 %}
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= avg_rating %}
+                                                ⭐
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endwith %}
+                                </div>
+                                <span class="text-muted">
+                                    ({{ product.reviews.count }} opinión{{ product.reviews.count|pluralize:"es" }})
+                                </span>
+                                <a href="#reviews-section" class="small">Ver opiniones</a>
+                            </div>
+                        </div>
+                    {% endif %}
                     
                     <div class="mb-3">
                         <small class="text-muted">SKU: {{ product.sku }}</small>
@@ -117,6 +178,89 @@
             </div>
         </div>
     </div>
+
+    <!-- Sección de Reviews -->
+    <div class="row mt-5" id="reviews-section">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="bi bi-star-fill text-warning"></i>
+                            Opiniones de Clientes
+                        </h4>
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'shop:add_review' product.id %}" class="btn btn-primary">
+                                <i class="bi bi-pencil"></i> Escribir Opinión
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    {% if product.reviews.exists %}
+                        {% for review in product.reviews.all|slice:":3" %}
+                            <div class="review-card card mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <div class="review-stars">
+                                                {% for i in "12345" %}
+                                                    {% if forloop.counter <= review.rating %}⭐{% endif %}
+                                                {% endfor %}
+                                            </div>
+                                            <strong>{{ review.user.get_full_name|default:review.user.username }}</strong>
+                                            {% if review.is_verified_purchase %}
+                                                <span class="badge bg-success ms-2">
+                                                    <i class="bi bi-check-circle"></i> Compra verificada
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                        <small class="text-muted">{{ review.created_at|date:"d/m/Y" }}</small>
+                                    </div>
+                                    
+                                    {% if review.title %}
+                                        <h6 class="mb-2">{{ review.title }}</h6>
+                                    {% endif %}
+                                    
+                                    <p class="mb-2">{{ review.comment }}</p>
+                                    
+                                    <div class="d-flex gap-3">
+                                        <button class="btn btn-sm btn-outline-secondary helpful-btn" data-review-id="{{ review.id }}">
+                                            <i class="bi bi-hand-thumbs-up"></i> Útil ({{ review.helpful_count }})
+                                        </button>
+                                        
+                                        {% if user == review.user %}
+                                            <a href="{% url 'shop:edit_review' review.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-pencil"></i> Editar
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        
+                        {% if product.reviews.count > 3 %}
+                            <div class="text-center mt-3">
+                                <a href="{% url 'shop:product_reviews' product.id %}" class="btn btn-outline-primary">
+                                    Ver todas las opiniones ({{ product.reviews.count }})
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-chat-square-text text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-3">Aún no hay opiniones para este producto</p>
+                            {% if user.is_authenticated %}
+                                <a href="{% url 'shop:add_review' product.id %}" class="btn btn-primary">
+                                    Sé el primero en opinar
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
     
     <!-- Productos Relacionados -->
     {% if related_products %}
@@ -165,40 +309,92 @@
 
 {% block extra_js %}
 <script>
-$('#addToCartForm').on('submit', function(e) {
-    e.preventDefault();
+    $(document).ready(function() {
+    // Agregar al carrito
+    $('#addToCartForm').on('submit', function(e) {
+        e.preventDefault();
     
-    const quantity = $('#quantity').val();
-    const productId = '{{ product.pk }}';
-    const productName = '{{ product.name|escapejs }}';
+        const quantity = $('#quantity').val();
+        const productId = '{{ product.pk }}';
+        const productName = '{{ product.name|escapejs }}';
     
-    $.ajax({
-        url: `/agregar-al-carrito/${productId}/`,
-        method: 'POST',
-        data: {
-            'quantity': quantity,
-            'csrfmiddlewaretoken': '{{ csrf_token }}'
-        },
-        success: function(response) {
-            if (response.success) {
-                // Actualizar badge del carrito
-                $('.cart-badge').text(response.cart_count).show();
+        $.ajax({
+            url: `/agregar-al-carrito/${productId}/`,
+            method: 'POST',
+            data: {
+                'quantity': quantity,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Actualizar badge del carrito
+                    $('.cart-badge').text(response.cart_count).show();
 
-                // ⭐ TOAST DE ÉXITO ⭐
-                Toast.success(
-                    '¡Producto agregado!',
-                    `${quantity}x ${productName} agregado al carrito`,
-                    { duration: 3000 }
-                );
-            } else {
-                // ⭐ TOAST DE ERROR ⭐
-                Toast.error('Error', response.message || 'No se pudo agregar el producto');
+                    //  TOAST DE ÉXITO 
+                    Toast.success(
+                        '¡Producto agregado!',
+                        `${quantity}x ${productName} agregado al carrito`,
+                        { duration: 3000 }
+                    );
+                } else {
+                    //  TOAST DE ERROR 
+                    Toast.error('Error', response.message || 'No se pudo agregar el producto');
+                }
+            },
+            error: function() {
+                //  TOAST DE ERROR 
+                Toast.error('Error de conexión', 'No se pudo agregar el producto al carrito');
             }
-        },
-        error: function() {
-            // ⭐ TOAST DE ERROR ⭐
-            Toast.error('Error de conexión', 'No se pudo agregar el producto al carrito');
-        }
+        });
+    });
+
+    // Toggle wishlist
+    $('.wishlist-btn').on('click', function() {
+        const productId = $(this).data('product-id');
+        const $btn = $(this);
+        
+        $.ajax({
+            url: `/toggle-favorito/${productId}/`,
+            method: 'POST',
+            data: {
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    $btn.toggleClass('in-wishlist');
+                    Toast.success(
+                        response.in_wishlist ? '¡Agregado a favoritos!' : 'Eliminado de favoritos',
+                        response.message,
+                        { duration: 2000 }
+                    );
+                }
+            },
+            error: function() {
+                Toast.error('Error', 'No se pudo actualizar favoritos');
+            }
+        });
+    });
+    
+    // Marcar review como útil
+    $('.helpful-btn').on('click', function() {
+        const reviewId = $(this).data('review-id');
+        const $btn = $(this);
+        
+        $.ajax({
+            url: `/review/${reviewId}/util/`,
+            method: 'POST',
+            data: {
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    $btn.html(`<i class="bi bi-hand-thumbs-up"></i> Útil (${response.helpful_count})`);
+                    Toast.info('Gracias', response.message, { duration: 2000 });
+                } else {
+                    Toast.error('Error', response.message);
+                }
+            }
+        });
     });
 });
 </script>

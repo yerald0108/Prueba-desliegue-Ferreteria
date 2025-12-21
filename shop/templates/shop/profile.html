@@ -195,26 +195,26 @@
 
 {% block extra_js %}
 <script>
-$(document).ready(function() {
-    // Interceptar el envío del formulario
-    $('#profileForm').on('submit', function(e) {
-        var $form = $(this);
-        var $submitBtn = $form.find('button[type="submit"]');
-        var originalText = $submitBtn.html();
+    $(document).ready(function() {
+        // Interceptar el envío del formulario
+        $('#profileForm').on('submit', function(e) {
+            var $form = $(this);
+            var $submitBtn = $form.find('button[type="submit"]');
+            var originalText = $submitBtn.html();
         
-        // Deshabilitar botón y mostrar loading
-        $submitBtn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Guardando...');
+            // Deshabilitar botón y mostrar loading
+            $submitBtn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Guardando...');
         
-        // ⭐ TOAST DE LOADING ⭐
-        Toast.info('Guardando cambios', 'Por favor espera...', {
-            duration: 2000,
-            closeButton: false
+            //  TOAST DE LOADING 
+            Toast.info('Guardando cambios', 'Por favor espera...', {
+                duration: 2000,
+                closeButton: false
+            });
+        
+            // Permitir que el formulario se envíe normalmente
+            // Guardar mensaje en sessionStorage para después de la recarga
+            sessionStorage.setItem('successNotification', 'Perfil actualizado exitosamente');
         });
-        
-        // Permitir que el formulario se envíe normalmente
-        // Guardar mensaje en sessionStorage para después de la recarga
-        sessionStorage.setItem('successNotification', 'Perfil actualizado exitosamente');
     });
-});
 </script>
 {% endblock %}
