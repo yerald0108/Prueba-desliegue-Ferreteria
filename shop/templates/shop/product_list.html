@@ -594,11 +594,6 @@ $(document).ready(function() {
                         // Actualizar badge
                         $('.cart-badge').text(response.cart_count).show();
                     
-                        // Animación
-                        if (window.animateAddToCart) {
-                            window.animateAddToCart(button);
-                        }
-                    
                         // ⭐ TOAST DE ÉXITO ⭐
                         Toast.success('¡Agregado!', `${productName} agregado al carrito`, {
                             duration: 3000

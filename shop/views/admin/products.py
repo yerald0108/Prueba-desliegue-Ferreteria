@@ -28,15 +28,13 @@ def admin_products(request):
     """
     Listado de productos con filtros.
     
-    Filtros:
-    - category: filtrar por slug de categoría
-    - stock: 'low' (<=10) o 'out' (=0)
-    - q: búsqueda por nombre, SKU o descripción
+    ✅ OPTIMIZADO: select_related para category
     """
     category_filter = request.GET.get('category', '')
     stock_filter = request.GET.get('stock', '')
     search_query = request.GET.get('q', '')
     
+    # ✅ OPTIMIZACIÓN: Siempre cargar category con select_related
     products = Product.objects.select_related('category')
     
     # Aplicar filtros
@@ -75,13 +73,13 @@ def admin_product_detail(request, product_id):
     """
     Ver detalle del producto con estadísticas de ventas.
     
-    Muestra:
-    - Información del producto
-    - Total vendido
-    - Ingresos generados
-    - Órdenes recientes
+    ✅ OPTIMIZADO: Prefetch de order items con órdenes
     """
-    product = get_object_or_404(Product, pk=product_id)
+    # ✅ OPTIMIZACIÓN: Cargar category con select_related
+    product = get_object_or_404(
+        Product.objects.select_related('category'),
+        pk=product_id
+    )
     
     # Estadísticas del producto
     total_sold = OrderItem.objects.filter(product=product).aggregate(
@@ -97,10 +95,13 @@ def admin_product_detail(request, product_id):
         )
     )['total'] or 0
     
-    # Órdenes recientes que incluyen este producto
+    # ✅ OPTIMIZACIÓN: Prefetch órdenes recientes con usuario
     recent_orders = OrderItem.objects.filter(
         product=product
-    ).select_related('order__user').order_by('-order__created_at')[:10]
+    ).select_related(
+        'order__user',
+        'order__user__profile'
+    ).order_by('-order__created_at')[:10]
     
     context = {
         'product': product,

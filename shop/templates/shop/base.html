@@ -89,57 +89,7 @@
             font-weight: bold;
         }
 
-        /* Animación del ícono de carrito cuando se agrega un producto */
-        .cart-animate {
-            animation: cart-bounce 0.6s ease-out;
-        }
-
-        @keyframes cart-bounce {
-            0%   { transform: translateY(0) scale(1); filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0)); }
-            30%  { transform: translateY(-6px) scale(1.2); filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8)); }
-            60%  { transform: translateY(0) scale(0.95); filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.4)); }
-            100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0)); }
-        }
-
-        /* Ícono de pulso alrededor del carrito */
-        .cart-pulse::after {
-            content: '';
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.7);
-            transform: translate(-50%, -50%);
-            animation: cart-pulse-ring 0.7s ease-out forwards;
-            pointer-events: none;
-        }
-
-        @keyframes cart-pulse-ring {
-            0% { transform: translate(-50%, -50%) scale(0.4); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(1.3); opacity: 0; }
-        }
-
-        /* Imagen o “burbuja” que viaja desde el botón al carrito */
-        .fly-to-cart-img {
-            position: fixed;
-            z-index: 1050;
-            pointer-events: none;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
-        }
-
-        .fly-to-cart-fallback {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #ffe0d2, var(--primary-color));
-            position: fixed;
-            z-index: 1050;
-            pointer-events: none;
-        }
+        
         
         .hero-section {
             background: linear-gradient(135deg, var(--secondary-color) 0%, var(--dark-color) 100%);
@@ -395,83 +345,6 @@
     <script src="{% static 'js/toast.js' %}"></script>
 
     <script>
-        // Animación reutilizable: imagen/burbuja que vuela al carrito + rebote y pulso del ícono
-        window.animateAddToCart = function (startElement) {
-            try {
-                const $start = $(startElement);
-                const $cartLink = $('.navbar a[href$="carrito/"], .navbar a[href*="cart"]').first();
-                const $cartIcon = $cartLink.find('.bi-cart3').first();
-
-                if ($start.length === 0 || $cartIcon.length === 0) {
-                    return;
-                }
-
-                const startOffset = $start.offset();
-                const cartOffset = $cartIcon.offset();
-
-                // Intentar usar la imagen del producto más cercana
-                let $img = $start.closest('.card, .row').find('img.product-image, .card-img-top, .img-fluid').first();
-                let useFallback = false;
-
-                if ($img.length === 0 || !$img.attr('src')) {
-                    useFallback = true;
-                }
-
-                const startX = startOffset.left + $start.outerWidth() / 2;
-                const startY = startOffset.top + $start.outerHeight() / 2;
-                const endX = cartOffset.left + $cartIcon.outerWidth() / 2;
-                const endY = cartOffset.top + $cartIcon.outerHeight() / 2;
-
-                let $flyEl;
-
-                if (!useFallback) {
-                    $flyEl = $('<img class="fly-to-cart-img" />')
-                        .attr('src', $img.attr('src'))
-                        .appendTo('body');
-                    $flyEl.css({
-                        width: 60,
-                        height: 60,
-                        left: startX - 30,
-                        top: startY - 30
-                    });
-                } else {
-                    $flyEl = $('<div class="fly-to-cart-fallback"></div>').appendTo('body');
-                    $flyEl.css({
-                        left: startX - 8,
-                        top: startY - 8
-                    });
-                }
-
-                // Trayectoria curva: primero hacia arriba, luego hacia el carrito
-                const midX = (startX + endX) / 2;
-                const midY = Math.min(startY, endY) - 120;  // punto de control elevado para hacer un arco
-
-                $flyEl.animate(
-                    { left: midX, top: midY },
-                    250,
-                    'swing',
-                    function () {
-                        $flyEl.animate(
-                            { left: endX - (useFallback ? 8 : 30), top: endY - (useFallback ? 8 : 30), opacity: 0.1, width: useFallback ? 10 : 30, height: useFallback ? 10 : 30 },
-                            260,
-                            'swing',
-                            function () {
-                                $flyEl.remove();
-                                // Rebote + pulso del ícono del carrito
-                                $cartIcon.addClass('cart-animate');
-                                $cartLink.addClass('cart-pulse');
-                                setTimeout(function () {
-                                    $cartIcon.removeClass('cart-animate');
-                                    $cartLink.removeClass('cart-pulse');
-                                }, 700);
-                            }
-                        );
-                    }
-                );
-            } catch (e) {
-                console.error('Error en animateAddToCart:', e);
-            }
-        };
 
         // ================================================================
         // SISTEMA DE NOTIFICACIONES AUTOMÁTICO

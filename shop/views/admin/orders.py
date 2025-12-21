@@ -11,10 +11,10 @@ Maneja:
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.http import JsonResponse
 
-from ...models import Order
+from ...models import Order, OrderItem
 from ...email_utils import send_order_status_update_email
 
 
@@ -23,14 +23,21 @@ def admin_orders(request):
     """
     Listado de órdenes con filtros.
     
-    Filtros disponibles:
-    - status: filtrar por estado
-    - q: búsqueda por número de orden, usuario o email
+    ✅ OPTIMIZADO: Elimina N+1 en user y items
     """
     status_filter = request.GET.get('status', '')
     search_query = request.GET.get('q', '')
     
-    orders = Order.objects.select_related('user').prefetch_related('items')
+    # ✅ OPTIMIZACIÓN CLAVE: select_related para user, prefetch_related para items
+    orders = Order.objects.select_related(
+        'user',
+        'user__profile'
+    ).prefetch_related(
+        Prefetch(
+            'items',
+            queryset=OrderItem.objects.select_related('product', 'product__category')
+        )
+    )
     
     # Aplicar filtros
     if status_filter:
@@ -40,7 +47,9 @@ def admin_orders(request):
         orders = orders.filter(
             Q(order_number__icontains=search_query) |
             Q(user__username__icontains=search_query) |
-            Q(user__email__icontains=search_query)
+            Q(user__email__icontains=search_query) |
+            Q(user__first_name__icontains=search_query) |
+            Q(user__last_name__icontains=search_query)
         )
     
     orders = orders.order_by('-created_at')
@@ -60,13 +69,24 @@ def admin_order_detail(request, order_id):
     """
     Detalle de orden con gestión de estado y notas.
     
-    Acciones disponibles:
-    - update_status: Cambiar estado de la orden
-    - update_notes: Actualizar notas administrativas
-    
-    Maneja tanto peticiones normales como AJAX.
+    ✅ OPTIMIZADO: Prefetch de items con productos
     """
-    order = get_object_or_404(Order, pk=order_id)
+    # ✅ OPTIMIZACIÓN: Cargar todo en un solo query
+    order = get_object_or_404(
+        Order.objects.select_related(
+            'user',
+            'user__profile'
+        ).prefetch_related(
+            Prefetch(
+                'items',
+                queryset=OrderItem.objects.select_related(
+                    'product',
+                    'product__category'
+                )
+            )
+        ),
+        pk=order_id
+    )
     
     if request.method == 'POST':
         action = request.POST.get('action')

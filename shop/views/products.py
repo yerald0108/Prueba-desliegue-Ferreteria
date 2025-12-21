@@ -17,8 +17,17 @@ from ..models import Product, Category
 
 
 def home(request):
-    """Vista principal de la tienda"""
-    featured_products = Product.objects.filter(is_active=True, featured=True)[:8]
+    """
+    Vista principal de la tienda
+    
+    ✅ OPTIMIZADO: select_related para featured products
+    """
+    # ✅ OPTIMIZACIÓN: Cargar category con select_related
+    featured_products = Product.objects.filter(
+        is_active=True, 
+        featured=True
+    ).select_related('category')[:8]
+    
     categories = Category.objects.all()
     
     context = {
@@ -32,13 +41,11 @@ def product_list(request):
     """
     Lista de productos con filtros y paginación inteligente.
     
-    Filtros disponibles:
-    - category: slug de la categoría
-    - q: búsqueda por texto
-    - sort: ordenamiento (price_asc, price_desc, name_asc, etc.)
-    - per_page: productos por página (12, 24, 36, 48)
+    ✅ OPTIMIZADO: select_related para category
     """
-    products = Product.objects.filter(is_active=True)
+    # ✅ OPTIMIZACIÓN CLAVE
+    products = Product.objects.filter(is_active=True).select_related('category')
+    
     categories = Category.objects.all()
     
     # Filtro por categoría
@@ -134,14 +141,25 @@ def product_list(request):
 
 
 def product_detail(request, pk):
-    """Detalle de producto con productos relacionados"""
-    product = get_object_or_404(Product, pk=pk, is_active=True)
+    """
+    Detalle de producto con productos relacionados
     
-    # Productos relacionados de la misma categoría
+    ✅ OPTIMIZADO: select_related para categorías
+    """
+    # ✅ OPTIMIZACIÓN
+    product = get_object_or_404(
+        Product.objects.select_related('category'),
+        pk=pk, 
+        is_active=True
+    )
+    
+    # ✅ OPTIMIZACIÓN: Productos relacionados con category cargada
     related_products = Product.objects.filter(
         category=product.category,
         is_active=True
-    ).exclude(pk=pk)[:4]
+    ).exclude(
+        pk=pk
+    ).select_related('category')[:4]
     
     context = {
         'product': product,

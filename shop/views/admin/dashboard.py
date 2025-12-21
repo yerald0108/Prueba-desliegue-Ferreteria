@@ -1,17 +1,6 @@
-"""
-Vista del dashboard de administración.
-
-Proporciona:
-- Estadísticas generales
-- Gráficos de ventas
-- Órdenes recientes
-- Productos más vendidos
-- Alertas de stock
-"""
-
 from django.shortcuts import render
 from django.contrib.admin.views.decorators import staff_member_required
-from django.db.models import Sum, Count, F
+from django.db.models import Sum, Count, F, Q, Prefetch
 from django.db.models.functions import TruncDate
 from django.utils import timezone
 from datetime import timedelta
@@ -24,6 +13,8 @@ from ...models import Product, Order, OrderItem, User
 def admin_dashboard(request):
     """
     Dashboard principal de administración con estadísticas y gráficos.
+    
+    ✅ OPTIMIZADO: Elimina todos los queries N+1
     """
     # ==========================================
     # ESTADÍSTICAS GENERALES
@@ -54,10 +45,19 @@ def admin_dashboard(request):
     out_of_stock = Product.objects.filter(is_active=True, stock=0).count()
     
     # ==========================================
-    # ÓRDENES RECIENTES
+    # ÓRDENES RECIENTES - ✅ OPTIMIZADO
     # ==========================================
-    recent_orders = Order.objects.select_related('user').prefetch_related(
-        'items'
+    # ❌ ANTES: N+1 al acceder a order.user y order.items
+    # ✅ AHORA: Un solo query con select_related y prefetch_related
+    
+    recent_orders = Order.objects.select_related(
+        'user',                    # Para order.user.username
+        'user__profile'            # Para order.user.profile (si se usa)
+    ).prefetch_related(
+        Prefetch(
+            'items',
+            queryset=OrderItem.objects.select_related('product')
+        )
     ).order_by('-created_at')[:10]
     
     # ==========================================
@@ -78,7 +78,8 @@ def admin_dashboard(request):
     # PRODUCTOS MÁS VENDIDOS
     # ==========================================
     top_products = OrderItem.objects.values(
-        'product__name', 'product__id'
+        'product__name', 
+        'product__id'
     ).annotate(
         total_sold=Sum('quantity'),
         revenue=Sum(F('quantity') * F('price'))

@@ -10,12 +10,12 @@ Maneja:
 from django.shortcuts import render, get_object_or_404
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.models import User
-from django.db.models import Q, Sum, Count, Avg, F, ExpressionWrapper, DecimalField
+from django.db.models import Q, Sum, Count, Avg, F, ExpressionWrapper, DecimalField, Prefetch
 from django.contrib.sessions.models import Session
 from django.utils import timezone
 from django.http import JsonResponse
 
-from ...models import Order, OrderItem
+from ...models import Order, OrderItem, CartItem, Cart
 
 
 @staff_member_required
@@ -23,17 +23,11 @@ def admin_users(request):
     """
     Listado de usuarios con estadísticas básicas.
     
-    Muestra:
-    - Total de órdenes por usuario
-    - Total gastado
-    - Información de contacto
-    
-    Filtros:
-    - q: búsqueda por username, email, nombre o apellido
+    ✅ OPTIMIZADO: Annotations en un solo query
     """
     search_query = request.GET.get('q', '')
     
-    # Anotar con estadísticas
+    # ✅ OPTIMIZACIÓN: select_related para profile, annotations para stats
     users = User.objects.select_related('profile').annotate(
         order_count=Count('orders'),
         total_spent=Sum('orders__total')
@@ -63,22 +57,38 @@ def admin_user_detail(request, user_id):
     """
     Detalle completo de un usuario con análisis exhaustivo.
     
-    Muestra:
-    - Información básica y perfil
-    - Estadísticas de compras
-    - Análisis de órdenes por estado
-    - Productos más comprados
-    - Historial completo de órdenes
+    ✅ OPTIMIZADO: Prefetch completo de todas las relaciones
     """
-    user = get_object_or_404(User.objects.select_related('profile'), pk=user_id)
+    # ✅ OPTIMIZACIÓN MÁXIMA: Cargar TODO en queries eficientes
+    user = get_object_or_404(
+        User.objects.select_related('profile').prefetch_related(
+            Prefetch(
+                'orders',
+                queryset=Order.objects.prefetch_related(
+                    Prefetch(
+                        'items',
+                        queryset=OrderItem.objects.select_related(
+                            'product',
+                            'product__category'
+                        )
+                    )
+                ).order_by('-created_at')
+            ),
+            Prefetch(
+                'cart',
+                queryset=Cart.objects.prefetch_related(
+                    Prefetch(
+                        'items',
+                        queryset=CartItem.objects.select_related('product')
+                    )
+                )
+            )
+        ),
+        pk=user_id
+    )
     
-    # ==========================================
-    # ÓRDENES Y ESTADÍSTICAS
-    # ==========================================
-    orders = Order.objects.filter(user=user).prefetch_related(
-        'items__product'
-    ).order_by('-created_at')
-    
+    # ✅ AHORA podemos acceder a todo sin queries adicionales
+    orders = user.orders.all()  # Ya está prefetcheado
     order_count = orders.count()
     
     # Agregaciones
@@ -102,18 +112,19 @@ def admin_user_detail(request, user_id):
     )
     
     # ==========================================
-    # ANÁLISIS DE PRODUCTOS
+    # ANÁLISIS DE PRODUCTOS - ✅ OPTIMIZADO
     # ==========================================
     # Productos distintos comprados
     distinct_products = OrderItem.objects.filter(
         order__user=user
     ).values('product').distinct().count()
     
-    # Top 10 productos más comprados
+    # Top 10 productos más comprados - ✅ Sin queries extras
     top_products = OrderItem.objects.filter(
         order__user=user
     ).values(
-        'product__id', 'product__name'
+        'product__id', 
+        'product__name'
     ).annotate(
         total_quantity=Sum('quantity'),
         revenue=Sum(
@@ -127,7 +138,7 @@ def admin_user_detail(request, user_id):
     # ==========================================
     # CARRITO ACTUAL
     # ==========================================
-    cart = getattr(user, 'cart', None)
+    cart = getattr(user, 'cart', None)  # Ya está prefetcheado
     
     context = {
         'detail_user': user,

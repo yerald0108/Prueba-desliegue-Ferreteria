@@ -9,14 +9,28 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 from django.db import transaction
+from django.db.models import Prefetch
 
 from ..models import Product, Cart, CartItem
 
 
 @login_required
 def cart_view(request):
-    """Ver carrito de compras"""
-    cart, created = Cart.objects.get_or_create(user=request.user)
+    """
+    Ver carrito de compras
+    
+    ✅ OPTIMIZADO: Prefetch de items con productos
+    """
+    # ✅ OPTIMIZACIÓN: Cargar cart con items y productos en un query
+    cart, created = Cart.objects.prefetch_related(
+        Prefetch(
+            'items',
+            queryset=CartItem.objects.select_related(
+                'product',
+                'product__category'
+            ).order_by('-added_at')
+        )
+    ).get_or_create(user=request.user)
     
     context = {
         'cart': cart,

@@ -184,11 +184,6 @@ $('#addToCartForm').on('submit', function(e) {
                 // Actualizar badge del carrito
                 $('.cart-badge').text(response.cart_count).show();
 
-                // Animación hacia el carrito
-                if (window.animateAddToCart) {
-                    window.animateAddToCart($('#addToCartForm button[type="submit"]'));
-                }
-
                 // ⭐ TOAST DE ÉXITO ⭐
                 Toast.success(
                     '¡Producto agregado!',
@@ -207,3 +202,4 @@ $('#addToCartForm').on('submit', function(e) {
     });
 });
 </script>
+{% endblock %}
