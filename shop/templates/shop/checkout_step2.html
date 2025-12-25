@@ -1,0 +1,112 @@
+{% extends 'shop/checkout_base.html' %}
+
+{% block step_content %}
+<h3 class="mb-4">
+    <i class="bi bi-calendar-check text-primary"></i> 
+    Fecha, Hora y Método de Pago
+</h3>
+
+<p class="text-muted mb-4">
+    Selecciona cuándo deseas recibir tu pedido y cómo prefieres pagar.
+</p>
+
+<form method="post" id="step2Form">
+    {% csrf_token %}
+    
+    <!-- Fecha de Entrega -->
+    <div class="mb-4">
+        <label for="{{ form.delivery_date.id_for_label }}" class="form-label fw-bold">
+            <i class="bi bi-calendar3"></i> {{ form.delivery_date.label }} *
+        </label>
+        {{ form.delivery_date }}
+        {% if form.delivery_date.errors %}
+            <div class="text-danger small mt-1">{{ form.delivery_date.errors.0 }}</div>
+        {% endif %}
+    </div>
+    
+    <!-- Horario de Entrega -->
+    <div class="mb-4">
+        <label class="form-label fw-bold">
+            <i class="bi bi-clock"></i> {{ form.delivery_time.label }} *
+        </label>
+        <div class="d-flex flex-column gap-2">
+            {% for radio in form.delivery_time %}
+            <div class="card">
+                <div class="card-body py-3">
+                    <div class="form-check">
+                        {{ radio.tag }}
+                        <label class="form-check-label w-100" for="{{ radio.id_for_label }}">
+                            {{ radio.choice_label }}
+                        </label>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% if form.delivery_time.errors %}
+            <div class="text-danger small mt-1">{{ form.delivery_time.errors.0 }}</div>
+        {% endif %}
+    </div>
+
+    <!-- Método de Pago -->
+    <div class="mb-4">
+        <label class="form-label fw-bold">
+            <i class="bi bi-wallet2"></i> {{ form.payment_method.label }} *
+        </label>
+        <div class="d-flex flex-column gap-2">
+            {% for radio in form.payment_method %}
+            <div class="card">
+                <div class="card-body py-3">
+                    <div class="form-check">
+                        {{ radio.tag }}
+                        <label class="form-check-label w-100" for="{{ radio.id_for_label }}">
+                            <strong>{{ radio.choice_label }}</strong>
+                        <br>
+                        <small class="text-muted">
+                            {% if radio.choice_value == 'cash' %}
+                                Paga cuando recibas tu pedido
+                            {% elif radio.choice_value == 'transfer' %}
+                                Te enviaremos los datos bancarios
+                            {% endif %}
+                        </small>
+                    </label>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% if form.payment_method.errors %}
+        <div class="text-danger small mt-1">{{ form.payment_method.errors.0 }}</div>
+    {% endif %}
+    </div>
+
+    <!-- Navegación -->
+    <div class="step-navigation">
+        <a href="{% url 'shop:checkout' %}?step=1" class="btn btn-outline-secondary btn-lg btn-step">
+            <i class="bi bi-arrow-left"></i> Anterior
+        </a>
+        <button type="submit" class="btn btn-primary btn-lg btn-step">
+            Continuar <i class="bi bi-arrow-right"></i>
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block step_js %}
+<script>
+$(document).ready(function() {
+    // Validación
+    $('#step2Form').on('submit', function(e) {
+        const date = $('#{{ form.delivery_date.id_for_label }}').val();
+        const time = $('input[name="delivery_time"]:checked').val();
+        const payment = $('input[name="payment_method"]:checked').val();
+        
+        if (!date || !time || !payment) {
+            e.preventDefault();
+            Toast.error('Campos requeridos', 'Por favor completa todos los campos');
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}

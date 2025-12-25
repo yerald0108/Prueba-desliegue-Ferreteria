@@ -1,0 +1,269 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Checkout - Paso {{ current_step }} de 3{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============================================
+       CHECKOUT MULTI-PASO - ESTILOS
+       ============================================ */
+    
+    /* Indicador de progreso */
+    .checkout-progress {
+        position: relative;
+        margin-bottom: 3rem;
+    }
+    
+    .progress-steps {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        margin-bottom: 1rem;
+    }
+    
+    .progress-line {
+        position: absolute;
+        top: 20px;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: #e9ecef;
+        z-index: 0;
+    }
+    
+    .progress-line-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        background: linear-gradient(90deg, #4e73df 0%, #224abe 100%);
+        transition: width 0.4s ease;
+        z-index: 1;
+    }
+    
+    .progress-step {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+    }
+    
+    .step-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: white;
+        border: 4px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1rem;
+        transition: all 0.3s;
+        margin-bottom: 0.5rem;
+    }
+    
+    .progress-step.completed .step-circle {
+        background: #28a745;
+        border-color: #28a745;
+        color: white;
+    }
+    
+    .progress-step.active .step-circle {
+        background: #4e73df;
+        border-color: #4e73df;
+        color: white;
+        transform: scale(1.15);
+        box-shadow: 0 4px 15px rgba(78, 115, 223, 0.4);
+    }
+    
+    .step-label {
+        font-size: 0.875rem;
+        text-align: center;
+        color: #6c757d;
+        font-weight: 500;
+    }
+    
+    .progress-step.active .step-label {
+        color: #4e73df;
+        font-weight: 600;
+    }
+    
+    .progress-step.completed .step-label {
+        color: #28a745;
+    }
+    
+    /* Resumen sticky */
+    .checkout-summary {
+        position: sticky;
+        top: 90px;
+        margin-top: 0;
+    }
+    
+    /* Animación de paso */
+    .checkout-step-content {
+        animation: fadeInUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Navegación de pasos */
+    .step-navigation {
+        display: flex;
+        gap: 1rem;
+        justify-content: space-between;
+        margin-top: 2rem;
+    }
+    
+    .btn-step {
+        min-width: 150px;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .step-label {
+            font-size: 0.75rem;
+        }
+        
+        .step-circle {
+            width: 35px;
+            height: 35px;
+            font-size: 0.875rem;
+        }
+        
+        .checkout-summary {
+            position: static;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Indicador de Progreso -->
+    <div class="checkout-progress">
+        <div class="progress-steps">
+            <div class="progress-line">
+                <div class="progress-line-fill" style="width: {% if current_step == 1 %}0%{% elif current_step == 2 %}50%{% else %}100%{% endif %};"></div>
+            </div>
+            
+            <div class="progress-step {% if current_step >= 1 %}{% if current_step == 1 %}active{% else %}completed{% endif %}{% endif %}">
+                <div class="step-circle">
+                    {% if current_step > 1 %}
+                        <i class="bi bi-check-lg"></i>
+                    {% else %}
+                        1
+                    {% endif %}
+                </div>
+                <span class="step-label">Información<br>de Entrega</span>
+            </div>
+            
+            <div class="progress-step {% if current_step >= 2 %}{% if current_step == 2 %}active{% else %}completed{% endif %}{% endif %}">
+                <div class="step-circle">
+                    {% if current_step > 2 %}
+                        <i class="bi bi-check-lg"></i>
+                    {% else %}
+                        2
+                    {% endif %}
+                </div>
+                <span class="step-label">Fecha y<br>Pago</span>
+            </div>
+            
+            <div class="progress-step {% if current_step == 3 %}active{% endif %}">
+                <div class="step-circle">3</div>
+                <span class="step-label">Confirmación</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Formulario del Paso -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm checkout-step-content">
+                <div class="card-body p-4">
+                    {% block step_content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Resumen del Pedido (Sticky) -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm checkout-summary">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">
+                        <i class="bi bi-receipt"></i> Resumen del Pedido
+                    </h5>
+                    
+                    <!-- Items -->
+                    <div class="mb-3" style="max-height: 300px; overflow-y: auto;">
+                        {% for item in cart.items.all %}
+                            <div class="d-flex justify-content-between align-items-start mb-2 pb-2 border-bottom">
+                                <div class="flex-grow-1">
+                                    <strong style="font-size: 0.9rem;">{{ item.product.name }}</strong>
+                                    <br>
+                                    <small class="text-muted">Cantidad: {{ item.quantity }}</small>
+                                </div>
+                                <span class="text-primary fw-bold">${{ item.subtotal }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Totales -->
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <strong>${{ cart.total }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Envío:</span>
+                        <strong>$5.00</strong>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-3">
+                        <h5 class="mb-0">Total:</h5>
+                        <h5 class="mb-0 text-primary">${{ cart.total|add:"5" }}</h5>
+                    </div>
+                    
+                    <!-- Información ya ingresada -->
+                    {% if checkout_data.step1 %}
+                    <div class="alert alert-light small">
+                        <i class="bi bi-check-circle text-success"></i>
+                        <strong>Paso 1 completado</strong>
+                    </div>
+                    {% endif %}
+                    
+                    {% if checkout_data.step2 %}
+                    <div class="alert alert-light small">
+                        <i class="bi bi-check-circle text-success"></i>
+                        <strong>Paso 2 completado</strong>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="alert alert-info small">
+                        <i class="bi bi-shield-check"></i>
+                        <strong>Compra segura</strong><br>
+                        Tu información está protegida
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% block step_js %}{% endblock %}
+{% endblock %}

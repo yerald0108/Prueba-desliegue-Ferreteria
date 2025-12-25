@@ -1,0 +1,124 @@
+{% extends 'shop/checkout_base.html' %}
+
+{% block step_content %}
+<h3 class="mb-4">
+    <i class="bi bi-check-circle text-success"></i> 
+    Confirma tu Pedido
+</h3>
+
+<p class="text-muted mb-4">
+    Revisa cuidadosamente la información antes de confirmar.
+</p>
+
+<!-- Resumen de Información -->
+<div class="card bg-light mb-4">
+    <div class="card-body">
+        <h5 class="card-title">
+            <i class="bi bi-geo-alt text-primary"></i> Información de Entrega
+        </h5>
+        <p class="mb-1">
+            <strong>Dirección:</strong> {{ checkout_data.step1.delivery_address }}
+        </p>
+        <p class="mb-1">
+            <strong>Municipio:</strong> {{ checkout_data.step1.delivery_city }}, {{ checkout_data.step1.delivery_province }}
+        </p>
+        <p class="mb-0">
+            <strong>Teléfono:</strong> {{ checkout_data.step1.contact_phone }}
+        </p>
+        <a href="{% url 'shop:checkout' %}?step=1" class="btn btn-sm btn-outline-primary mt-2">
+            <i class="bi bi-pencil"></i> Editar
+        </a>
+    </div>
+</div>
+
+<div class="card bg-light mb-4">
+    <div class="card-body">
+        <h5 class="card-title">
+            <i class="bi bi-calendar-check text-primary"></i> Fecha y Método de Pago
+        </h5>
+        <p class="mb-1">
+            <strong>Fecha:</strong> {{ checkout_data.step2.delivery_date|date:"d/m/Y" }}
+        </p>
+        <p class="mb-1">
+            <strong>Horario:</strong> 
+            {% if checkout_data.step2.delivery_time == 'morning' %}
+                Mañana (8:00 AM - 12:00 PM)
+            {% elif checkout_data.step2.delivery_time == 'afternoon' %}
+                Tarde (12:00 PM - 6:00 PM)
+            {% else %}
+                Noche (6:00 PM - 9:00 PM)
+            {% endif %}
+        </p>
+        <p class="mb-0">
+            <strong>Pago:</strong> 
+            {% if checkout_data.step2.payment_method == 'cash' %}
+                Efectivo al recibir
+            {% else %}
+                Transferencia bancaria
+            {% endif %}
+        </p>
+        <a href="{% url 'shop:checkout' %}?step=2" class="btn btn-sm btn-outline-primary mt-2">
+            <i class="bi bi-pencil"></i> Editar
+        </a>
+    </div>
+</div>
+
+<!-- Notas Adicionales -->
+<form method="post" id="step3Form">
+    {% csrf_token %}
+    
+    <div class="mb-4">
+        <label for="{{ form.notes.id_for_label }}" class="form-label fw-bold">
+            <i class="bi bi-chat-left-text"></i> {{ form.notes.label }}
+        </label>
+        {{ form.notes }}
+        <small class="text-muted">
+            Ejemplo: "Tocar timbre", "Dejar en portería", etc.
+        </small>
+    </div>
+    
+    <!-- Términos y Condiciones -->
+    <div class="form-check mb-4">
+        <input class="form-check-input" type="checkbox" id="termsCheck" required>
+        <label class="form-check-label" for="termsCheck">
+            Acepto los <a href="#" target="_blank">términos y condiciones</a> y confirmo que la información es correcta *
+        </label>
+    </div>
+    
+    <!-- Navegación -->
+    <div class="step-navigation">
+        <a href="{% url 'shop:checkout' %}?step=2" class="btn btn-outline-secondary btn-lg btn-step">
+            <i class="bi bi-arrow-left"></i> Anterior
+        </a>
+        <button type="submit" class="btn btn-success btn-lg btn-step" id="confirmBtn">
+            <i class="bi bi-check-circle"></i> Confirmar Pedido
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block step_js %}
+<script>
+$(document).ready(function() {
+    $('#step3Form').on('submit', function(e) {
+        const termsChecked = $('#termsCheck').is(':checked');
+        
+        if (!termsChecked) {
+            e.preventDefault();
+            Toast.error('Términos requeridos', 'Debes aceptar los términos y condiciones');
+            return false;
+        }
+        
+        // Deshabilitar botón
+        const $btn = $('#confirmBtn');
+        const originalText = $btn.html();
+        $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Procesando...');
+        
+        Toast.info('Procesando pedido', 'Por favor espera...', {
+            duration: 0,
+            closeButton: false
+        });
+    });
+});
+</script>
+{% endblock %}

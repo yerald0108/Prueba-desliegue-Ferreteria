@@ -190,13 +190,34 @@
                     </li>
                 </ul>
                 
-                <!-- Search form -->
-                <form class="d-flex me-3" method="get" action="{% url 'shop:product_list' %}">
-                    <input class="form-control me-2" type="search" name="q" placeholder="Buscar productos..." aria-label="Search">
-                    <button class="btn btn-outline-light" type="submit">
-                        <i class="bi bi-search"></i>
-                    </button>
-                </form>
+                <!-- Search form mejorado -->
+                <div class="search-container d-flex me-3">
+                    <input class="search-input" 
+                        type="search" 
+                        id="searchInput"
+                        name="q"
+                        placeholder="Buscar productos..." 
+                        aria-label="Search"
+                        autocomplete="off">
+
+                <!-- Botón de limpiar -->
+                <button type="button" 
+                    class="clear-search-btn" 
+                    aria-label="Limpiar búsqueda">
+                    <i class="bi bi-x-circle-fill"></i>
+                </button>
+
+                <!-- Botón de búsqueda -->
+                <button class="search-btn" 
+                    type="button"
+                    id="searchBtn"
+                    aria-label="Buscar">
+                    <i class="bi bi-search"></i>
+                </button>
+
+                <!-- Dropdown de autocompletado -->
+                <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
+                </div>
                 
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}

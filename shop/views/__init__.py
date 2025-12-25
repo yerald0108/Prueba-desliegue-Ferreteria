@@ -83,7 +83,7 @@ from .wishlist import (
 # ==========================================
 # PÁGINAS ESTÁTICAS
 # ==========================================
-from .pages import (
+from ..pages import (
     about_us,
     contact,
     faq,

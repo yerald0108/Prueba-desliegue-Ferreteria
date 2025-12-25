@@ -4,12 +4,119 @@ from django.contrib.auth.models import User
 from .models import UserProfile, Order, Product, Review
 import datetime
 
-# Reutilizar las opciones del modelo Order
-DELIVERY_TIME_CHOICES = [
-    ('morning', 'Mañana (8:00 AM - 12:00 PM)'),
-    ('afternoon', 'Tarde (12:00 PM - 6:00 PM)'),
-    ('evening', 'Noche (6:00 PM - 9:00 PM)'),
-]
+class CheckoutStep1Form(forms.ModelForm):
+    """Paso 1: Información de Entrega"""
+    
+    class Meta:
+        model = Order
+        fields = ['delivery_address', 'delivery_city', 'delivery_province', 'contact_phone']
+        widgets = {
+            'delivery_address': forms.Textarea(attrs={
+                'class': 'form-control form-control-lg',
+                'placeholder': 'Calle, número, apartamento, referencias...',
+                'rows': 3,
+                'required': True
+            }),
+            'delivery_city': forms.TextInput(attrs={
+                'class': 'form-control form-control-lg',
+                'placeholder': 'Municipio',
+                'required': True
+            }),
+            'delivery_province': forms.TextInput(attrs={
+                'class': 'form-control form-control-lg',
+                'placeholder': 'Provincia',
+                'required': True
+            }),
+            'contact_phone': forms.TextInput(attrs={
+                'class': 'form-control form-control-lg',
+                'placeholder': '56835698',
+                'required': True
+            }),
+        }
+        labels = {
+            'delivery_address': 'Dirección de Entrega',
+            'delivery_city': 'Municipio',
+            'delivery_province': 'Provincia',
+            'contact_phone': 'Teléfono de Contacto',
+        }
+    
+    def clean_contact_phone(self):
+        phone = self.cleaned_data['contact_phone']
+        import re
+        pattern = r'^(\d{8}|\+53\s?\d{8})$'
+        if not re.match(pattern, phone):
+            raise forms.ValidationError(
+                "El número debe tener 8 dígitos (ejemplo: 56835698). "
+                "El código +53 se agregará automáticamente."
+            )
+        if len(phone) == 8 and phone.isdigit():
+            phone = f'+53 {phone}'
+        return phone
+
+
+class CheckoutStep2Form(forms.ModelForm):
+    """Paso 2: Fecha, Hora y Método de Pago"""
+    
+    DELIVERY_TIME_CHOICES = [
+        ('morning', 'Mañana (8:00 AM - 12:00 PM)'),
+        ('afternoon', 'Tarde (12:00 PM - 6:00 PM)'),
+        ('evening', 'Noche (6:00 PM - 9:00 PM)'),
+    ]
+    
+    PAYMENT_METHOD_CHOICES = [
+        ('cash', 'Efectivo al recibir'),
+        ('transfer', 'Transferencia bancaria'),
+    ]
+    
+    delivery_time = forms.ChoiceField(
+        choices=DELIVERY_TIME_CHOICES,
+        widget=forms.RadioSelect(attrs={'class': 'form-check-input'}),
+        label='Horario de Entrega'
+    )
+
+    payment_method = forms.ChoiceField(
+        choices=PAYMENT_METHOD_CHOICES,
+        widget=forms.RadioSelect(attrs={'class': 'form-check-input'}),
+        label='Método de Pago'
+    )
+    
+    class Meta:
+        model = Order
+        fields = ['delivery_date', 'delivery_time', 'payment_method']
+        widgets = {
+            'delivery_date': forms.DateInput(attrs={
+                'class': 'form-control form-control-lg',
+                'type': 'date',
+                'min': datetime.date.today().isoformat(),
+                'required': True
+            }),
+        }
+        labels = {
+            'delivery_date': 'Fecha de Entrega',
+        }
+    
+    def clean_delivery_date(self):
+        date = self.cleaned_data['delivery_date']
+        if date < datetime.date.today():
+            raise forms.ValidationError("La fecha de entrega no puede ser en el pasado")
+        return date
+
+class CheckoutStep3Form(forms.ModelForm):
+    """Paso 3: Notas adicionales (opcional)"""
+    
+    class Meta:
+        model = Order
+        fields = ['notes']
+        widgets = {
+            'notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Instrucciones especiales de entrega (opcional)...',
+                'rows': 4
+            }),
+        }
+        labels = {
+            'notes': 'Notas Adicionales',
+        }
 
 
 class UserRegistrationForm(UserCreationForm):
@@ -116,79 +223,6 @@ class UserProfileForm(forms.ModelForm):
             phone = f'+53 {phone}'
         return phone
 
-
-class CheckoutForm(forms.ModelForm):
-    PAYMENT_METHOD_CHOICES = [
-        ('cash', 'Efectivo al recibir'),
-        ('transfer', 'Transferencia bancaria'),
-    ]
-    
-    delivery_time = forms.ChoiceField(
-        choices=DELIVERY_TIME_CHOICES,
-        widget=forms.RadioSelect(attrs={'class': 'form-check-input'})
-    )
-
-    payment_method = forms.ChoiceField(
-        choices=PAYMENT_METHOD_CHOICES,
-        widget=forms.RadioSelect(attrs={'class': 'form-check-input'})
-    )
-    
-    class Meta:
-        model = Order
-        fields = ['delivery_address', 'delivery_city', 'delivery_province', 'contact_phone', 
-                    'delivery_date', 'delivery_time', 'payment_method', 'notes']
-        widgets = {
-            'delivery_address': forms.Textarea(attrs={
-                'class': 'form-control',
-                'placeholder': 'Dirección completa de entrega',
-                'rows': 3,
-                'required': True
-            }),
-            'delivery_city': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Municipio',
-                'required': True
-            }),
-            'delivery_province': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Provincia',
-                'required': True
-            }),
-            'contact_phone': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': '56835698',
-                'required': True
-            }),
-            'delivery_date': forms.DateInput(attrs={
-                'class': 'form-control',
-                'type': 'date',
-                'min': datetime.date.today().isoformat(),
-                'required': True
-            }),
-            'notes': forms.Textarea(attrs={
-                'class': 'form-control',
-                'placeholder': 'Notas adicionales (opcional)',
-                'rows': 3
-            }),
-        }
-    
-    def clean_delivery_date(self):
-        date = self.cleaned_data['delivery_date']
-        if date < datetime.date.today():
-            raise forms.ValidationError("La fecha de entrega no puede ser en el pasado")
-        return date
-    
-    def clean_contact_phone(self):
-        phone = self.cleaned_data['contact_phone']
-        import re
-        # Acepta: 8 dígitos solos, o +53 seguido de espacio opcional y 8 dígitos
-        pattern = r'^(\d{8}|\+53\s?\d{8})$'
-        if not re.match(pattern, phone):
-            raise forms.ValidationError("El número debe tener 8 dígitos (ejemplo: 56835698). El código +53 se agregará automáticamente.")
-        # Si solo tiene 8 dígitos, agregar +53 automáticamente
-        if len(phone) == 8 and phone.isdigit():
-            phone = f'+53 {phone}'
-        return phone
 
 class ProductForm(forms.ModelForm):
     class Meta:

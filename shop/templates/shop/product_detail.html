@@ -34,16 +34,6 @@
 
 {% block content %}
 <div class="container py-5">
-    <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'shop:home' %}">Inicio</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'shop:product_list' %}">Productos</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'shop:product_list' %}?category={{ product.category.slug }}">{{ product.category.name }}</a></li>
-            <li class="breadcrumb-item active">{{ product.name }}</li>
-        </ol>
-    </nav>
-    
     <div class="row">
         <div class="col-lg-6 mb-4">
             <div class="card shadow-sm">

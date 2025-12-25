@@ -244,5 +244,11 @@ document.getElementById('checkoutForm').addEventListener('submit', function(e) {
         return false;
     }
 });
+
+$('#checkoutForm').on('submit', function(e) {
+    const $btn = $(this).find('button[type="submit"]');
+    $btn.prop('disabled', true)
+        .html('<span class="spinner-border spinner-border-sm me-2"></span>Procesando...');
+});
 </script>
 {% endblock %}
