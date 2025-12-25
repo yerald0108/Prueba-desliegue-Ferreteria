@@ -16,14 +16,14 @@ def validate_phone_or_empty(value):
 class Category(models.Model):
     name = models.CharField(max_length=100, verbose_name="Nombre")
     description = models.TextField(blank=True, verbose_name="Descripción")
-    slug = models.SlugField(unique=True, db_index=True)  # ✅ ÍNDICE: Para búsquedas por slug
-    created_at = models.DateTimeField(auto_now_add=True, db_index=True)  # ✅ ÍNDICE: Para ordenar
+    slug = models.SlugField(unique=True, db_index=True)  # ÍNDICE: Para búsquedas por slug
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)  # ÍNDICE: Para ordenar
     
     class Meta:
         verbose_name = "Categoría"
         verbose_name_plural = "Categorías"
         ordering = ['name']
-        # ✅ ÍNDICE COMPUESTO: Para queries que filtran por is_active
+        # ÍNDICE COMPUESTO: Para queries que filtran por is_active
         indexes = [
             models.Index(fields=['name']),
         ]
@@ -38,35 +38,108 @@ class Product(models.Model):
         on_delete=models.CASCADE, 
         related_name='products', 
         verbose_name="Categoría",
-        db_index=True  # ✅ ÍNDICE: Para búsquedas por categoría
+        db_index=True  # ÍNDICE: Para búsquedas por categoría
     )
-    name = models.CharField(max_length=200, verbose_name="Nombre", db_index=True)  # ✅ ÍNDICE: Para búsquedas
+    name = models.CharField(max_length=200, verbose_name="Nombre", db_index=True)  # ÍNDICE: Para búsquedas
     description = models.TextField(verbose_name="Descripción")
     price = models.DecimalField(
         max_digits=10, 
         decimal_places=2, 
         validators=[MinValueValidator(Decimal('0.01'))], 
         verbose_name="Precio",
-        db_index=True  # ✅ ÍNDICE: Para ordenar por precio
+        db_index=True  # ÍNDICE: Para ordenar por precio
     )
     stock = models.IntegerField(
         default=0, 
         validators=[MinValueValidator(0)], 
         verbose_name="Stock",
-        db_index=True  # ✅ ÍNDICE: Para filtros de stock
+        db_index=True  # ÍNDICE: Para filtros de stock
     )
     image = models.ImageField(upload_to='products/', blank=True, null=True, verbose_name="Imagen")
-    is_active = models.BooleanField(default=True, verbose_name="Activo", db_index=True)  # ✅ ÍNDICE: Filtro común
-    featured = models.BooleanField(default=False, verbose_name="Destacado", db_index=True)  # ✅ ÍNDICE: Para featured
-    sku = models.CharField(max_length=50, unique=True, verbose_name="SKU", db_index=True)  # ✅ ÍNDICE: Búsquedas por SKU
-    created_at = models.DateTimeField(auto_now_add=True, db_index=True)  # ✅ ÍNDICE: Para ordenar
+    is_active = models.BooleanField(default=True, verbose_name="Activo", db_index=True)  # ÍNDICE: Filtro común
+    featured = models.BooleanField(default=False, verbose_name="Destacado", db_index=True)  # ÍNDICE: Para featured
+    sku = models.CharField(max_length=50, unique=True, verbose_name="SKU", db_index=True)  # ÍNDICE: Búsquedas por SKU
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)  # ÍNDICE: Para ordenar
     updated_at = models.DateTimeField(auto_now=True)
     
+    # ==========================================
+    # NUEVOS CAMPOS PARA COMPARADOR
+    # ==========================================
+    
+    # Especificaciones Técnicas Básicas
+    material = models.CharField(
+        max_length=100, 
+        blank=True,
+        verbose_name="Material",
+        help_text="Ej: Acero galvanizado, Plástico ABS, Madera"
+    )
+    
+    dimensiones = models.CharField(
+        max_length=200, 
+        blank=True,
+        verbose_name="Dimensiones",
+        help_text="Ej: 10cm x 5cm x 2cm, Largo 50cm"
+    )
+    
+    peso = models.DecimalField(
+        max_digits=8,  # Permite hasta 999999.99 kg
+        decimal_places=2, 
+        blank=True, 
+        null=True,
+        verbose_name="Peso (kg)",
+        help_text="Peso en kilogramos"
+    )
+    
+    # Especificaciones Eléctricas (para herramientas)
+    voltaje = models.CharField(
+        max_length=50, 
+        blank=True,
+        verbose_name="Voltaje",
+        help_text="Ej: 110V, 220V, 12V DC"
+    )
+    
+    potencia = models.CharField(
+        max_length=50, 
+        blank=True,
+        verbose_name="Potencia",
+        help_text="Ej: 1500W, 2HP, 750W"
+    )
+    
+    # Información Comercial
+    marca = models.CharField(
+        max_length=100, 
+        blank=True,
+        verbose_name="Marca",
+        help_text="Fabricante o marca del producto"
+    )
+    
+    garantia = models.CharField(
+        max_length=100, 
+        blank=True,
+        verbose_name="Garantía",
+        help_text="Ej: 1 año, 6 meses, Sin garantía"
+    )
+    
+    # Características Adicionales (opcional)
+    color = models.CharField(
+        max_length=50,
+        blank=True,
+        verbose_name="Color",
+        help_text="Color principal del producto"
+    )
+    
+    # Campo de uso (para categorización)
+    uso_recomendado = models.TextField(
+        blank=True,
+        verbose_name="Uso Recomendado",
+        help_text="Para qué se recomienda usar este producto"
+    )
+
     class Meta:
         verbose_name = "Producto"
         verbose_name_plural = "Productos"
         ordering = ['-created_at']
-        # ✅ ÍNDICES COMPUESTOS: Para queries comunes
+        # ÍNDICES COMPUESTOS: Para queries comunes
         indexes = [
             # Query común: productos activos de una categoría
             models.Index(fields=['category', 'is_active', '-created_at']),
@@ -76,6 +149,8 @@ class Product(models.Model):
             models.Index(fields=['is_active', 'stock']),
             # Query común: búsqueda por nombre
             models.Index(fields=['name', 'is_active']),
+            # Query común: búsquedas por marca
+            models.Index(fields=['marca', 'is_active']),
         ]
     
     def __str__(self):
@@ -86,12 +161,67 @@ class Product(models.Model):
         return self.stock > 0
 
 
+    # ==========================================
+    # NUEVOS MÉTODOS PARA COMPARADOR
+    # ==========================================
+    
+    def get_specifications(self):
+        """
+        Retorna un diccionario con todas las especificaciones
+        técnicas del producto para facilitar la comparación.
+        
+        Returns:
+            dict: Diccionario con especificaciones agrupadas
+        """
+        specs = {
+            'basic_info': {
+                'Nombre': self.name,
+                'Marca': self.marca or 'No especificada',
+                'SKU': self.sku,
+                'Categoría': self.category.name,
+            },
+            'physical_specs': {
+                'Material': self.material or 'No especificado',
+                'Dimensiones': self.dimensiones or 'No especificado',
+                'Peso': f"{self.peso} kg" if self.peso else 'No especificado',
+                'Color': self.color or 'No especificado',
+            },
+            'technical_specs': {
+                'Voltaje': self.voltaje or 'N/A',
+                'Potencia': self.potencia or 'N/A',
+            },
+            'commercial_info': {
+                'Precio': f"${self.price}",
+                'Stock': f"{self.stock} unidades" if self.stock > 0 else "Agotado",
+                'Garantía': self.garantia or 'No especificada',
+            }
+        }
+        
+        # Filtrar campos vacíos si se desea
+        return specs
+    
+    def has_comparable_specs(self):
+        """
+        Verifica si el producto tiene suficientes especificaciones
+        para ser comparado.
+        
+        Returns:
+            bool: True si tiene al menos 2 especificaciones llenas
+        """
+        spec_fields = [
+            self.material, self.dimensiones, self.peso,
+            self.voltaje, self.potencia, self.marca,
+            self.garantia, self.color
+        ]
+        filled_specs = sum(1 for field in spec_fields if field)
+        return filled_specs >= 2
+
 class UserProfile(models.Model):
     user = models.OneToOneField(
         User, 
         on_delete=models.CASCADE, 
         related_name='profile',
-        db_index=True  # ✅ ÍNDICE: Relación uno-a-uno
+        db_index=True  # ÍNDICE: Relación uno-a-uno
     )
     phone = models.CharField(
         validators=[validate_phone_or_empty], 
@@ -116,9 +246,9 @@ class UserProfile(models.Model):
     email_verified = models.BooleanField(
         default=False, 
         verbose_name="Email verificado",
-        db_index=True  # ✅ ÍNDICE: Para filtrar usuarios verificados
+        db_index=True  # ÍNDICE: Para filtrar usuarios verificados
     )
-    verification_token = models.CharField(max_length=100, blank=True, null=True, db_index=True)  # ✅ ÍNDICE: Búsqueda por token
+    verification_token = models.CharField(max_length=100, blank=True, null=True, db_index=True)  # ÍNDICE: Búsqueda por token
     verification_token_created = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
@@ -175,13 +305,13 @@ class Order(models.Model):
         on_delete=models.CASCADE, 
         related_name='orders', 
         verbose_name="Usuario",
-        db_index=True  # ✅ ÍNDICE: Para filtrar órdenes por usuario
+        db_index=True  # ÍNDICE: Para filtrar órdenes por usuario
     )
     order_number = models.CharField(
         max_length=20, 
         unique=True, 
         verbose_name="Número de orden",
-        db_index=True  # ✅ ÍNDICE: Para búsqueda por número de orden
+        db_index=True  # ÍNDICE: Para búsqueda por número de orden
     )
     
     # Información de contacto y entrega
@@ -189,7 +319,7 @@ class Order(models.Model):
     delivery_city = models.CharField(max_length=100, verbose_name="Municipio")
     delivery_province = models.CharField(max_length=100, verbose_name="Provincia")
     contact_phone = models.CharField(max_length=17, verbose_name="Teléfono de contacto")
-    delivery_date = models.DateField(verbose_name="Fecha de entrega", db_index=True)  # ✅ ÍNDICE: Para reportes por fecha
+    delivery_date = models.DateField(verbose_name="Fecha de entrega", db_index=True)  # ÍNDICE: Para reportes por fecha
     delivery_time = models.CharField(max_length=50, choices=DELIVERY_TIME_CHOICES, verbose_name="Hora de entrega")
     
     # Información de pago y estado
@@ -199,27 +329,27 @@ class Order(models.Model):
         choices=STATUS_CHOICES, 
         default='pending', 
         verbose_name="Estado",
-        db_index=True  # ✅ ÍNDICE: Filtro muy común
+        db_index=True  # ÍNDICE: Filtro muy común
     )
     
     # Totales
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Subtotal")
     delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Costo de envío")
-    total = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Total", db_index=True)  # ✅ ÍNDICE: Para reportes
+    total = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Total", db_index=True)  # ÍNDICE: Para reportes
     
     # Notas
     notes = models.TextField(blank=True, verbose_name="Notas adicionales")
     admin_notes = models.TextField(blank=True, verbose_name="Notas del administrador")
     cancellation_reason = models.TextField(blank=True, verbose_name="Motivo de cancelación")
     
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación", db_index=True)  # ✅ ÍNDICE: Ordenar
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación", db_index=True)  # ÍNDICE: Ordenar
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Última actualización")
     
     class Meta:
         verbose_name = "Orden"
         verbose_name_plural = "Órdenes"
         ordering = ['-created_at']
-        # ✅ ÍNDICES COMPUESTOS: Para queries comunes de administración
+        # ÍNDICES COMPUESTOS: Para queries comunes de administración
         indexes = [
             # Query común: órdenes de un usuario por fecha
             models.Index(fields=['user', '-created_at']),
@@ -241,13 +371,13 @@ class OrderItem(models.Model):
         on_delete=models.CASCADE, 
         related_name='items', 
         verbose_name="Orden",
-        db_index=True  # ✅ ÍNDICE: Para obtener items de una orden
+        db_index=True  # ÍNDICE: Para obtener items de una orden
     )
     product = models.ForeignKey(
         Product, 
         on_delete=models.PROTECT, 
         verbose_name="Producto",
-        db_index=True  # ✅ ÍNDICE: Para reportes de productos vendidos
+        db_index=True  # ÍNDICE: Para reportes de productos vendidos
     )
     quantity = models.IntegerField(validators=[MinValueValidator(1)], verbose_name="Cantidad")
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Precio unitario")
@@ -255,7 +385,7 @@ class OrderItem(models.Model):
     class Meta:
         verbose_name = "Item de Orden"
         verbose_name_plural = "Items de Orden"
-        # ✅ ÍNDICE COMPUESTO: Para estadísticas de ventas por producto
+        # ÍNDICE COMPUESTO: Para estadísticas de ventas por producto
         indexes = [
             models.Index(fields=['product', 'order']),
         ]
@@ -274,10 +404,10 @@ class Cart(models.Model):
         on_delete=models.CASCADE, 
         related_name='cart', 
         verbose_name="Usuario",
-        db_index=True  # ✅ ÍNDICE: Relación uno-a-uno
+        db_index=True  # ÍNDICE: Relación uno-a-uno
     )
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True, db_index=True)  # ✅ ÍNDICE: Para limpiar carritos viejos
+    updated_at = models.DateTimeField(auto_now=True, db_index=True)  # ÍNDICE: Para limpiar carritos viejos
     
     class Meta:
         verbose_name = "Carrito"
@@ -305,13 +435,13 @@ class CartItem(models.Model):
         on_delete=models.CASCADE, 
         related_name='items', 
         verbose_name="Carrito",
-        db_index=True  # ✅ ÍNDICE: Para obtener items de un carrito
+        db_index=True  # ÍNDICE: Para obtener items de un carrito
     )
     product = models.ForeignKey(
         Product, 
         on_delete=models.CASCADE, 
         verbose_name="Producto",
-        db_index=True  # ✅ ÍNDICE: Para verificar si producto ya está en carrito
+        db_index=True  # ÍNDICE: Para verificar si producto ya está en carrito
     )
     quantity = models.IntegerField(default=1, validators=[MinValueValidator(1)], verbose_name="Cantidad")
     added_at = models.DateTimeField(auto_now_add=True)
@@ -320,7 +450,7 @@ class CartItem(models.Model):
         verbose_name = "Item del Carrito"
         verbose_name_plural = "Items del Carrito"
         unique_together = ['cart', 'product']
-        # ✅ ÍNDICE COMPUESTO: Para buscar producto en carrito específico
+        # ÍNDICE COMPUESTO: Para buscar producto en carrito específico
         indexes = [
             models.Index(fields=['cart', 'product']),
         ]

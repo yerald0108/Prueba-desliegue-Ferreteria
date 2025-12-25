@@ -54,7 +54,10 @@ He realizado un análisis exhaustivo de todos los templates, CSS, JavaScript y f
 8. **Falta de Comparador de Productos**
    - Los usuarios no pueden comparar especificaciones
    - Común en e-commerce de ferretería
+   - Especialmente crítico para ferretería (especificaciones técnicas)
+   - Los usuarios no pueden tomar decisiones informadas fácilmente
    - Impacto: Menor conversión, más consultas
+
 
 9. **Checkout en Una Sola Página (Single Page Checkout)**
    - Actualmente es todo en una vista
@@ -268,4 +271,309 @@ He realizado un análisis exhaustivo de todos los templates, CSS, JavaScript y f
 
 ---
 
-¿Quieres que profundice en alguna de estas áreas específicas o que te proporcione mockups/wireframes de cómo implementar las de mayor prioridad?
+
+ASUNTO: [Prioridad Alta] Implementación de Comparador de Productos para Ferretería
+
+Necesitamos implementar un comparador de productos como mejora crítica para nuestro e-commerce de ferretería.
+
+**PROBLEMA ACTUAL:**
+- Los usuarios no pueden comparar especificaciones técnicas entre productos
+- Esto genera indecisión, carritos abandonados y consultas innecesarias al soporte
+- Especialmente crítico en ferretería donde las especificaciones técnicas son decisivas
+
+**REQUERIMIENTOS FUNCIONALES:**
+
+1. **Mecanismo de selección:**
+   - Checkbox en listados de productos (máximo 4 productos)
+   - Botón "Comparar" flotante/visible al seleccionar
+
+2. **Vista de comparación:**
+   - Layout en tabla comparativa lado a lado
+   - Columnas: Producto A | Producto B | Producto C | Producto D
+   - Filas con características técnicas agrupadas por categoría
+
+3. **Características técnicas:**
+   - Extraer automáticamente atributos de productos
+   - Agrupar: Especificaciones, Dimensiones, Material, Precio, Disponibilidad
+   - Resaltar diferencias (color diferenciado)
+
+4. **UX/UI:**
+   - Modal o página dedicada
+   - Botones claros: "Añadir al carrito" por producto
+   - Opción "Eliminar" de la comparación
+   - Responsive (mobile-friendly)
+
+**DATOS NECESARIOS:**
+- Los productos ya tienen especificaciones en atributos/variantes
+- Necesitamos definir qué campos son comparables (ej: voltaje, peso, material)
+
+**PRIORIDAD: Alta** - Impacta directamente en conversión y satisfacción del cliente
+
+Empieza a implementar, guiame paso por paso detalladamente para no perderme
+
+
+📋 FASE 3: Plan de Implementación Detallado
+
+Paso 3.1: Modificar el Modelo
+
+- Agregar campos de especificaciones a Product
+- Crear migración
+
+Paso 3.2: Actualizar Admin y Formularios
+
+- Permitir editar estos campos en el panel admin
+
+Paso 3.3: Sistema de Comparación - Backend
+
+- Vista para manejar la comparación
+- Lógica para obtener y formatear datos
+
+Paso 3.4: UI de Selección
+
+- Checkbox en product cards
+- Botón flotante "Comparar (X)"
+- JavaScript para manejar selección
+
+Paso 3.5: Vista de Comparación
+
+- Template con tabla comparativa
+- Responsive design
+- Resaltado de diferencias
+
+Paso 3.6: Pulir y Probar
+
+---------------------------------------------------------------------------------------------
+
+
+ASUNTO: [Prioridad Alta] Implementación: Vista Rápida de Productos
+
+Necesitamos implementar la funcionalidad de Vista Rápida como mejora crítica para optimizar la exploración de productos.
+
+PROBLEMA ACTUAL:
+
+- Los usuarios deben abandonar el listado y cargar la página completa para ver cada producto
+
+- Cada evaluación requiere múltiples pasos: clic, esperar carga completa, volver atrás
+
+- Los clientes de ferretería necesitan comparar rápidamente especificaciones técnicas entre productos similares
+
+- La fricción actual reduce significativamente el número de productos que un usuario evalúa por sesión
+
+IMPACTO NEGATIVO:
+
+- Menos productos evaluados por visita
+
+- Mayor probabilidad de abandono por frustración
+
+- Proceso de decisión de compra más lento
+
+- Menor conversión desde páginas de categoría y listados
+
+REQUERIMIENTOS FUNCIONALES:
+
+Activación y Acceso:
+
+- Botón claramente visible en cada tarjeta de producto en listados
+
+- Texto: "Vista rápida" con icono de ojo o lupa
+
+- También activable al hacer clic en la imagen del producto
+
+- En dispositivos de escritorio, considerar activación al pasar el cursor
+
+Contenido del Modal:
+
+- Galería de imágenes del producto con navegación
+
+- Nombre del producto destacado
+
+- Precio actual y precio anterior tachado si hay descuento
+
+- Calificación con estrellas y número de reseñas
+
+- 3 a 5 especificaciones técnicas más importantes del producto
+
+- Selector de variantes disponibles (colores, tamaños, materiales)
+
+- Indicador de disponibilidad en inventario
+
+- Dos botones principales: "Añadir al carrito" y "Ver detalles completos"
+
+Comportamiento de Usuario:
+
+- Modal que se abre sobre el contenido actual sin recargar la página
+
+- Múltiples formas de cerrar: botón [X], clic fuera del modal, tecla Escape
+
+- Animaciones suaves al abrir y cerrar
+
+- En dispositivos móviles, el modal debe ocupar casi toda la pantalla
+
+- Al cerrar, el usuario debe regresar exactamente al mismo lugar donde estaba
+
+Requisitos de Rendimiento:
+
+- Los datos deben cargarse de forma asíncrona sin recargar la página completa
+
+- Implementar caché para productos ya vistos durante la sesión
+
+- Las imágenes dentro del modal deben cargarse bajo demanda
+
+- Tiempo máximo de apertura: 2 segundos desde que el usuario hace clic
+
+Diseño y Experiencia:
+
+- Fondo semitransparente detrás del modal para mantener contexto
+
+- Diseño responsive que funcione igual en móvil y escritorio
+
+- Accesibilidad completa: navegación con teclado, lectores de pantalla
+
+- Estilos visuales consistentes con el resto de la plataforma
+
+FLUJO DEL USUARIO:
+
+- Usuario navega por listado de productos
+
+- Ve un producto de interés y hace clic en "Vista rápida"
+
+- Modal se abre instantáneamente mostrando información clave
+
+- Usuario evalúa especificaciones técnicas, precio, disponibilidad
+
+- Toma decisión: añade al carrito, va a detalles completos, o cierra para seguir navegando
+
+- Modal se cierra y usuario continúa explorando desde donde estaba
+
+DATOS NECESARIOS:
+
+- Los productos ya tienen todos los atributos necesarios en la base de datos
+
+- Las imágenes ya están optimizadas y disponibles en diferentes tamaños
+
+- Existe endpoint para obtener datos individuales de producto
+
+- Las especificaciones técnicas están estructuradas y normalizadas
+
+PRIORIDAD: Alta
+
+IMPACTO ESPERADO:
+
+- Aumento del 20-30% en número de productos vistos por sesión
+
+- Reducción del 40% en tiempo para tomar decisión de compra
+
+- Incremento del 5-8% en conversiones desde páginas de listado
+
+- Mejora significativa en satisfacción del usuario y percepción de velocidad
+
+La Vista Rápida es fundamental para reducir la fricción en el proceso de exploración, especialmente en ferretería donde los clientes comparan múltiples productos con especificaciones técnicas similares.
+
+Empieza a implementar, guiame paso por paso detalladamente para no perderme
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+
+# **Explicación para el Desarrollador - Indicadores de Carga**
+
+**ASUNTO:** [Prioridad Alta] Implementación: Sistema de Feedback Visual de Carga
+
+Necesitamos implementar indicadores de carga en toda la plataforma para dar retroalimentación clara a los usuarios durante las transiciones y procesos.
+
+**PROBLEMA ACTUAL:**
+- Las páginas cambian sin mostrar ningún indicador de que se está cargando contenido
+- Los formularios no tienen estados visibles de "enviando" o "procesando"
+- Los usuarios hacen clic múltiples veces porque no saben si su acción funcionó
+- Los filtros y búsquedas ocurren sin confirmación visual
+
+**CONSECUENCIAS DEL PROBLEMA ACTUAL:**
+- Usuarios repiten acciones innecesariamente (doble clic, triple clic)
+- Envíos duplicados de formularios que causan errores en el sistema
+- Percepción de que la plataforma es lenta o no responde
+- Abandonos por pensar que la página se congeló
+- Confusión general en la experiencia de usuario
+
+**REQUERIMIENTOS FUNCIONALES:**
+
+1. **Indicador Global de Navegación:**
+   - Mostrar un indicador visible cada vez que el usuario cambia de página
+   - Debe aparecer inmediatamente al hacer clic en un enlace
+   - Debe desaparecer cuando la nueva página está completamente cargada
+   - Posición: preferiblemente en la parte superior de la pantalla
+
+2. **Estados de Formularios:**
+   - Todo formulario debe mostrar estado "enviando" o "procesando"
+   - Los botones de envío deben cambiar visualmente y deshabilitarse
+   - Debe prevenirse automáticamente el envío múltiple
+   - Feedback inmediato al usuario de que su acción se está procesando
+
+3. **Acciones Asíncronas Específicas:**
+   - **Filtros de productos:** mostrar "Aplicando filtros..." mientras se actualiza
+   - **Búsquedas:** indicador mientras se obtienen resultados
+   - **Añadir al carrito:** confirmación visual inmediata
+   - **Carga de más productos:** mostrar "Cargando más productos..."
+   - **Aplicar cupones:** indicador durante la validación
+
+4. **Tipos de Indicadores Visuales:**
+
+   **A. Spinner/Círculo de Carga:**
+   - Para acciones rápidas (2-5 segundos)
+   - Ubicación: cerca del elemento que disparó la acción
+   - Tamaño apropiado para no ser intrusivo pero sí visible
+
+   **B. Barra de Progreso Superior:**
+   - Para cargas de página completas
+   - Muestra progreso de manera estimada
+   - Color consistente con la identidad de la marca
+
+   **C. Estados de Botón con Texto Cambiante:**
+   - Ejemplo: "Enviar" → "Enviando..." → "¡Enviado!"
+   - Con icono de carga pequeño integrado
+   - Cambio de color para indicar estado
+
+   **D. Esqueletos de Contenido (Skeleton Screens):**
+   - Para páginas que cargan contenido dinámico
+   - Muestra la estructura del contenido mientras carga
+   - Mejora la percepción de velocidad
+
+5. **Comportamiento y UX:**
+   - Todos los indicadores deben ser claramente visibles
+   - Deben aparecer inmediatamente (máximo 0.3 segundos después de la acción)
+   - Deben desaparecer suavemente, no bruscamente
+   - En caso de error, mostrar mensaje apropiado
+   - Timeout máximo: si una carga supera los 10 segundos, mostrar opción de reintentar
+
+**FLUJOS CRÍTICOS A MEJORAR:**
+
+1. **Proceso de Checkout:**
+   - Cada paso debe mostrar claramente que se está procesando
+   - Validación de datos con feedback inmediato
+   - Procesamiento de pago con indicador claro
+
+2. **Búsqueda y Filtrado:**
+   - Filtros complejos deben mostrar que se están aplicando
+   - Resultados que tardan en cargar deben mostrar indicador
+   - Búsquedas con muchos resultados deben mostrar progreso
+
+3. **Gestión de Usuario:**
+   - Login/registro con estados claros
+   - Actualización de perfil con confirmación
+   - Cambio de contraseña con feedback visual
+
+**CRITERIOS DE ÉXITO:**
+- Reducción del 70% en clics múltiples en formularios
+- Eliminación de envíos duplicados
+- Mejora en percepción de velocidad de la plataforma
+- Reducción de consultas al soporte por "congelamientos"
+
+**PRIORIDAD: Alta**
+
+**IMPACTO ESPERADO:**
+- **Para el usuario:** Confianza de que el sistema responde, experiencia más fluida
+- **Para el negocio:** Menos errores por acciones duplicadas, mayor satisfacción
+- **Para el sistema:** Menos carga por acciones repetidas, mejor manejo de procesos
+
+**RECOMENDACIÓN DE IMPLEMENTACIÓN:**
+Comenzar con los formularios más críticos (checkout, contacto, login) y luego expandir a toda la plataforma. Los indicadores de carga son una mejora fundamental que, aunque parece pequeña, transforma completamente la percepción de calidad y responsividad del sistema.
+
+Empieza a implementar, guiame paso por paso detalladamente para no perderme
