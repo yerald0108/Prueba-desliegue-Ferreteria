@@ -1,9 +1,18 @@
 from django.urls import path
 from . import views
+from . import views_test_errors
 
 app_name = 'shop'
 
 urlpatterns = [
+
+    # ==========================================
+    # URLs DE PRUEBA PARA ERRORES (Solo desarrollo)
+    # ==========================================
+    path('test-errors/404/', views_test_errors.test_404, name='test_404'),
+    path('test-errors/500/', views_test_errors.test_500, name='test_500'),
+    path('test-errors/429/', views_test_errors.test_429, name='test_429'),
+
     # Home y productos
     path('', views.home, name='home'),
     path('productos/', views.product_list, name='product_list'),

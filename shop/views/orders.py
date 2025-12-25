@@ -14,7 +14,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import transaction
 from django.db.models import F, Prefetch
+from django.urls import reverse
 from decimal import Decimal
+from datetime import date
 import uuid
 import logging
 
@@ -83,13 +85,13 @@ def checkout(request):
         if current_step == 1:
             form = CheckoutStep1Form(request.POST)
             if form.is_valid():
-                # Guardar en sesión
+                # Guardar en sesión (strings son JSON serializables)
                 checkout_data['step1'] = form.cleaned_data
                 request.session['checkout_data'] = checkout_data
                 request.session.modified = True
                 
                 # Ir a paso 2
-                return redirect('shop:checkout' + '?step=2')
+                return redirect(reverse('shop:checkout') + '?step=2')
             else:
                 # Mostrar errores
                 for field, errors in form.errors.items():
@@ -103,17 +105,22 @@ def checkout(request):
             # Validar que completó paso 1
             if not checkout_data.get('step1'):
                 messages.error(request, 'Por favor completa el paso anterior.')
-                return redirect('shop:checkout' + '?step=1')
+                return redirect(reverse('shop:checkout') + '?step=1')
             
             form = CheckoutStep2Form(request.POST)
             if form.is_valid():
+                # Convertir date a string ISO para JSON
+                step2_data = form.cleaned_data.copy()
+                if step2_data.get('delivery_date'):
+                    step2_data['delivery_date'] = step2_data['delivery_date'].isoformat()
+                
                 # Guardar en sesión
-                checkout_data['step2'] = form.cleaned_data
+                checkout_data['step2'] = step2_data
                 request.session['checkout_data'] = checkout_data
                 request.session.modified = True
                 
                 # Ir a paso 3
-                return redirect('shop:checkout' + '?step=3')
+                return redirect(reverse('shop:checkout') + '?step=3')
             else:
                 for field, errors in form.errors.items():
                     for error in errors:
@@ -126,7 +133,7 @@ def checkout(request):
             # Validar pasos anteriores
             if not checkout_data.get('step1') or not checkout_data.get('step2'):
                 messages.error(request, 'Por favor completa todos los pasos.')
-                return redirect('shop:checkout' + '?step=1')
+                return redirect(reverse('shop:checkout') + '?step=1')
             
             form = CheckoutStep3Form(request.POST)
             if form.is_valid():
@@ -162,7 +169,11 @@ def checkout(request):
                         
                         # Datos del paso 2
                         step2_data = checkout_data['step2']
-                        order.delivery_date = step2_data['delivery_date']
+                        # Convertir string ISO de vuelta a date
+                        if isinstance(step2_data['delivery_date'], str):
+                            order.delivery_date = date.fromisoformat(step2_data['delivery_date'])
+                        else:
+                            order.delivery_date = step2_data['delivery_date']
                         order.delivery_time = step2_data['delivery_time']
                         order.payment_method = step2_data['payment_method']
                         
@@ -254,9 +265,14 @@ def checkout(request):
         # Validar que completó paso 1
         if not checkout_data.get('step1'):
             messages.warning(request, 'Por favor completa el paso anterior.')
-            return redirect('shop:checkout' + '?step=1')
+            return redirect(reverse('shop:checkout') + '?step=1')
         
         initial_data = checkout_data.get('step2', {})
+        # Convertir string ISO a date para el formulario
+        if initial_data.get('delivery_date') and isinstance(initial_data['delivery_date'], str):
+            initial_data = initial_data.copy()
+            initial_data['delivery_date'] = date.fromisoformat(initial_data['delivery_date'])
+        
         form = CheckoutStep2Form(initial=initial_data)
         template = 'shop/checkout_step2.html'
         
@@ -264,7 +280,7 @@ def checkout(request):
         # Validar pasos anteriores
         if not checkout_data.get('step1') or not checkout_data.get('step2'):
             messages.warning(request, 'Por favor completa todos los pasos.')
-            return redirect('shop:checkout' + '?step=1')
+            return redirect(reverse('shop:checkout') + '?step=1')
         
         initial_data = checkout_data.get('step3', {})
         form = CheckoutStep3Form(initial=initial_data)
@@ -287,7 +303,6 @@ def order_detail(request, order_id):
     
     ✅ OPTIMIZADO: Prefetch de items con productos
     """
-    # ✅ OPTIMIZACIÓN: Cargar orden con items y productos en un query
     order = get_object_or_404(
         Order.objects.select_related('user').prefetch_related(
             Prefetch(
@@ -315,7 +330,6 @@ def order_history(request):
     
     ✅ OPTIMIZADO: Prefetch de items con productos
     """
-    # ✅ OPTIMIZACIÓN: Cargar órdenes con items en un query
     orders = Order.objects.filter(
         user=request.user
     ).prefetch_related(
