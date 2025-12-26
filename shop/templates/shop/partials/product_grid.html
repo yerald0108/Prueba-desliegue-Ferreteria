@@ -4,17 +4,32 @@
 <div class="col-lg-4 col-md-6 product-card-wrapper" data-product-id="{{ product.id }}">
     <div class="card h-100 product-card">
         <div class="position-relative product-image-container">
+            
+            <!-- Checkbox de Comparación -->
+            <div class="compare-checkbox-container">
+                <label class="compare-checkbox-label">
+                    <input type="checkbox" 
+                        class="compare-checkbox" 
+                        value="{{ product.id }}"
+                        aria-label="Comparar {{ product.name }}">
+                    <span class="d-none d-md-inline">Comparar</span>
+                </label>
+                <div class="compare-tooltip">Agregar a comparación</div>
+            </div>
+            
+            <!-- Imagen del producto -->
             {% if product.image %}
                 <img src="{{ product.image.url }}" 
-                     class="card-img-top product-image" 
-                     alt="{{ product.name }}"
-                     loading="lazy">
+                    class="card-img-top product-image" 
+                    alt="{{ product.name }}"
+                    loading="lazy">
             {% else %}
                 <div class="product-image bg-secondary d-flex align-items-center justify-content-center">
                     <i class="bi bi-image text-white" style="font-size: 3rem;"></i>
                 </div>
             {% endif %}
             
+            <!-- Stock badge -->
             {% if product.stock == 0 %}
                 <span class="stock-badge out-of-stock">Agotado</span>
             {% elif product.stock < 10 %}
@@ -24,7 +39,7 @@
             {% endif %}
             
             {% if product.featured %}
-                <span class="badge bg-warning position-absolute" style="top: 10px; left: 10px;">
+                <span class="badge bg-warning position-absolute" style="top: 10px; right: 10px;">
                     <i class="bi bi-star-fill"></i> Destacado
                 </span>
             {% endif %}
