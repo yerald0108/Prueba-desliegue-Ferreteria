@@ -97,6 +97,7 @@ from .compare import (
     add_to_compare,
     remove_from_compare,
     clear_compare,
+    get_compare_list,
 )
 
 # ==========================================
@@ -158,4 +159,5 @@ __all__ = [
     'add_to_compare',
     'remove_from_compare',
     'clear_compare',
+    'get_compare_list',
 ]

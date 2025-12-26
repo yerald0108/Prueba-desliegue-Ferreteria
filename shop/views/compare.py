@@ -306,6 +306,23 @@ def remove_from_compare(request):
         })
 
 
+def get_compare_list(request):
+    """
+    API para obtener la lista actual de comparación desde la sesión.
+    Permite sincronizar el estado del cliente con el servidor.
+    
+    Returns:
+        JSON con la lista actual
+    """
+    compare_list = request.session.get('compare_list', [])
+    
+    return JsonResponse({
+        'success': True,
+        'compare_list': compare_list,
+        'compare_count': len(compare_list)
+    })
+
+
 @require_http_methods(["POST"])
 def clear_compare(request):
     """

@@ -84,4 +84,5 @@ urlpatterns = [
     path('comparar/agregar/', views.add_to_compare, name='add_to_compare'),
     path('comparar/remover/', views.remove_from_compare, name='remove_from_compare'),
     path('comparar/limpiar/', views.clear_compare, name='clear_compare'),
+    path('comparar/obtener/', views.get_compare_list, name='get_compare_list'),
 ]
