@@ -1,0 +1,553 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Comparar Productos - Ferretería{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============================================
+       ESTILOS PARA COMPARADOR
+       ============================================ */
+    
+    .compare-container {
+        padding: 2rem 0;
+    }
+    
+    .compare-header {
+        background: linear-gradient(135deg, var(--secondary-color), var(--dark-color));
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+    
+    .compare-table-wrapper {
+        overflow-x: auto;
+        margin-bottom: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .compare-table {
+        width: 100%;
+        background: white;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    
+    /* Columnas de productos */
+    .compare-table th {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-bottom: 2px solid #dee2e6;
+        text-align: center;
+        vertical-align: top;
+        min-width: 250px;
+    }
+    
+    .compare-table th:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 10;
+        background: white;
+        text-align: left;
+        font-weight: 600;
+        color: var(--dark-color);
+        min-width: 200px;
+        border-right: 2px solid #dee2e6;
+    }
+    
+    /* Filas de datos */
+    .compare-table td {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+        text-align: center;
+        vertical-align: middle;
+    }
+    
+    .compare-table td:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 5;
+        background: #f8f9fa;
+        text-align: left;
+        font-weight: 500;
+        color: #495057;
+        border-right: 2px solid #dee2e6;
+    }
+    
+    /* Headers de categoría */
+    .category-header td {
+        background: var(--secondary-color);
+        color: white;
+        font-weight: 600;
+        font-size: 1.1rem;
+        padding: 1rem 1.5rem;
+        text-align: left;
+        border-bottom: 2px solid var(--dark-color);
+    }
+    
+    /* Diferencias resaltadas */
+    .has-difference {
+        background-color: rgba(255, 193, 7, 0.1);
+        position: relative;
+    }
+    
+    .has-difference::before {
+        content: '●';
+        position: absolute;
+        left: 5px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #ffc107;
+        font-size: 0.7rem;
+    }
+    
+    /* Card de producto en header */
+    .product-compare-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .product-compare-image {
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    
+    .product-compare-name {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--dark-color);
+        margin-bottom: 0.5rem;
+        min-height: 40px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    .product-compare-price {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+    
+    .product-compare-stock {
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+    }
+    
+    /* Botones de acción */
+    .compare-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-direction: column;
+    }
+    
+    .btn-remove-compare {
+        font-size: 0.85rem;
+    }
+    
+    /* Badge de diferencias */
+    .difference-badge {
+        display: inline-block;
+        background: #ffc107;
+        color: #000;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+    }
+    
+    /* Estado vacío */
+    .empty-compare {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+    
+    .empty-compare i {
+        font-size: 5rem;
+        color: #dee2e6;
+        margin-bottom: 1rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 992px) {
+        .compare-table th,
+        .compare-table td {
+            min-width: 180px;
+            font-size: 0.9rem;
+            padding: 0.75rem 1rem;
+        }
+        
+        .product-compare-image {
+            width: 100px;
+            height: 100px;
+        }
+        
+        .product-compare-name {
+            font-size: 0.85rem;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .compare-header {
+            padding: 1.5rem 1rem;
+        }
+        
+        .compare-table th:first-child,
+        .compare-table td:first-child {
+            min-width: 150px;
+            font-size: 0.85rem;
+        }
+    }
+    
+    /* Animaciones */
+    .compare-table tbody tr {
+        transition: background-color 0.2s;
+    }
+    
+    .compare-table tbody tr:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+    
+    /* Scroll horizontal hint */
+    .scroll-hint {
+        text-align: center;
+        color: #6c757d;
+        font-size: 0.85rem;
+        margin-top: 1rem;
+    }
+    
+    .scroll-hint i {
+        animation: bounceX 2s infinite;
+    }
+    
+    @keyframes bounceX {
+        0%, 100% { transform: translateX(0); }
+        50% { transform: translateX(10px); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container compare-container">
+    <!-- Header -->
+    <div class="compare-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="mb-2">
+                    <i class="bi bi-arrow-left-right"></i>
+                    Comparar Productos
+                </h2>
+                <p class="mb-0 opacity-75">
+                    Compara las especificaciones técnicas lado a lado
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a href="{% url 'shop:product_list' %}" class="btn btn-light me-2">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
+                <button class="btn btn-outline-light" id="clearCompareBtn">
+                    <i class="bi bi-trash"></i> Limpiar
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    {% if products %}
+        <!-- Tabla de Comparación -->
+        <div class="compare-table-wrapper">
+            <table class="compare-table">
+                <thead>
+                    <tr>
+                        <th>Característica</th>
+                        {% for product in products %}
+                        <th>
+                            <div class="product-compare-card">
+                                {% if product.image %}
+                                    <img src="{{ product.image.url }}" 
+                                         alt="{{ product.name }}"
+                                         class="product-compare-image mx-auto d-block">
+                                {% else %}
+                                    <div class="product-compare-image mx-auto d-flex align-items-center justify-content-center bg-secondary rounded">
+                                        <i class="bi bi-image text-white fs-1"></i>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="product-compare-name">
+                                    {{ product.name }}
+                                </div>
+                                
+                                <div class="product-compare-price">
+                                    ${{ product.price }}
+                                </div>
+                                
+                                <div class="product-compare-stock">
+                                    {% if product.stock == 0 %}
+                                        <span class="badge bg-danger">Agotado</span>
+                                    {% elif product.stock < 10 %}
+                                        <span class="badge bg-warning text-dark">{{ product.stock }} unidades</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Disponible</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="compare-actions">
+                                    {% if product.stock > 0 %}
+                                        <button class="btn btn-primary btn-sm add-to-cart-btn" 
+                                                data-product-id="{{ product.id }}">
+                                            <i class="bi bi-cart-plus"></i> Agregar al Carrito
+                                        </button>
+                                    {% endif %}
+                                    
+                                    <a href="{% url 'shop:product_detail' product.id %}" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-eye"></i> Ver Detalles
+                                    </a>
+                                    
+                                    <button class="btn btn-outline-danger btn-sm btn-remove-compare" 
+                                            data-product-id="{{ product.id }}">
+                                        <i class="bi bi-x"></i> Quitar
+                                    </button>
+                                </div>
+                            </div>
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                
+                <tbody>
+                    {% for category_name, fields in comparison_data.items %}
+                        <!-- Separador de Categoría -->
+                        <tr class="category-header">
+                            <td colspan="{{ products|length|add:1 }}">
+                                <i class="bi bi-tag-fill me-2"></i>
+                                {{ category_name }}
+                            </td>
+                        </tr>
+                        
+                        <!-- Campos de la Categoría -->
+                        {% for field in fields %}
+                        <tr>
+                            <td class="{% if field.has_difference %}has-difference{% endif %}">
+                                {{ field.label }}
+                                {% if field.has_difference %}
+                                    <span class="difference-badge">Diferente</span>
+                                {% endif %}
+                            </td>
+                            {% for value in field.values %}
+                            <td>
+                                {{ value|safe }}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Hint para scroll horizontal -->
+        {% if products|length > 2 %}
+        <div class="scroll-hint">
+            <i class="bi bi-arrow-left-right"></i>
+            Desliza horizontalmente para ver todos los productos
+        </div>
+        {% endif %}
+        
+        <!-- Leyenda -->
+        <div class="alert alert-info mt-4">
+            <i class="bi bi-info-circle"></i>
+            <strong>Leyenda:</strong>
+            <ul class="mb-0 mt-2">
+                <li><span class="badge bg-warning text-dark">●</span> Los campos marcados en amarillo indican diferencias entre productos</li>
+                <li>Puedes agregar productos al carrito directamente desde aquí</li>
+                <li>Máximo 4 productos para comparar simultáneamente</li>
+            </ul>
+        </div>
+        
+    {% else %}
+        <!-- Estado Vacío -->
+        <div class="empty-compare">
+            <i class="bi bi-arrow-left-right"></i>
+            <h3>No hay productos para comparar</h3>
+            <p class="text-muted mb-4">
+                {% if error %}
+                    {{ error }}
+                {% else %}
+                    Selecciona al menos 2 productos desde el listado para comenzar a compararlos
+                {% endif %}
+            </p>
+            <a href="{% url 'shop:product_list' %}" class="btn btn-primary btn-lg">
+                <i class="bi bi-shop"></i> Ir al Catálogo
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    
+    // ============================================
+    // AGREGAR AL CARRITO DESDE COMPARADOR
+    // ============================================
+    $('.add-to-cart-btn').on('click', function() {
+        const productId = $(this).data('product-id');
+        const $btn = $(this);
+        const originalText = $btn.html();
+        
+        $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Agregando...');
+        
+        $.ajax({
+            url: `/agregar-al-carrito/${productId}/`,
+            method: 'POST',
+            data: {
+                'quantity': 1,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Actualizar badge del carrito
+                    $('.cart-badge').text(response.cart_count).show();
+                    
+                    // Toast de éxito
+                    Toast.success('¡Producto agregado!', 'Producto agregado al carrito', {
+                        duration: 3000
+                    });
+                    
+                    // Cambiar botón temporalmente
+                    $btn.html('<i class="bi bi-check-circle"></i> Agregado')
+                        .removeClass('btn-primary')
+                        .addClass('btn-success');
+                    
+                    setTimeout(function() {
+                        $btn.html(originalText)
+                            .removeClass('btn-success')
+                            .addClass('btn-primary')
+                            .prop('disabled', false);
+                    }, 2000);
+                } else {
+                    $btn.prop('disabled', false).html(originalText);
+                    Toast.error('Error', response.message || 'No se pudo agregar el producto');
+                }
+            },
+            error: function() {
+                $btn.prop('disabled', false).html(originalText);
+                Toast.error('Error', 'No se pudo agregar el producto al carrito');
+            }
+        });
+    });
+    
+    // ============================================
+    // QUITAR PRODUCTO DE LA COMPARACIÓN
+    // ============================================
+    $('.btn-remove-compare').on('click', function() {
+        const productId = $(this).data('product-id');
+        
+        if (window.ProductCompare && typeof window.ProductCompare.remove === 'function') {
+            // Usar el sistema de comparación
+            $.ajax({
+                url: '/comparar/remover/',
+                method: 'POST',
+                data: {
+                    'product_id': productId,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Toast.success('Producto removido', 'Actualizando comparación...', {
+                            duration: 2000
+                        });
+                        
+                        // Recargar página después de un momento
+                        setTimeout(function() {
+                            // Reconstruir URL sin ese producto
+                            const currentIds = '{{ products|map:"id"|join:"," }}'.split(',');
+                            const newIds = currentIds.filter(id => id !== String(productId));
+                            
+                            if (newIds.length >= 2) {
+                                window.location.href = `/comparar/?ids=${newIds.join(',')}`;
+                            } else {
+                                // Si quedan menos de 2, ir al listado
+                                window.location.href = '{% url "shop:product_list" %}';
+                            }
+                        }, 1000);
+                    }
+                },
+                error: function() {
+                    Toast.error('Error', 'No se pudo remover el producto');
+                }
+            });
+        } else {
+            // Fallback sin AJAX
+            const currentIds = '{{ products|map:"id"|join:"," }}'.split(',');
+            const newIds = currentIds.filter(id => id !== String(productId));
+            
+            if (newIds.length >= 2) {
+                window.location.href = `/comparar/?ids=${newIds.join(',')}`;
+            } else {
+                window.location.href = '{% url "shop:product_list" %}';
+            }
+        }
+    });
+    
+    // ============================================
+    // LIMPIAR COMPARACIÓN
+    // ============================================
+    $('#clearCompareBtn').on('click', function() {
+        if (window.showConfirmModal) {
+            window.showConfirmModal({
+                message: '¿Deseas limpiar la comparación y volver al catálogo?',
+                confirmText: 'Limpiar',
+                confirmClass: 'btn-danger',
+                onConfirm: function() {
+                    if (window.ProductCompare && typeof window.ProductCompare.clear === 'function') {
+                        window.ProductCompare.clear();
+                    }
+                    window.location.href = '{% url "shop:product_list" %}';
+                }
+            });
+        } else {
+            if (confirm('¿Deseas limpiar la comparación?')) {
+                if (window.ProductCompare && typeof window.ProductCompare.clear === 'function') {
+                    window.ProductCompare.clear();
+                }
+                window.location.href = '{% url "shop:product_list" %}';
+            }
+        }
+    });
+    
+    // ============================================
+    // INDICADOR DE SCROLL HORIZONTAL
+    // ============================================
+    const tableWrapper = document.querySelector('.compare-table-wrapper');
+    if (tableWrapper) {
+        // Detectar si hay scroll disponible
+        if (tableWrapper.scrollWidth > tableWrapper.clientWidth) {
+            // Animar hint al cargar
+            const scrollHint = document.querySelector('.scroll-hint');
+            if (scrollHint) {
+                scrollHint.style.display = 'block';
+                
+                // Ocultar hint después del primer scroll
+                tableWrapper.addEventListener('scroll', function() {
+                    scrollHint.style.opacity = '0';
+                    setTimeout(() => {
+                        scrollHint.style.display = 'none';
+                    }, 500);
+                }, { once: true });
+            }
+        }
+    }
+});
+</script>
+{% endblock %}
