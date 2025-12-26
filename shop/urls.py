@@ -78,4 +78,10 @@ urlpatterns = [
     path('sobre-nosotros/', views.about_us, name='about_us'),
     path('contacto/', views.contact, name='contact'),
     path('preguntas-frecuentes/', views.faq, name='faq'),
+
+    # Comparador de productos
+    path('comparar/', views.compare_products, name='compare_products'),
+    path('comparar/agregar/', views.add_to_compare, name='add_to_compare'),
+    path('comparar/remover/', views.remove_from_compare, name='remove_from_compare'),
+    path('comparar/limpiar/', views.clear_compare, name='clear_compare'),
 ]

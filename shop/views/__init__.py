@@ -90,6 +90,16 @@ from ..pages import (
 )
 
 # ==========================================
+# VISTAS DEL COMPARADOR
+# ==========================================
+from .compare import (
+    compare_products,
+    add_to_compare,
+    remove_from_compare,
+    clear_compare,
+)
+
+# ==========================================
 # ALL exports (para facilitar imports)
 # ==========================================
 __all__ = [
@@ -143,4 +153,9 @@ __all__ = [
     'about_us',
     'contact',
     'faq',
+    # Comparador
+    'compare_products',
+    'add_to_compare',
+    'remove_from_compare',
+    'clear_compare',
 ]
