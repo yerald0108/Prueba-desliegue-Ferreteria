@@ -301,7 +301,7 @@
                                 
                                 <!-- Botones de Acción -->
                                 <div class="d-grid gap-2">
-                                    <button class="btn btn-primary btn-lg" id="quickViewAddToCart">
+                                    <button class="btn btn-primary btn-lg" id="quickViewAddToCart" {% if not user.is_authenticated %}style="display:none"{% endif %}>
                                         <i class="bi bi-cart-plus"></i> Agregar al Carrito
                                     </button>
                                     <a href="#" class="btn btn-outline-primary" id="quickViewDetailsLink">

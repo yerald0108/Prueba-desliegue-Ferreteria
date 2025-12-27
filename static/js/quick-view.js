@@ -1,13 +1,9 @@
 /**
  * ================================================================
- * SISTEMA DE VISTA RÁPIDA DE PRODUCTOS
+ * SISTEMA DE VISTA RÁPIDA DE PRODUCTOS - VERSIÓN CORREGIDA
  * ================================================================
  * 
- * Funcionalidades:
- * - Carga datos del producto vía AJAX
- * - Muestra modal con información clave
- * - Permite agregar al carrito desde el modal
- * - Mantiene el contexto de navegación
+ * CORRECCIÓN: Uso de FormData para envío correcto de datos AJAX
  */
 
 const QuickView = (function() {
@@ -256,10 +252,16 @@ const QuickView = (function() {
     }
     
     // ============================================
-    // AGREGAR AL CARRITO DESDE MODAL
+    // AGREGAR AL CARRITO DESDE MODAL - ✅ CORREGIDO
     // ============================================
     function addToCartFromQuickView() {
-        if (!currentProductId) return;
+        if (!currentProductId) {
+            console.error('❌ No hay producto ID seleccionado');
+            if (typeof Toast !== 'undefined') {
+                Toast.error('Error', 'No se pudo identificar el producto');
+            }
+            return;
+        }
         
         const $btn = document.getElementById('quickViewAddToCart');
         const originalText = $btn.innerHTML;
@@ -268,16 +270,31 @@ const QuickView = (function() {
         $btn.disabled = true;
         $btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Agregando...';
         
+        console.log('🛒 Agregando producto al carrito:', currentProductId);
+        
+        // ✅ CORRECCIÓN: Usar FormData para enviar correctamente
+        const formData = new FormData();
+        formData.append('quantity', '1');
+        formData.append('csrfmiddlewaretoken', getCsrfToken());
+        
         fetch(`/agregar-al-carrito/${currentProductId}/`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
                 'X-Requested-With': 'XMLHttpRequest',
             },
-            body: `quantity=1&csrfmiddlewaretoken=${getCsrfToken()}`
+            body: formData
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('📡 Respuesta del servidor:', response.status);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('✅ Datos recibidos:', data);
+            
             if (data.success) {
                 // Actualizar badge del carrito
                 const $cartBadge = document.querySelector('.cart-badge');
@@ -291,6 +308,8 @@ const QuickView = (function() {
                     Toast.success('¡Agregado!', 'Producto agregado al carrito', {
                         duration: 3000
                     });
+                } else {
+                    alert('Producto agregado al carrito');
                 }
                 
                 // Cambiar botón temporalmente
@@ -305,23 +324,19 @@ const QuickView = (function() {
                     $btn.disabled = false;
                 }, 2000);
             } else {
-                $btn.disabled = false;
-                $btn.innerHTML = originalText;
-                
-                if (typeof Toast !== 'undefined') {
-                    Toast.error('Error', data.message || 'No se pudo agregar el producto');
-                } else {
-                    alert(data.message || 'No se pudo agregar el producto');
-                }
+                throw new Error(data.message || 'Error desconocido');
             }
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('❌ Error agregando al carrito:', error);
+            
             $btn.disabled = false;
             $btn.innerHTML = originalText;
             
             if (typeof Toast !== 'undefined') {
-                Toast.error('Error', 'No se pudo agregar el producto al carrito');
+                Toast.error('Error', error.message || 'No se pudo agregar el producto al carrito');
+            } else {
+                alert('No se pudo agregar el producto al carrito');
             }
         });
     }
@@ -377,6 +392,13 @@ const QuickView = (function() {
                 }
             }
         }
+        
+        if (!cookieValue) {
+            console.error('❌ CSRF token no encontrado');
+        } else {
+            console.log('🔐 CSRF token obtenido correctamente');
+        }
+        
         return cookieValue;
     }
     
