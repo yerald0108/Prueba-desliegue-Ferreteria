@@ -11,6 +11,7 @@ from .products import (
     home,
     product_list,
     product_detail,
+    product_quick_view,
 )
 
 from .cart import (
@@ -108,6 +109,7 @@ __all__ = [
     'home',
     'product_list',
     'product_detail',
+    'product_quick_view',
     'cart_view',
     'add_to_cart',
     'update_cart_item',

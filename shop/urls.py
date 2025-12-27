@@ -17,6 +17,7 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('productos/', views.product_list, name='product_list'),
     path('producto/<int:pk>/', views.product_detail, name='product_detail'),
+    path('producto/<int:product_id>/vista-rapida/', views.product_quick_view, name='product_quick_view'),
     
     # Autenticación
     path('registro/', views.register, name='register'),

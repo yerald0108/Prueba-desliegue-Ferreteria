@@ -63,22 +63,30 @@
                 </div>
                 
                 <div class="d-flex gap-2">
-                    <a href="{% url 'shop:product_detail' product.pk %}" 
-                        class="btn btn-outline-primary flex-grow-1">
-                        <i class="bi bi-eye"></i> Ver
-                    </a>
-                    
-                    {% if user.is_authenticated and product.in_stock %}
-                        <button class="btn btn-primary quick-add-btn" 
-                                data-product-id="{{ product.pk }}">
-                            <i class="bi bi-cart-plus"></i>
+                    <!-- Botón Vista Rápida -->
+                        <button class="btn btn-outline-secondary flex-grow-1 quick-view-btn" 
+                                data-product-id="{{ product.pk }}"
+                                title="Vista rápida">
+                            <i class="bi bi-eye"></i> Vista Rápida
                         </button>
-                    {% endif %}
+                    
+                        <!-- Botón Ver Detalles -->
+                        <a href="{% url 'shop:product_detail' product.pk %}" 
+                            class="btn btn-outline-primary flex-grow-1">
+                            <i class="bi bi-eye"></i> Ver
+                        </a>
+                    
+                        {% if user.is_authenticated and product.in_stock %}
+                            <button class="btn btn-primary quick-add-btn" 
+                                    data-product-id="{{ product.pk }}">
+                                <i class="bi bi-cart-plus"></i>
+                            </button>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 {% empty %}
 <div class="col-12">
     <div class="text-center py-5">

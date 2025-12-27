@@ -12,6 +12,8 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
 
 from ..models import Product, Category
 
@@ -166,3 +168,84 @@ def product_detail(request, pk):
         'related_products': related_products,
     }
     return render(request, 'shop/product_detail.html', context)
+
+@require_http_methods(["GET"])
+def product_quick_view(request, product_id):
+    """
+    Vista AJAX para obtener datos del producto para vista rápida.
+    
+    Devuelve JSON con:
+    - Información básica
+    - Especificaciones técnicas principales
+    - Disponibilidad
+    - Precio y descuentos
+    - Reviews resumidos
+    
+    ✅ OPTIMIZADO: select_related para category
+    """
+    try:
+        # Cargar producto con relaciones optimizadas
+        product = Product.objects.select_related('category').prefetch_related(
+            'reviews'
+        ).get(pk=product_id, is_active=True)
+        
+        # Calcular estadísticas de reviews
+        reviews_stats = {
+            'count': product.reviews.filter(is_approved=True).count(),
+            'average': 0,
+        }
+        
+        if reviews_stats['count'] > 0:
+            from django.db.models import Avg
+            avg = product.reviews.filter(is_approved=True).aggregate(Avg('rating'))
+            reviews_stats['average'] = round(avg['rating__avg'] or 0, 1)
+        
+        # Preparar especificaciones principales (top 5)
+        specs = []
+        if product.material:
+            specs.append({'label': 'Material', 'value': product.material})
+        if product.dimensiones:
+            specs.append({'label': 'Dimensiones', 'value': product.dimensiones})
+        if product.peso:
+            specs.append({'label': 'Peso', 'value': f'{product.peso} kg'})
+        if product.voltaje:
+            specs.append({'label': 'Voltaje', 'value': product.voltaje})
+        if product.potencia:
+            specs.append({'label': 'Potencia', 'value': product.potencia})
+        
+        # Limitar a 5 specs
+        specs = specs[:5]
+        
+        # Preparar respuesta JSON
+        data = {
+            'success': True,
+            'product': {
+                'id': product.id,
+                'name': product.name,
+                'sku': product.sku,
+                'price': float(product.price),
+                'description': product.description,
+                'category': product.category.name,
+                'image': product.image.url if product.image else None,
+                'stock': product.stock,
+                'in_stock': product.in_stock,
+                'featured': product.featured,
+                'marca': product.marca or 'No especificada',
+            },
+            'specifications': specs,
+            'reviews': reviews_stats,
+            'detail_url': f'/producto/{product.id}/',
+        }
+        
+        return JsonResponse(data)
+        
+    except Product.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Producto no encontrado'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)

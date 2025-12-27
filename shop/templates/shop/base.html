@@ -366,6 +366,103 @@
         </div>
     </div>
 
+    <!-- Modal de Vista Rápida -->
+    <div class="modal fade" id="quickViewModal" tabindex="-1" aria-labelledby="quickViewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <!-- Loading State -->
+                <div class="quick-view-loading" id="quickViewLoading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Cargando producto...</p>
+                </div>
+                
+                <!-- Content State -->
+                <div class="quick-view-content" id="quickViewContent" style="display: none;">
+                    <div class="modal-header border-0">
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    
+                    <div class="modal-body p-4">
+                        <div class="row g-4">
+                            <!-- Columna Izquierda: Imagen -->
+                            <div class="col-md-6">
+                                <div class="quick-view-image-container">
+                                    <img id="quickViewImage" src="" alt="" class="img-fluid rounded shadow-sm">
+                                    
+                                    <!-- Badges -->
+                                    <div class="quick-view-badges">
+                                        <span class="badge bg-warning" id="quickViewFeatured" style="display: none;">
+                                            <i class="bi bi-star-fill"></i> Destacado
+                                        </span>
+                                    </div>
+                                    
+                                    <!-- Stock Badge -->
+                                    <div class="quick-view-stock-badge" id="quickViewStockBadge"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Columna Derecha: Información -->
+                            <div class="col-md-6">
+                                <!-- Categoría -->
+                                <div class="mb-2">
+                                    <span class="badge bg-secondary" id="quickViewCategory"></span>
+                                </div>
+                                
+                                <!-- Nombre -->
+                                <h4 class="mb-3" id="quickViewName"></h4>
+                                
+                                <!-- Reviews -->
+                                <div class="mb-3" id="quickViewReviewsContainer">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="quick-view-stars" id="quickViewStars"></div>
+                                        <span class="text-muted small" id="quickViewReviewCount"></span>
+                                    </div>
+                                </div>
+                                
+                                <!-- SKU y Marca -->
+                                <div class="mb-3">
+                                    <small class="text-muted">SKU: <span id="quickViewSKU"></span></small>
+                                    <br>
+                                    <small class="text-muted">Marca: <span id="quickViewBrand"></span></small>
+                                </div>
+                                
+                                <!-- Precio -->
+                                <div class="mb-4">
+                                    <h3 class="text-primary mb-0" id="quickViewPrice"></h3>
+                                </div>
+                                
+                                <!-- Descripción corta -->
+                                <div class="mb-4">
+                                    <p class="text-muted" id="quickViewDescription"></p>
+                                </div>
+                                
+                                <!-- Especificaciones -->
+                                <div class="mb-4" id="quickViewSpecsContainer">
+                                    <h6 class="mb-3">
+                                        <i class="bi bi-list-check"></i> Especificaciones
+                                    </h6>
+                                    <div class="quick-view-specs" id="quickViewSpecs"></div>
+                                </div>
+                                
+                                <!-- Botones de Acción -->
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-primary btn-lg" id="quickViewAddToCart">
+                                        <i class="bi bi-cart-plus"></i> Agregar al Carrito
+                                    </button>
+                                    <a href="#" class="btn btn-outline-primary" id="quickViewDetailsLink">
+                                        <i class="bi bi-eye"></i> Ver Detalles Completos
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ============================================ -->
     <!-- BOTÓN FLOTANTE DE COMPARACIÓN -->
     <!-- ============================================ -->
@@ -391,6 +488,9 @@
 
     <!-- Script de Comparador -->
     <script src="{% static 'js/compare.js' %}"></script>
+
+    <!-- Script de Vista Rápida -->
+    <script src="{% static 'js/quick-view.js' %}"></script>
 
     <script>
 

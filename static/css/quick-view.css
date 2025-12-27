@@ -1,0 +1,670 @@
+/* ================================================================
+    SISTEMA DE VISTA RÁPIDA DE PRODUCTOS - CSS PROFESIONAL
+   ================================================================ */
+
+/* ============================================
+    OVERLAY DEL MODAL
+   ============================================ */
+.quick-view-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    padding: 20px;
+}
+
+.quick-view-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ============================================
+    MODAL PRINCIPAL
+   ============================================ */
+.quick-view-modal {
+    background: white;
+    border-radius: 20px;
+    max-width: 1000px;
+    width: 100%;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+    position: relative;
+    transform: scale(0.7) translateY(-50px);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.quick-view-overlay.active .quick-view-modal {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
+/* ============================================
+    HEADER DEL MODAL
+   ============================================ */
+.quick-view-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    border-bottom: 1px solid #e5e7eb;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.quick-view-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.quick-view-title i {
+    font-size: 1.5rem;
+}
+
+.quick-view-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    font-size: 1.5rem;
+}
+
+.quick-view-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+}
+
+/* ============================================
+    CONTENIDO DEL MODAL
+   ============================================ */
+.quick-view-body {
+    padding: 30px 25px;
+    overflow-y: auto;
+    max-height: calc(90vh - 80px);
+}
+
+/* Scrollbar personalizado */
+.quick-view-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.quick-view-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.quick-view-body::-webkit-scrollbar-thumb {
+    background: #667eea;
+    border-radius: 10px;
+}
+
+.quick-view-body::-webkit-scrollbar-thumb:hover {
+    background: #764ba2;
+}
+
+/* ============================================
+    LAYOUT DE CONTENIDO
+   ============================================ */
+.quick-view-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+/* ============================================
+    GALERÍA DE IMÁGENES
+   ============================================ */
+.quick-view-gallery {
+    position: relative;
+}
+
+.quick-view-main-image {
+    width: 100%;
+    border-radius: 15px;
+    overflow: hidden;
+    background: #f8f9fa;
+    position: relative;
+    aspect-ratio: 1;
+}
+
+.quick-view-main-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+}
+
+.quick-view-main-image:hover img {
+    transform: scale(1.05);
+}
+
+/* Placeholder para imagen */
+.quick-view-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 4rem;
+}
+
+/* Badge en imagen */
+.quick-view-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    padding: 8px 16px;
+    border-radius: 25px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    z-index: 10;
+}
+
+.badge-featured {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: white;
+}
+
+/* ============================================
+    INFORMACIÓN DEL PRODUCTO
+   ============================================ */
+.quick-view-info {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.quick-view-category {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    width: fit-content;
+}
+
+.quick-view-product-name {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0;
+    line-height: 1.3;
+}
+
+/* Calificaciones */
+.quick-view-rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rating-stars {
+    color: #fbbf24;
+    font-size: 1.125rem;
+}
+
+.rating-text {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+/* Stock */
+.quick-view-stock {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    width: fit-content;
+}
+
+.stock-available {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.stock-low {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.stock-out {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* Precio */
+.quick-view-price {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.price-current {
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.price-label {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+/* Descripción */
+.quick-view-description {
+    color: #4b5563;
+    line-height: 1.7;
+    font-size: 0.9375rem;
+}
+
+/* Especificaciones */
+.quick-view-specs {
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.quick-view-specs h6 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 15px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.spec-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.spec-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.spec-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.spec-label {
+    color: #6b7280;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.spec-value {
+    color: #1f2937;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+/* ============================================
+    SELECTOR DE CANTIDAD
+   ============================================ */
+.quick-view-quantity {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.quantity-label {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 0.9375rem;
+}
+
+.quantity-selector {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.quantity-controls {
+    display: flex;
+    align-items: center;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.quantity-btn {
+    background: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #4b5563;
+    font-size: 1.25rem;
+}
+
+.quantity-btn:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.quantity-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.quantity-input {
+    width: 60px;
+    text-align: center;
+    border: none;
+    border-left: 2px solid #e5e7eb;
+    border-right: 2px solid #e5e7eb;
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 1rem;
+}
+
+.quantity-input:focus {
+    outline: none;
+}
+
+/* ============================================
+    BOTONES DE ACCIÓN
+   ============================================ */
+.quick-view-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.btn-quick-add {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.btn-quick-add:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+}
+
+.btn-quick-add:active {
+    transform: translateY(0);
+}
+
+.btn-quick-add i {
+    font-size: 1.25rem;
+}
+
+.btn-full-details {
+    background: white;
+    color: #667eea;
+    border: 2px solid #667eea;
+    padding: 12px 30px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-full-details:hover {
+    background: #667eea;
+    color: white;
+}
+
+/* ============================================
+    LOADING STATE
+   ============================================ */
+.quick-view-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    gap: 20px;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #e5e7eb;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    color: #6b7280;
+    font-size: 1rem;
+}
+
+/* ============================================
+    RESPONSIVE
+   ============================================ */
+
+@media (max-width: 992px) {
+    .quick-view-content {
+        grid-template-columns: 1fr;
+        gap: 25px;
+    }
+    
+    .quick-view-modal {
+        max-height: 95vh;
+    }
+}
+
+@media (max-width: 768px) {
+    .quick-view-overlay {
+        padding: 10px;
+    }
+    
+    .quick-view-modal {
+        border-radius: 15px;
+    }
+    
+    .quick-view-header {
+        padding: 15px 20px;
+    }
+    
+    .quick-view-title {
+        font-size: 1.125rem;
+    }
+    
+    .quick-view-body {
+        padding: 20px;
+    }
+    
+    .quick-view-product-name {
+        font-size: 1.5rem;
+    }
+    
+    .price-current {
+        font-size: 2rem;
+    }
+    
+    .quick-view-actions {
+        position: sticky;
+        bottom: 0;
+        background: white;
+        padding: 15px 0;
+        margin: 0 -20px;
+        padding: 15px 20px;
+        border-top: 1px solid #e5e7eb;
+        box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.05);
+    }
+}
+
+@media (max-width: 576px) {
+    .quick-view-price {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .quantity-selector {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .quantity-controls {
+        justify-content: space-between;
+    }
+    
+    .quantity-input {
+        flex: 1;
+    }
+}
+
+/* ============================================
+    ANIMACIONES ADICIONALES
+   ============================================ */
+
+/* Pulse para botón agregar */
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.btn-quick-add.loading {
+    animation: pulse 1.5s infinite;
+    cursor: wait;
+}
+
+/* Fade in para contenido */
+@keyframes fadeInContent {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.quick-view-info > * {
+    animation: fadeInContent 0.5s ease-out;
+}
+
+.quick-view-info > *:nth-child(1) { animation-delay: 0.05s; }
+.quick-view-info > *:nth-child(2) { animation-delay: 0.1s; }
+.quick-view-info > *:nth-child(3) { animation-delay: 0.15s; }
+.quick-view-info > *:nth-child(4) { animation-delay: 0.2s; }
+.quick-view-info > *:nth-child(5) { animation-delay: 0.25s; }
+.quick-view-info > *:nth-child(6) { animation-delay: 0.3s; }
+.quick-view-info > *:nth-child(7) { animation-delay: 0.35s; }
+.quick-view-info > *:nth-child(8) { animation-delay: 0.4s; }
+
+/* ============================================
+    DARK MODE SUPPORT (Opcional)
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+    .quick-view-modal {
+        background: #1f2937;
+        color: #f9fafb;
+    }
+    
+    .quick-view-product-name,
+    .spec-value {
+        color: #f9fafb;
+    }
+    
+    .quick-view-description,
+    .spec-label {
+        color: #d1d5db;
+    }
+    
+    .quick-view-specs {
+        background: #374151;
+    }
+    
+    .spec-item {
+        border-bottom-color: #4b5563;
+    }
+    
+    .quantity-controls {
+        border-color: #4b5563;
+    }
+    
+    .quantity-input {
+        background: #374151;
+        color: #f9fafb;
+        border-color: #4b5563;
+    }
+    
+    .quantity-btn {
+        background: #374151;
+        color: #f9fafb;
+    }
+    
+    .btn-full-details {
+        background: #374151;
+        border-color: #667eea;
+    }
+}
