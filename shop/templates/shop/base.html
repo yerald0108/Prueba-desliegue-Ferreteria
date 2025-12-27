@@ -1,4 +1,3 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -10,162 +9,16 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    {% load static %}
     <!-- Sistema de Toast -->
     <link rel="stylesheet" href="{% static 'css/toast.css' %}">
     <!-- Sistema de Comparación -->
     <link rel="stylesheet" href="{% static 'css/compare.css' %}">
-    
-    <style>
-        :root {
-            --primary-color: #ff6b35;
-            --secondary-color: #004e89;
-            --dark-color: #1a1a2e;
-            --light-color: #f5f5f5;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--light-color);
-        }
-        
-        .navbar {
-            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--dark-color) 100%);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .navbar-brand {
-            font-weight: bold;
-            font-size: 1.5rem;
-            color: white !important;
-        }
-        
-        .nav-link {
-            color: rgba(255,255,255,0.9) !important;
-            transition: color 0.3s;
-        }
-        
-        .nav-link:hover {
-            color: var(--primary-color) !important;
-        }
-        
-        .btn-primary {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-            transition: all 0.3s;
-        }
-        
-        .btn-primary:hover {
-            background-color: #e55a2b;
-            border-color: #e55a2b;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(255, 107, 53, 0.3);
-        }
-        
-        .card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-        
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-        
-        .product-image {
-            height: 200px;
-            object-fit: cover;
-            border-radius: 15px 15px 0 0;
-        }
-        
-        .cart-badge {
-            position: relative;
-            top: -10px;
-            right: -5px;
-            background-color: var(--primary-color);
-            color: white;
-            border-radius: 50%;
-            padding: 2px 7px;
-            font-size: 0.75rem;
-            font-weight: bold;
-        }
-
-        
-        
-        .hero-section {
-            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--dark-color) 100%);
-            color: white;
-            padding: 80px 0;
-            margin-bottom: 50px;
-        }
-        
-        .category-card {
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .category-card:hover {
-            background-color: var(--primary-color);
-            color: white;
-        }
-        
-        .footer {
-            background-color: var(--dark-color);
-            color: white;
-            padding: 40px 0 20px;
-            margin-top: 80px;
-        }
-        
-        .price-tag {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--primary-color);
-        }
-        
-        .stock-badge {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-        
-        .in-stock {
-            background-color: #28a745;
-            color: white;
-        }
-        
-        .low-stock {
-            background-color: #ffc107;
-            color: #000;
-        }
-        
-        .out-of-stock {
-            background-color: #dc3545;
-            color: white;
-        }
-        
-        /* Comportamiento del resumen de pedido en checkout */
-        .checkout-summary {
-            position: sticky;
-            top: 90px; /* espacio por debajo de la navbar sticky */
-            margin-top: 1rem;
-            z-index: 1; /* por debajo de la navbar de Bootstrap (z-index más alto) */
-        }
-
-        /* Comportamiento del resumen en la página de carrito */
-        .cart-summary {
-            position: sticky;
-            top: 90px; /* mismo offset que el checkout */
-            margin-top: 1rem;
-            z-index: 1;
-        }
-
-        
-    </style>
+    <!-- Sistema de Vista Rápida -->
+    <link rel="stylesheet" href="{% static 'css/quick-view.css' %}">
+    <!-- Estilos de base.html -->
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
     
     {% block extra_css %}{% endblock %}
 </head>
@@ -619,10 +472,6 @@
             });
         });
     </script>
-
-    
-
-    
     {% block extra_js %}{% endblock %}
 </body>
 </html>

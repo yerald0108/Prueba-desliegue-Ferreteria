@@ -1,35 +1,11 @@
 {% extends 'shop/base.html' %}
+{% load static %}
 
 {% block title %}{{ product.name }} - Ferretería{% endblock %}
 
 {% block extra_css %}
-<style>
-    .review-stars {
-        color: #fbbf24;
-        font-size: 1rem;
-    }
-    
-    .review-card {
-        border-left: 3px solid var(--primary-color);
-        transition: all 0.3s;
-    }
-    
-    .review-card:hover {
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-    
-    .wishlist-btn {
-        position: relative;
-    }
-    
-    .wishlist-btn.in-wishlist {
-        color: #dc3545;
-    }
-    
-    .wishlist-btn:not(.in-wishlist) {
-        color: #6c757d;
-    }
-</style>
+<!-- Estilos de product_detail.html -->
+<link rel="stylesheet" href="{% static 'css/product_detail.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -60,6 +36,7 @@
                     </div>
 
                     <!-- Botón de Wishlist -->
+                    <div class="mb-3">
                         {% if user.is_authenticated %}
                             <button class="btn btn-link wishlist-btn {% if product in user.wishlist.items.all %}in-wishlist{% endif %}"
                                     data-product-id="{{ product.id }}"

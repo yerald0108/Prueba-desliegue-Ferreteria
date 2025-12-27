@@ -578,6 +578,7 @@ Comenzar con los formularios más críticos (checkout, contacto, login) y luego 
 
 Empieza a implementar, guiame paso por paso detalladamente para no perderme
 
+------------------------------------------------------------------------------------------------------------------------------
 
 ASUNTO: [Prioridad Alta] Implementación: Vista Rápida de Productos
 
