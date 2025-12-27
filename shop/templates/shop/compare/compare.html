@@ -273,8 +273,8 @@
                             <div class="product-compare-card">
                                 {% if product.image %}
                                     <img src="{{ product.image.url }}" 
-                                         alt="{{ product.name }}"
-                                         class="product-compare-image mx-auto d-block">
+                                        alt="{{ product.name }}"
+                                        class="product-compare-image mx-auto d-block">
                                 {% else %}
                                     <div class="product-compare-image mx-auto d-flex align-items-center justify-content-center bg-secondary rounded">
                                         <i class="bi bi-image text-white fs-1"></i>
@@ -308,7 +308,7 @@
                                     {% endif %}
                                     
                                     <a href="{% url 'shop:product_detail' product.id %}" 
-                                       class="btn btn-outline-primary btn-sm">
+                                        class="btn btn-outline-primary btn-sm">
                                         <i class="bi bi-eye"></i> Ver Detalles
                                     </a>
                                     
@@ -471,7 +471,7 @@ $(document).ready(function() {
                         // Recargar página después de un momento
                         setTimeout(function() {
                             // Reconstruir URL sin ese producto
-                            const currentIds = '{{ products|map:"id"|join:"," }}'.split(',');
+                            const currentIds = '{{ product_ids }}'.split(',');
                             const newIds = currentIds.filter(id => id !== String(productId));
                             
                             if (newIds.length >= 2) {
@@ -489,7 +489,7 @@ $(document).ready(function() {
             });
         } else {
             // Fallback sin AJAX
-            const currentIds = '{{ products|map:"id"|join:"," }}'.split(',');
+            const currentIds = '{{ product_ids }}'.split(',');
             const newIds = currentIds.filter(id => id !== String(productId));
             
             if (newIds.length >= 2) {

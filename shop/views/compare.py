@@ -68,6 +68,7 @@ def compare_products(request):
     
     context = {
         'products': products,
+        'product_ids': ','.join(str(p.id) for p in products), 
         'comparison_data': comparison_data,
         'product_count': len(products),
     }

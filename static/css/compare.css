@@ -121,7 +121,7 @@
 
 .btn-compare-action {
     background: white;
-    color: #ff6b35;
+    color: white;
     border: none;
     padding: 10px 20px;
     border-radius: 25px;
@@ -131,7 +131,7 @@
 
 .btn-compare-action:hover {
     background: #f5f5f5;
-    color: #e55a2b;
+    color: white;
     transform: scale(1.05);
 }
 
