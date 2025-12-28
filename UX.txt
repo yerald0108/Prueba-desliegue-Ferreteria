@@ -271,118 +271,32 @@ He realizado un análisis exhaustivo de todos los templates, CSS, JavaScript y f
 
 ---------------------------------------------------------------------------------------
 
+1. Búsqueda en Navbar - Funcionalidad Rota (Prioridad 1)
+Problema: El input de búsqueda en el navbar no hace nada funcional. Solo tiene HTML/CSS pero no hay implementación real.
 
-# **Explicación para el Desarrollador - Indicadores de Carga**
+2. Autocompletado Prometido pero NO Implementado (Prioridad 1)
+Problema: El HTML menciona <div class="autocomplete-dropdown" id="autocompleteDropdown"></div> pero no hay JS que lo maneje.
 
-**ASUNTO:** [Prioridad Alta] Implementación: Sistema de Feedback Visual de Carga
+3. Feedback Visual Ausente en Acciones Críticas (Prioridad 1)
+Problema: Cuando el usuario agrega al carrito, no hay indicación visual inmediata de dónde fue el producto.
+Solución - Animación "Flying Cart":
 
-Necesitamos implementar indicadores de carga en toda la plataforma para dar retroalimentación clara a los usuarios durante las transiciones y procesos.
+4. Checkout Multi-Paso: Navegación Confusa (Prioridad 2)
+Problema: El usuario no puede volver al paso anterior fácilmente. Los botones "Anterior" están pero redirigen con ?step=N lo que puede perder datos.
 
-**PROBLEMA ACTUAL:**
-- Las páginas cambian sin mostrar ningún indicador de que se está cargando contenido
-- Los formularios no tienen estados visibles de "enviando" o "procesando"
-- Los usuarios hacen clic múltiples veces porque no saben si su acción funcionó
-- Los filtros y búsquedas ocurren sin confirmación visual
+5. Validación de Stock en Tiempo Real (Prioridad 2)
+Problema: El usuario puede agregar 10 unidades cuando solo hay 3 en stock. El error aparece después de enviar.
 
-**CONSECUENCIAS DEL PROBLEMA ACTUAL:**
-- Usuarios repiten acciones innecesariamente (doble clic, triple clic)
-- Envíos duplicados de formularios que causan errores en el sistema
-- Percepción de que la plataforma es lenta o no responde
-- Abandonos por pensar que la página se congeló
-- Confusión general en la experiencia de usuario
+6. Comparador: UX Mejorable (Prioridad 2)
+Problemas:
 
-**REQUERIMIENTOS FUNCIONALES:**
+No hay indicación de por qué debería comparar
+El botón flotante aparece abruptamente
+No muestra preview de los productos seleccionados
 
-1. **Indicador Global de Navegación:**
-   - Mostrar un indicador visible cada vez que el usuario cambia de página
-   - Debe aparecer inmediatamente al hacer clic en un enlace
-   - Debe desaparecer cuando la nueva página está completamente cargada
-   - Posición: preferiblemente en la parte superior de la pantalla
+7. Wishlist: Falta Integración Visual (Prioridad 2)
+Problema: El botón de wishlist está pero no es obvio en las product cards del listado.
+Solución:
 
-2. **Estados de Formularios:**
-   - Todo formulario debe mostrar estado "enviando" o "procesando"
-   - Los botones de envío deben cambiar visualmente y deshabilitarse
-   - Debe prevenirse automáticamente el envío múltiple
-   - Feedback inmediato al usuario de que su acción se está procesando
-
-3. **Acciones Asíncronas Específicas:**
-   - **Filtros de productos:** mostrar "Aplicando filtros..." mientras se actualiza
-   - **Búsquedas:** indicador mientras se obtienen resultados
-   - **Añadir al carrito:** confirmación visual inmediata
-   - **Carga de más productos:** mostrar "Cargando más productos..."
-   - **Aplicar cupones:** indicador durante la validación
-
-4. **Tipos de Indicadores Visuales:**
-
-   **A. Spinner/Círculo de Carga:**
-   - Para acciones rápidas (2-5 segundos)
-   - Ubicación: cerca del elemento que disparó la acción
-   - Tamaño apropiado para no ser intrusivo pero sí visible
-
-   **B. Barra de Progreso Superior:**
-   - Para cargas de página completas
-   - Muestra progreso de manera estimada
-   - Color consistente con la identidad de la marca
-
-   **C. Estados de Botón con Texto Cambiante:**
-   - Ejemplo: "Enviar" → "Enviando..." → "¡Enviado!"
-   - Con icono de carga pequeño integrado
-   - Cambio de color para indicar estado
-
-   **D. Esqueletos de Contenido (Skeleton Screens):**
-   - Para páginas que cargan contenido dinámico
-   - Muestra la estructura del contenido mientras carga
-   - Mejora la percepción de velocidad
-
-5. **Comportamiento y UX:**
-   - Todos los indicadores deben ser claramente visibles
-   - Deben aparecer inmediatamente (máximo 0.3 segundos después de la acción)
-   - Deben desaparecer suavemente, no bruscamente
-   - En caso de error, mostrar mensaje apropiado
-   - Timeout máximo: si una carga supera los 10 segundos, mostrar opción de reintentar
-
-**FLUJOS CRÍTICOS A MEJORAR:**
-
-1. **Proceso de Checkout:**
-   - Cada paso debe mostrar claramente que se está procesando
-   - Validación de datos con feedback inmediato
-   - Procesamiento de pago con indicador claro
-
-2. **Búsqueda y Filtrado:**
-   - Filtros complejos deben mostrar que se están aplicando
-   - Resultados que tardan en cargar deben mostrar indicador
-   - Búsquedas con muchos resultados deben mostrar progreso
-
-3. **Gestión de Usuario:**
-   - Login/registro con estados claros
-   - Actualización de perfil con confirmación
-   - Cambio de contraseña con feedback visual
-
-**CRITERIOS DE ÉXITO:**
-- Reducción del 70% en clics múltiples en formularios
-- Eliminación de envíos duplicados
-- Mejora en percepción de velocidad de la plataforma
-- Reducción de consultas al soporte por "congelamientos"
-
-**PRIORIDAD: Alta**
-
-**IMPACTO ESPERADO:**
-- **Para el usuario:** Confianza de que el sistema responde, experiencia más fluida
-- **Para el negocio:** Menos errores por acciones duplicadas, mayor satisfacción
-- **Para el sistema:** Menos carga por acciones repetidas, mejor manejo de procesos
-
-**RECOMENDACIÓN DE IMPLEMENTACIÓN:**
-Comenzar con los formularios más críticos (checkout, contacto, login) y luego expandir a toda la plataforma. Los indicadores de carga son una mejora fundamental que, aunque parece pequeña, transforma completamente la percepción de calidad y responsividad del sistema.
-
-Vamos a implementar en 4 fases:
-
-Fase 1: Crear archivos CSS/JS para los indicadores
-Fase 2: Implementar barra de progreso global
-Fase 3: Actualizar formularios críticos
-Fase 4: Agregar estados de carga en AJAX
-
-ya las fase 1 , 2 y 3 estan implementadas, Empieza a implementar la fase 4, guiame paso por paso detalladamente para no perderme
-
-
-
-------------------------------------------------------------------------------------------------------------------------------
+8. Skeleton Screens en lugar de Spinners
+Reemplaza los spinners genéricos con skeleton screens para mejor percepción de velocidad
