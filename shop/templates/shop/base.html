@@ -11,6 +11,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 
     {% load static %}
+    <!-- Sistema de Loading -->
+    <link rel="stylesheet" href="{% static 'css/loading-indicators.css' %}">
+    
     <!-- Sistema de Toast -->
     <link rel="stylesheet" href="{% static 'css/toast.css' %}">
     <!-- Sistema de Comparación -->
@@ -23,6 +26,11 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+    <!-- Barra de progreso global -->
+    <div class="global-loading-bar">
+        <div class="loading-bar-progress"></div>
+    </div>
+
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container">
@@ -55,29 +63,28 @@
                         aria-label="Search"
                         autocomplete="off">
 
-                <!-- Botón de limpiar -->
-                <button type="button" 
-                    class="clear-search-btn" 
-                    aria-label="Limpiar búsqueda">
-                    <i class="bi bi-x-circle-fill"></i>
-                </button>
+                    <!-- Botón de limpiar -->
+                    <button type="button" 
+                        class="clear-search-btn" 
+                        aria-label="Limpiar búsqueda">
+                        <i class="bi bi-x-circle-fill"></i>
+                    </button>
 
-                <!-- Botón de búsqueda -->
-                <button class="search-btn" 
-                    type="button"
-                    id="searchBtn"
-                    aria-label="Buscar">
-                    <i class="bi bi-search"></i>
-                </button>
+                    <!-- Botón de búsqueda -->
+                    <button class="search-btn" 
+                        type="button"
+                        id="searchBtn"
+                        aria-label="Buscar">
+                        <i class="bi bi-search"></i>
+                    </button>
 
-                <!-- Dropdown de autocompletado -->
-                <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
+                    <!-- Dropdown de autocompletado -->
+                    <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
                 </div>
                 
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
                         <li class="nav-item">
-
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'shop:wishlist' %}">
                                     <i class="bi bi-heart"></i> Favoritos
@@ -86,7 +93,6 @@
 
                             <a class="nav-link position-relative" href="{% url 'shop:cart' %}">
                                 <i class="bi bi-cart3"></i> Carrito
-                                {# Siempre renderizamos el badge para que pueda ser actualizado vía JS #}
                                 <span class="cart-badge" {% if not user.cart.items_count %}style="display:none"{% endif %}>
                                     {{ user.cart.items_count|default:"0" }}
                                 </span>
@@ -316,9 +322,7 @@
         </div>
     </div>
 
-    <!-- ============================================ -->
-    <!-- BOTÓN FLOTANTE DE COMPARACIÓN -->
-    <!-- ============================================ -->
+    <!-- Botón flotante de comparación -->
     <div id="compareFloatingButton" class="compare-floating-btn" style="display: none;">
         <div class="compare-btn-content">
             <i class="bi bi-arrow-left-right"></i>
@@ -336,6 +340,9 @@
     <!-- jQuery (para AJAX) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
+    <!-- Sistema de Loading (DEBE IR ANTES de otros scripts) -->
+    <script src="{% static 'js/loading-indicators.js' %}"></script>
+
     <!-- Sistema de Toast -->
     <script src="{% static 'js/toast.js' %}"></script>
 
@@ -346,7 +353,6 @@
     <script src="{% static 'js/quick-view.js' %}"></script>
 
     <script>
-
         // ================================================================
         // SISTEMA DE NOTIFICACIONES AUTOMÁTICO
         // ================================================================
@@ -360,6 +366,7 @@
                 });
                 sessionStorage.removeItem('logoutWaitingToast');
             }
+            
             // Mostrar notificación si hay mensaje de éxito en sessionStorage
             const successMsg = sessionStorage.getItem('successNotification');
             if (successMsg) {
@@ -437,7 +444,6 @@
             $('#logoutLink').on('click', function(e) {
                 e.preventDefault();
         
-                //  TOAST DE LOADING 
                 Toast.info('Cerrando sesión', 'Por favor espera...', {
                     duration: 0,
                     closeButton: false
@@ -458,7 +464,6 @@
                         window.location.href = '{% url "shop:home" %}';
                     },
                     error: function() {
-                        //  TOAST DE ERROR 
                         Toast.error('Error', 'No se pudo cerrar la sesión correctamente', {
                             duration: 3000
                         });
