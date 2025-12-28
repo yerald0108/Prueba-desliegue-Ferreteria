@@ -85,7 +85,7 @@
         <a href="{% url 'shop:checkout' %}?step=1" class="btn btn-outline-secondary btn-lg btn-step">
             <i class="bi bi-arrow-left"></i> Anterior
         </a>
-        <button type="submit" class="btn btn-primary btn-lg btn-step">
+        <button type="submit" class="btn btn-primary btn-lg btn-step" id="step2SubmitBtn">
             Continuar <i class="bi bi-arrow-right"></i>
         </button>
     </div>
@@ -100,12 +100,22 @@ $(document).ready(function() {
         const date = $('#{{ form.delivery_date.id_for_label }}').val();
         const time = $('input[name="delivery_time"]:checked').val();
         const payment = $('input[name="payment_method"]:checked').val();
+        const $btn = $('#step2SubmitBtn');
+        const originalText = $btn.html();
         
         if (!date || !time || !payment) {
             e.preventDefault();
             Toast.error('Campos requeridos', 'Por favor completa todos los campos');
             return false;
         }
+
+        $btn.prop('disabled', true)
+            .html('<i class="bi bi-hourglass-split"></i> Procesando...');
+
+        Toast.info('Procesando', 'Validando fecha y pago...', {
+            duration: 2000,
+            closeButton: false
+        });
     });
 });
 </script>

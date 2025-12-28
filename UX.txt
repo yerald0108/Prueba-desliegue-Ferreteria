@@ -583,7 +583,7 @@ Fase 2: Implementar barra de progreso global
 Fase 3: Actualizar formularios críticos
 Fase 4: Agregar estados de carga en AJAX
 
-ya las fase 1 y 2 estan implementadas, Empieza a implementar la fase 3, guiame paso por paso detalladamente para no perderme
+ya las fase 1 , 2 y 3 estan implementadas, Empieza a implementar la fase 4, guiame paso por paso detalladamente para no perderme
 
 
 

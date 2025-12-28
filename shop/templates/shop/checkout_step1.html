@@ -68,7 +68,7 @@
         <a href="{% url 'shop:cart' %}" class="btn btn-outline-secondary btn-lg btn-step">
             <i class="bi bi-arrow-left"></i> Volver al Carrito
         </a>
-        <button type="submit" class="btn btn-primary btn-lg btn-step">
+        <button type="submit" class="btn btn-primary btn-lg btn-step" id="step1SubmitBtn">
             Continuar <i class="bi bi-arrow-right"></i>
         </button>
     </div>
@@ -84,12 +84,24 @@ $(document).ready(function() {
         const city = $('#{{ form.delivery_city.id_for_label }}').val().trim();
         const province = $('#{{ form.delivery_province.id_for_label }}').val().trim();
         const phone = $('#{{ form.contact_phone.id_for_label }}').val().trim();
-        
+        const $btn = $('#step1SubmitBtn');
+        const originalText = $btn.html();
+
         if (!address || !city || !province || !phone) {
             e.preventDefault();
             Toast.error('Campos requeridos', 'Por favor completa todos los campos obligatorios');
             return false;
         }
+
+        // Deshabilitar botón y mostrar loading
+        $btn.prop('disabled', true)
+            .html('<i class="bi bi-hourglass-split"></i> Procesando...');
+        
+        // Toast de loading
+        Toast.info('Procesando', 'Validando información...', {
+            duration: 2000,
+            closeButton: false
+        });
     });
 });
 </script>

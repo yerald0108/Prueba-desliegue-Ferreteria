@@ -36,11 +36,11 @@
                             </label>
                             <div class="input-group">
                                 <input type="password" 
-                                       class="form-control form-control-lg" 
-                                       id="password" 
-                                       name="password" 
-                                       placeholder="Tu contraseña"
-                                       required>
+                                    class="form-control form-control-lg" 
+                                    id="password" 
+                                    name="password" 
+                                    placeholder="Tu contraseña"
+                                    required>
                                 <button type="button" class="btn btn-outline-secondary" id="toggleLoginPassword" data-target="password">
                                     <i class="bi bi-eye"></i>
                                 </button>
@@ -96,28 +96,37 @@
         // Login con AJAX y Toast
         $('#loginForm').on('submit', function(e) {
             e.preventDefault();
-        
+
             var $form = $(this);
             var $btn = $('#loginBtn');
             var $error = $('#loginError');
             var originalText = $btn.html();
-        
+
             // Ocultar errores previos
             $error.hide();
-        
-            // Deshabilitar botón y mostrar loading
-            $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Iniciando sesión...');
-        
+
+            // FASE 3: Mejorar indicador de carga
+            $btn.prop('disabled', true)
+                .html('<i class="bi bi-hourglass-split"></i> Iniciando sesión...');
+    
+            // Toast de loading
+            Toast.info('Iniciando sesión', 'Por favor espera...', {
+                duration: 0,
+                closeButton: false
+            });
+
             $.ajax({
                 url: '{% url "shop:login" %}',
                 method: 'POST',
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest'
                 },
                 data: $form.serialize(),
                 success: function(response) {
                     if (response && response.success) {
+                        // ÉXITO: Guardar mensaje para la siguiente página
                         sessionStorage.setItem('successNotification', 'Sesión iniciada correctamente');
+                
                         var nextUrl = new URLSearchParams(window.location.search).get('next');
                         if (nextUrl) {
                             window.location.href = nextUrl;
@@ -129,22 +138,15 @@
                 error: function(xhr) {
                     // Restaurar botón
                     $btn.prop('disabled', false).html(originalText);
-                
-                    //  TOAST DE ERROR 
+        
                     var errorMsg = 'Usuario o contraseña incorrectos';
-                
+        
                     if (xhr.status === 429) {
                         errorMsg = 'Demasiados intentos. Espera unos minutos.';
                     } else if (xhr.responseJSON && xhr.responseJSON.error) {
                         errorMsg = xhr.responseJSON.error;
-                    } else if (xhr.responseText) {
-                        var $response = $(xhr.responseText);
-                        var extractedError = $response.find('.alert-danger').text();
-                        if (extractedError) {
-                            errorMsg = extractedError.trim();
-                        }
                     }
-                
+        
                     Toast.error('Error de inicio de sesión', errorMsg, {
                         duration: 5000
                     });

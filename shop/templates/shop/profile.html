@@ -201,17 +201,16 @@
             var $form = $(this);
             var $submitBtn = $form.find('button[type="submit"]');
             var originalText = $submitBtn.html();
-        
-            // Deshabilitar botón y mostrar loading
-            $submitBtn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Guardando...');
-        
-            //  TOAST DE LOADING 
+    
+            // FASE 3: Deshabilitar botón y mostrar loading
+            $submitBtn.prop('disabled', true)
+                .html('<i class="bi bi-hourglass-split"></i> Guardando...');
+    
             Toast.info('Guardando cambios', 'Por favor espera...', {
                 duration: 2000,
                 closeButton: false
             });
-        
-            // Permitir que el formulario se envíe normalmente
+    
             // Guardar mensaje en sessionStorage para después de la recarga
             sessionStorage.setItem('successNotification', 'Perfil actualizado exitosamente');
         });

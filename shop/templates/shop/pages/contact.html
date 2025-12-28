@@ -26,12 +26,12 @@
                                     <i class="bi bi-person"></i> Nombre Completo *
                                 </label>
                                 <input type="text" 
-                                       class="form-control" 
-                                       id="name" 
-                                       name="name" 
-                                       placeholder="Tu nombre"
-                                       required
-                                       value="{{ request.user.get_full_name|default:'' }}">
+                                    class="form-control" 
+                                    id="name" 
+                                    name="name" 
+                                    placeholder="Tu nombre"
+                                    required
+                                    value="{{ request.user.get_full_name|default:'' }}">
                             </div>
                             
                             <div class="col-md-6 mb-3">
@@ -39,12 +39,12 @@
                                     <i class="bi bi-envelope"></i> Email *
                                 </label>
                                 <input type="email" 
-                                       class="form-control" 
-                                       id="email" 
-                                       name="email" 
-                                       placeholder="tu-email@ejemplo.com"
-                                       required
-                                       value="{{ request.user.email|default:'' }}">
+                                    class="form-control" 
+                                    id="email" 
+                                    name="email" 
+                                    placeholder="tu-email@ejemplo.com"
+                                    required
+                                    value="{{ request.user.email|default:'' }}">
                             </div>
                         </div>
                         
@@ -53,11 +53,11 @@
                                 <i class="bi bi-chat-left-text"></i> Asunto *
                             </label>
                             <input type="text" 
-                                   class="form-control" 
-                                   id="subject" 
-                                   name="subject" 
-                                   placeholder="¿De qué se trata tu mensaje?"
-                                   required>
+                                class="form-control" 
+                                id="subject" 
+                                name="subject" 
+                                placeholder="¿De qué se trata tu mensaje?"
+                                required>
                         </div>
                         
                         <div class="mb-4">
@@ -65,11 +65,11 @@
                                 <i class="bi bi-chat-dots"></i> Mensaje *
                             </label>
                             <textarea class="form-control" 
-                                      id="message" 
-                                      name="message" 
-                                      rows="6" 
-                                      placeholder="Escribe tu mensaje aquí..."
-                                      required></textarea>
+                                    id="message" 
+                                    name="message" 
+                                    rows="6" 
+                                    placeholder="Escribe tu mensaje aquí..."
+                                    required></textarea>
                         </div>
                         
                         <div class="alert alert-info">
@@ -202,11 +202,12 @@ $(document).ready(function() {
             return false;
         }
         
-        // Deshabilitar botón
-        $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Enviando...');
+        // FASE 3: Indicador de carga
+        $btn.prop('disabled', true)
+            .html('<i class="bi bi-hourglass-split"></i> Enviando...');
         
         Toast.info('Enviando mensaje', 'Por favor espera...', {
-            duration: 2000,
+            duration: 0,
             closeButton: false
         });
     });

@@ -134,5 +134,21 @@
         if (t1) t1.addEventListener('click', function() { togglePassword('togglePassword1'); });
         if (t2) t2.addEventListener('click', function() { togglePassword('togglePassword2'); });
     });
+
+    $(document).ready(function() {
+        // FASE 3: Indicador de carga en registro
+        $('form').on('submit', function(e) {
+            const $btn = $(this).find('button[type="submit"]');
+            const originalText = $btn.html();
+        
+            $btn.prop('disabled', true)
+                .html('<i class="bi bi-hourglass-split"></i> Creando cuenta...');
+        
+            Toast.info('Procesando', 'Creando tu cuenta...', {
+                duration: 0,
+                closeButton: false
+            });
+        });
+    });
 </script>
 {% endblock %}
