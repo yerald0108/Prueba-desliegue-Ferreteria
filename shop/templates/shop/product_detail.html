@@ -277,92 +277,142 @@
 {% block extra_js %}
 <script>
     $(document).ready(function() {
-    // Agregar al carrito
-    $('#addToCartForm').on('submit', function(e) {
-        e.preventDefault();
+        // ============================================
+        // AGREGAR AL CARRITO CON LOADING
+        // ============================================
+        $('#addToCartForm').on('submit', function(e) {
+            e.preventDefault();
     
-        const quantity = $('#quantity').val();
-        const productId = '{{ product.pk }}';
-        const productName = '{{ product.name|escapejs }}';
-    
-        $.ajax({
-            url: `/agregar-al-carrito/${productId}/`,
-            method: 'POST',
-            data: {
-                'quantity': quantity,
-                'csrfmiddlewaretoken': '{{ csrf_token }}'
-            },
-            success: function(response) {
-                if (response.success) {
-                    // Actualizar badge del carrito
-                    $('.cart-badge').text(response.cart_count).show();
-
-                    //  TOAST DE ÉXITO 
-                    Toast.success(
-                        '¡Producto agregado!',
-                        `${quantity}x ${productName} agregado al carrito`,
-                        { duration: 3000 }
-                    );
-                } else {
-                    //  TOAST DE ERROR 
-                    Toast.error('Error', response.message || 'No se pudo agregar el producto');
-                }
-            },
-            error: function() {
-                //  TOAST DE ERROR 
-                Toast.error('Error de conexión', 'No se pudo agregar el producto al carrito');
-            }
-        });
-    });
-
-    // Toggle wishlist
-    $('.wishlist-btn').on('click', function() {
-        const productId = $(this).data('product-id');
-        const $btn = $(this);
+            const quantity = $('#quantity').val();
+            const productId = '{{ product.pk }}';
+            const productName = '{{ product.name|escapejs }}';
         
-        $.ajax({
-            url: `/toggle-favorito/${productId}/`,
-            method: 'POST',
-            data: {
-                'csrfmiddlewaretoken': '{{ csrf_token }}'
-            },
-            success: function(response) {
-                if (response.success) {
-                    $btn.toggleClass('in-wishlist');
-                    Toast.success(
-                        response.in_wishlist ? '¡Agregado a favoritos!' : 'Eliminado de favoritos',
-                        response.message,
-                        { duration: 2000 }
-                    );
-                }
-            },
-            error: function() {
-                Toast.error('Error', 'No se pudo actualizar favoritos');
-            }
-        });
-    });
-    
-    // Marcar review como útil
-    $('.helpful-btn').on('click', function() {
-        const reviewId = $(this).data('review-id');
-        const $btn = $(this);
+            // Deshabilitar botón
+            const $btn = $(this).find('button[type="submit"]');
+            const originalText = $btn.html();
+            $btn.prop('disabled', true)
+                .html('<i class="bi bi-hourglass-split"></i> Agregando...');
         
-        $.ajax({
-            url: `/review/${reviewId}/util/`,
-            method: 'POST',
-            data: {
-                'csrfmiddlewaretoken': '{{ csrf_token }}'
-            },
-            success: function(response) {
-                if (response.success) {
-                    $btn.html(`<i class="bi bi-hand-thumbs-up"></i> Útil (${response.helpful_count})`);
-                    Toast.info('Gracias', response.message, { duration: 2000 });
-                } else {
-                    Toast.error('Error', response.message);
+            // Toast de loading
+            Toast.info('Agregando', 'Agregando al carrito...', {
+                duration: 2000,
+                closeButton: false
+            });
+    
+            $.ajax({
+                url: `/agregar-al-carrito/${productId}/`,
+                method: 'POST',
+                data: {
+                    'quantity': quantity,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Actualizar badge del carrito
+                        $('.cart-badge').text(response.cart_count).show();
+
+                        Toast.success(
+                            '¡Producto agregado!',
+                            `${quantity}x ${productName} agregado al carrito`,
+                            { duration: 3000 }
+                        );
+                    
+                        // Cambiar botón temporalmente
+                        $btn.html('<i class="bi bi-check-circle"></i> ¡Agregado!')
+                            .removeClass('btn-primary')
+                            .addClass('btn-success');
+                    
+                        setTimeout(function() {
+                            $btn.html(originalText)
+                                .removeClass('btn-success')
+                                .addClass('btn-primary')
+                                .prop('disabled', false);
+                        }, 2000);
+                    } else {
+                        Toast.error('Error', response.message || 'No se pudo agregar el producto');
+                        $btn.prop('disabled', false).html(originalText);
+                    }
+                },
+                error: function() {
+                    Toast.error('Error de conexión', 'No se pudo agregar el producto al carrito');
+                    $btn.prop('disabled', false).html(originalText);
                 }
-            }
+            });
+        });
+
+        // ============================================
+        // TOGGLE WISHLIST CON LOADING
+        // ============================================
+        $('.wishlist-btn').on('click', function() {
+            const productId = $(this).data('product-id');
+            const $btn = $(this);
+        
+            // Deshabilitar botón temporalmente
+            $btn.css('pointer-events', 'none');
+        
+            $.ajax({
+                url: `/toggle-favorito/${productId}/`,
+                method: 'POST',
+                data: {
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $btn.toggleClass('in-wishlist');
+                        Toast.success(
+                            response.in_wishlist ? '¡Agregado a favoritos!' : 'Eliminado de favoritos',
+                            response.message,
+                            { duration: 2000 }
+                        );
+                    }
+                },
+                error: function() {
+                    Toast.error('Error', 'No se pudo actualizar favoritos');
+                },
+                complete: function() {
+                    // Re-habilitar botón
+                    $btn.css('pointer-events', 'auto');
+                }
+            });
+        });
+    
+        // ============================================
+        // MARCAR REVIEW COMO ÚTIL
+        // ============================================
+        $('.helpful-btn').on('click', function() {
+            const reviewId = $(this).data('review-id');
+            const $btn = $(this);
+            const originalText = $btn.html();
+        
+            // Deshabilitar botón
+            $btn.prop('disabled', true);
+        
+            $.ajax({
+                url: `/review/${reviewId}/util/`,
+                method: 'POST',
+                data: {
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $btn.html(`<i class="bi bi-hand-thumbs-up"></i> Útil (${response.helpful_count})`);
+                        Toast.info('Gracias', response.message, { duration: 2000 });
+                    } else {
+                        Toast.error('Error', response.message);
+                    }
+                },
+                error: function() {
+                    Toast.error('Error', 'No se pudo registrar el voto');
+                    $btn.html(originalText);
+                },
+                complete: function() {
+                    // Re-habilitar después de 2 segundos
+                    setTimeout(function() {
+                        $btn.prop('disabled', false);
+                    }, 2000);
+                }
+            });
         });
     });
-});
 </script>
 {% endblock %}

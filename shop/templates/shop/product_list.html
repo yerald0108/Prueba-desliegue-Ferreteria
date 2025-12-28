@@ -24,12 +24,12 @@
                         <form method="get" action="{% url 'shop:product_list' %}" id="searchForm">
                             <div class="input-group">
                                 <input type="text" 
-                                       class="form-control" 
-                                       id="searchInput"
-                                       name="q" 
-                                       placeholder="Buscar..." 
-                                       value="{{ query|default:'' }}"
-                                       autocomplete="off">
+                                    class="form-control" 
+                                    id="searchInput"
+                                    name="q" 
+                                    placeholder="Buscar..." 
+                                    value="{{ query|default:'' }}"
+                                    autocomplete="off">
                                 <button class="btn btn-primary" type="submit">
                                     <i class="bi bi-search"></i>
                                 </button>
@@ -41,13 +41,13 @@
                     <h6 class="mb-3">Categorías</h6>
                     <div class="list-group mb-4">
                         <a href="{% url 'shop:product_list' %}" 
-                           class="list-group-item list-group-item-action {% if not current_category %}active{% endif %}">
+                            class="list-group-item list-group-item-action {% if not current_category %}active{% endif %}">
                             <i class="bi bi-grid"></i> Todas
                         </a>
                         {% for category in categories %}
                             <a href="?category={{ category.slug }}" 
-                               class="list-group-item list-group-item-action category-filter {% if current_category == category.slug %}active{% endif %}"
-                               data-category="{{ category.slug }}">
+                                class="list-group-item list-group-item-action category-filter {% if current_category == category.slug %}active{% endif %}"
+                                data-category="{{ category.slug }}">
                                 <i class="bi bi-tag"></i> {{ category.name }}
                             </a>
                         {% endfor %}
@@ -138,9 +138,9 @@
                         <!-- Primera página -->
                         <li class="page-item {% if not products.has_previous %}disabled{% endif %}">
                             <a class="page-link page-nav" 
-                               href="#" 
-                               data-page="1"
-                               aria-label="Primera">
+                                href="#" 
+                                data-page="1"
+                                aria-label="Primera">
                                 <i class="bi bi-chevron-double-left"></i>
                             </a>
                         </li>
@@ -148,9 +148,9 @@
                         <!-- Anterior -->
                         <li class="page-item {% if not products.has_previous %}disabled{% endif %}">
                             <a class="page-link page-nav" 
-                               href="#" 
-                               data-page="{% if products.has_previous %}{{ products.previous_page_number }}{% else %}1{% endif %}"
-                               aria-label="Anterior">
+                                href="#" 
+                                data-page="{% if products.has_previous %}{{ products.previous_page_number }}{% else %}1{% endif %}"
+                                aria-label="Anterior">
                                 <i class="bi bi-chevron-left"></i>
                             </a>
                         </li>
@@ -164,8 +164,8 @@
                             {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
                                 <li class="page-item">
                                     <a class="page-link page-nav" 
-                                       href="#" 
-                                       data-page="{{ num }}">{{ num }}</a>
+                                        href="#" 
+                                        data-page="{{ num }}">{{ num }}</a>
                                 </li>
                             {% endif %}
                         {% endfor %}
@@ -173,9 +173,9 @@
                         <!-- Siguiente -->
                         <li class="page-item {% if not products.has_next %}disabled{% endif %}">
                             <a class="page-link page-nav" 
-                               href="#" 
-                               data-page="{% if products.has_next %}{{ products.next_page_number }}{% else %}{{ paginator.num_pages }}{% endif %}"
-                               aria-label="Siguiente">
+                                href="#" 
+                                data-page="{% if products.has_next %}{{ products.next_page_number }}{% else %}{{ paginator.num_pages }}{% endif %}"
+                                aria-label="Siguiente">
                                 <i class="bi bi-chevron-right"></i>
                             </a>
                         </li>
@@ -183,9 +183,9 @@
                         <!-- Última página -->
                         <li class="page-item {% if not products.has_next %}disabled{% endif %}">
                             <a class="page-link page-nav" 
-                               href="#" 
-                               data-page="{{ paginator.num_pages }}"
-                               aria-label="Última">
+                                href="#" 
+                                data-page="{{ paginator.num_pages }}"
+                                aria-label="Última">
                                 <i class="bi bi-chevron-double-right"></i>
                             </a>
                         </li>
@@ -197,12 +197,12 @@
                     <div class="d-inline-flex align-items-center gap-2">
                         <span class="text-muted small">Ir a página:</span>
                         <input type="number" 
-                               id="gotoPageInput" 
-                               class="form-control form-control-sm" 
-                               style="width: 70px;"
-                               min="1" 
-                               max="{{ paginator.num_pages }}"
-                               placeholder="{{ products.number }}">
+                                id="gotoPageInput" 
+                                class="form-control form-control-sm" 
+                                style="width: 70px;"
+                                min="1" 
+                                max="{{ paginator.num_pages }}"
+                                placeholder="{{ products.number }}">
                         <button class="btn btn-sm btn-primary" id="gotoPageBtn">
                             <i class="bi bi-arrow-right"></i>
                         </button>
@@ -229,12 +229,18 @@
             // Mostrar loading
             $productsContainer.addClass('products-loading');
             $loadingOverlay.removeClass('d-none');
-        
+    
             // Scroll suave a la sección de productos
             $('html, body').animate({
                 scrollTop: $('#products-section').offset().top - 100
             }, 400);
-        
+    
+            // Toast de loading
+            Toast.info('Cargando productos', 'Por favor espera...', {
+                duration: 2000,
+            closeButton: false
+            });
+    
             // Construir URL con parámetros
             const urlParams = new URLSearchParams(window.location.search);
             Object.keys(params).forEach(key => {
@@ -244,9 +250,9 @@
                     urlParams.delete(key);
                 }
             });
-        
+    
             const url = '{% url "shop:product_list" %}?' + urlParams.toString();
-        
+    
             // Realizar petición AJAX
             $.ajax({
                 url: url,
@@ -258,21 +264,21 @@
                     if (response.success) {
                         // Actualizar productos
                         $productsGrid.html(response.html);
-                    
+                
                         // Actualizar información de resultados
                         $('#startIndex').text(response.start_index);
                         $('#endIndex').text(response.end_index);
                         $('#totalProducts').text(response.total_products);
-                    
+                
                         // Actualizar paginación
                         updatePagination(response);
-                    
+                
                         // Re-inicializar botones de agregar al carrito
                         initAddToCartButtons();
-                    
+                
                         // Actualizar URL sin recargar página
                         window.history.pushState({}, '', url);
-                    
+                
                         // Ajustar sidebar después de actualizar contenido
                         setTimeout(function() {
                             adjustFiltersSidebar();
@@ -280,7 +286,8 @@
                     }
                 },
                 error: function() {
-                    alert('Error al cargar productos');
+                    // Toast de error
+                    Toast.error('Error', 'No se pudieron cargar los productos');
                 },
                 complete: function() {
                     // Ocultar loading
@@ -438,6 +445,11 @@
                 const button = $(this);
                 const productName = button.closest('.card').find('.card-title').text().trim();
         
+                // Deshabilitar botón
+                const originalText = button.html();
+                button.prop('disabled', true)
+                    .html('<i class="bi bi-hourglass-split"></i>');
+        
                 $.ajax({
                     url: "{% url 'shop:add_to_cart' 0 %}".replace('0', productId),
                     method: 'POST',
@@ -450,27 +462,31 @@
                             // Actualizar badge
                             $('.cart-badge').text(response.cart_count).show();
                     
-                            // ⭐ TOAST DE ÉXITO ⭐
+                            // Toast de éxito
                             Toast.success('¡Agregado!', `${productName} agregado al carrito`, {
                                 duration: 3000
                             });
                     
                             // Cambiar botón temporalmente
-                            button.html('<i class="bi bi-check-circle"></i>');
-                            button.removeClass('btn-primary').addClass('btn-success');
+                            button.html('<i class="bi bi-check-circle"></i>')
+                                .removeClass('btn-primary')
+                                .addClass('btn-success');
                     
                             setTimeout(function() {
-                                button.html('<i class="bi bi-cart-plus"></i>');
-                                button.removeClass('btn-success').addClass('btn-primary');
+                                button.html('<i class="bi bi-cart-plus"></i>')
+                                    .removeClass('btn-success')
+                                    .addClass('btn-primary')
+                                    .prop('disabled', false);
                             }, 1500);
                         } else {
-                            //  TOAST DE ERROR 
+                            // Toast de error
                             Toast.error('Error', response.message || 'No se pudo agregar el producto');
+                            button.prop('disabled', false).html(originalText);
                         }
                     },
                     error: function() {
-                        //  TOAST DE ERROR 
                         Toast.error('Error de conexión', 'No se pudo agregar el producto al carrito');
+                        button.prop('disabled', false).html(originalText);
                     }
                 });
             });

@@ -135,221 +135,261 @@
 
 {% block extra_js %}
 <script>
-    $(document).ready(function() {
-        // Actualizar cantidad
-        $('.quantity-input').on('change', function() {
-            const itemId = $(this).data('item-id');
-            const quantity = $(this).val();
-            updateCartItem(itemId, quantity);
-        });
+$(document).ready(function() {
+    // ============================================
+    // ACTUALIZAR CANTIDAD CON LOADING
+    // ============================================
+    $('.quantity-input').on('change', function() {
+        const itemId = $(this).data('item-id');
+        const quantity = $(this).val();
+        const $input = $(this);
+        const $cartItem = $(`.cart-item[data-item-id="${itemId}"]`);
+        
+        // Deshabilitar controles
+        $input.prop('disabled', true);
+        $cartItem.find('.increase-qty, .decrease-qty').prop('disabled', true);
+        
+        updateCartItem(itemId, quantity, $input, $cartItem);
+    });
     
-        // Botones de incremento/decremento
-        $('.increase-qty').on('click', function() {
-            const input = $(this).siblings('.quantity-input');
-            const max = parseInt(input.attr('max'));
-            let value = parseInt(input.val());
-            if (value < max) {
-                input.val(value + 1).trigger('change');
-            }
-        });
+    // Botones de incremento/decremento
+    $('.increase-qty').on('click', function() {
+        const input = $(this).siblings('.quantity-input');
+        const max = parseInt(input.attr('max'));
+        let value = parseInt(input.val());
+        if (value < max) {
+            input.val(value + 1).trigger('change');
+        }
+    });
     
-        $('.decrease-qty').on('click', function() {
-            const input = $(this).siblings('.quantity-input');
-            let value = parseInt(input.val());
-            if (value > 1) {
-                input.val(value - 1).trigger('change');
-            }
-        });
+    $('.decrease-qty').on('click', function() {
+        const input = $(this).siblings('.quantity-input');
+        let value = parseInt(input.val());
+        if (value > 1) {
+            input.val(value - 1).trigger('change');
+        }
+    });
     
-        // Eliminar item (usando modal de confirmación)
-        $('.remove-item').on('click', function() {
-            const itemId = $(this).data('item-id');
-            if (window.showConfirmModal) {
-                window.showConfirmModal({
-                    message: '¿Estás seguro de eliminar este producto del carrito?',
-                    confirmText: 'Eliminar',
-                    confirmClass: 'btn-danger',
-                    onConfirm: function() {
-                        removeCartItem(itemId);
-                    }
-                });
-            } else {
-                // Fallback al confirm nativo si por alguna razón no está disponible el modal
-                if (confirm('¿Estás seguro de eliminar este producto del carrito?')) {
-                    removeCartItem(itemId);
-                }
-            }
-        });
-    
-        function updateCartItem(itemId, quantity) {
-            $.ajax({
-                url: `/actualizar-carrito/${itemId}/`,
-                method: 'POST',
-                data: {
-                    'quantity': quantity,
-                    'csrfmiddlewaretoken': '{{ csrf_token }}'
-                },
-                success: function(response) {
-                    if (response.success) {
-                        // Actualizar subtotal del item
-                        $(`.cart-item[data-item-id="${itemId}"] .item-subtotal`).text('$' + response.subtotal.toFixed(2));
-                
-                        // Actualizar totales
-                        $('#cart-subtotal').text('$' + response.cart_total.toFixed(2));
-                        $('#cart-total').text('$' + (response.cart_total + 5).toFixed(2));
-                
-                        // Actualizar badge del navbar
-                        $('.cart-badge').text(response.cart_count);
-
-                        //  TOAST DE ÉXITO 
-                        Toast.success('Cantidad actualizada', 'Carrito actualizado correctamente', {
-                            duration: 2000
-                        });
-                    } else {
-                        //  TOAST DE ERROR 
-                        Toast.error('Error', response.message);
-                    }
-                },
-                error: function() {
-                    //  TOAST DE ERROR 
-                    Toast.error('Error', 'No se pudo actualizar el carrito');
+    // ============================================
+    // ELIMINAR ITEM CON CONFIRMACIÓN
+    // ============================================
+    $('.remove-item').on('click', function() {
+        const itemId = $(this).data('item-id');
+        const $btn = $(this);
+        
+        if (window.showConfirmModal) {
+            window.showConfirmModal({
+                message: '¿Estás seguro de eliminar este producto del carrito?',
+                confirmText: 'Eliminar',
+                confirmClass: 'btn-danger',
+                onConfirm: function() {
+                    // Deshabilitar botón
+                    $btn.prop('disabled', true)
+                        .html('<i class="bi bi-hourglass-split"></i>');
+                    
+                    removeCartItem(itemId, $btn);
                 }
             });
-        }  
+        } else {
+            if (confirm('¿Estás seguro de eliminar este producto del carrito?')) {
+                $btn.prop('disabled', true)
+                    .html('<i class="bi bi-hourglass-split"></i>');
+                removeCartItem(itemId, $btn);
+            }
+        }
+    });
     
-        function removeCartItem(itemId) {
+    // ============================================
+    // FUNCIÓN: ACTUALIZAR ITEM
+    // ============================================
+    function updateCartItem(itemId, quantity, $input, $cartItem) {
+        // Toast de loading
+        Toast.info('Actualizando', 'Actualizando cantidad...', {
+            duration: 2000,
+            closeButton: false
+        });
+        
+        $.ajax({
+            url: `/actualizar-carrito/${itemId}/`,
+            method: 'POST',
+            data: {
+                'quantity': quantity,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Actualizar subtotal del item
+                    $cartItem.find('.item-subtotal').text('$' + response.subtotal.toFixed(2));
+                    
+                    // Actualizar totales
+                    $('#cart-subtotal').text('$' + response.cart_total.toFixed(2));
+                    $('#cart-total').text('$' + (response.cart_total + 5).toFixed(2));
+                    
+                    // Actualizar badge del navbar
+                    $('.cart-badge').text(response.cart_count);
+                    
+                    //  Toast de éxito
+                    Toast.success('Actualizado', 'Cantidad actualizada correctamente', {
+                        duration: 2000
+                    });
+                } else {
+                    Toast.error('Error', response.message);
+                }
+            },
+            error: function() {
+                Toast.error('Error', 'No se pudo actualizar el carrito');
+            },
+            complete: function() {
+                // Re-habilitar controles
+                $input.prop('disabled', false);
+                $cartItem.find('.increase-qty, .decrease-qty').prop('disabled', false);
+            }
+        });
+    }
+    
+    // ============================================
+    // FUNCIÓN: ELIMINAR ITEM
+    // ============================================
+    function removeCartItem(itemId, $btn) {
+        // Toast de loading
+        Toast.info('Eliminando', 'Eliminando producto...', {
+            duration: 2000,
+            closeButton: false
+        });
+        
+        $.ajax({
+            url: `/eliminar-del-carrito/${itemId}/`,
+            method: 'POST',
+            data: {
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Eliminar item del DOM con animación
+                    $(`.cart-item[data-item-id="${itemId}"]`).fadeOut(300, function() {
+                        $(this).remove();
+                        
+                        // Si no quedan items, mostrar estado vacío
+                        if ($('.cart-item').length === 0) {
+                            showEmptyCartState();
+                        }
+                    });
+                    
+                    // Actualizar totales
+                    $('#cart-subtotal').text('$' + response.cart_total.toFixed(2));
+                    $('#cart-total').text('$' + (response.cart_total + 5).toFixed(2));
+                    
+                    // Actualizar badge del navbar
+                    $('.cart-badge').text(response.cart_count);
+                    if (response.cart_count === 0) {
+                        $('.cart-badge').hide();
+                    }
+                    
+                    // Toast de éxito
+                    Toast.success('Eliminado', 'Producto eliminado del carrito', {
+                        duration: 3000
+                    });
+                }
+            },
+            error: function() {
+                Toast.error('Error', 'No se pudo eliminar el producto');
+                // Restaurar botón en caso de error
+                $btn.prop('disabled', false)
+                    .html('<i class="bi bi-trash"></i>');
+            }
+        });
+    }
+    
+    // ============================================
+    // FUNCIÓN: MOSTRAR CARRITO VACÍO
+    // ============================================
+    function showEmptyCartState() {
+        const emptyCartHtml = `
+            <div class="text-center py-5">
+                <i class="bi bi-cart-x text-muted" style="font-size: 5rem;"></i>
+                <h3 class="mt-3">Tu carrito está vacío</h3>
+                <p class="text-muted">Agrega productos para empezar a comprar</p>
+                <a href="{% url 'shop:product_list' %}" class="btn btn-primary btn-lg mt-3">
+                    <i class="bi bi-shop"></i> Ir a la Tienda
+                </a>
+            </div>
+        `;
+        
+        $('.container.py-5').html(`
+            <h2 class="mb-4">
+                <i class="bi bi-cart3"></i> Mi Carrito de Compras
+            </h2>
+            ${emptyCartHtml}
+        `);
+    }
+    
+    // ============================================
+    // VACIAR CARRITO
+    // ============================================
+    $('.clear-cart').on('click', function() {
+        const $btn = $(this);
+        
+        function clearCartWithToast() {
+            // Deshabilitar botón
+            $btn.prop('disabled', true)
+                .html('<i class="bi bi-hourglass-split"></i> Vaciando...');
+            
+            // Toast de loading
+            Toast.info('Vaciando carrito', 'Por favor espera...', {
+                duration: 2000,
+                closeButton: false
+            });
+            
             $.ajax({
-                url: `/eliminar-del-carrito/${itemId}/`,
+                url: '{% url "shop:clear_cart" %}',
                 method: 'POST',
                 data: {
                     'csrfmiddlewaretoken': '{{ csrf_token }}'
                 },
                 success: function(response) {
                     if (response.success) {
-                        // Eliminar item del DOM
-                        $(`.cart-item[data-item-id="${itemId}"]`).fadeOut(300, function() {
-                            $(this).remove();
-                    
-                            // Si no quedan items, mostrar estado vacío sin recargar
-                            if ($('.cart-item').length === 0) {
-                                showEmptyCartState();
-                            }
-                        });
-                
-                        // Actualizar totales
-                        $('#cart-subtotal').text('$' + response.cart_total.toFixed(2));
-                        $('#cart-total').text('$' + (response.cart_total + 5).toFixed(2));
-                
                         // Actualizar badge del navbar
-                        $('.cart-badge').text(response.cart_count);
-                        if (response.cart_count === 0) {
-                            $('.cart-badge').hide();
-                        }
-
-                        //  TOAST DE ÉXITO 
-                        Toast.success('Producto eliminado', 'El producto fue eliminado del carrito', {
+                        $('.cart-badge').text('0').hide();
+                        
+                        Toast.success('Carrito vaciado', 'Todos los productos fueron eliminados', {
                             duration: 3000
                         });
+                        
+                        // Mostrar estado vacío
+                        setTimeout(function() {
+                            showEmptyCartState();
+                        }, 500);
+                    } else {
+                        Toast.error('Error', response.message || 'No se pudo vaciar el carrito');
+                        // Restaurar botón
+                        $btn.prop('disabled', false)
+                            .html('<i class="bi bi-trash"></i> Vaciar carrito');
                     }
                 },
                 error: function() {
-                    //  TOAST DE ERROR 
-                    Toast.error('Error', 'No se pudo eliminar el producto');
+                    Toast.error('Error de conexión', 'No se pudo vaciar el carrito');
+                    // Restaurar botón
+                    $btn.prop('disabled', false)
+                        .html('<i class="bi bi-trash"></i> Vaciar carrito');
                 }
             });
         }
-
-        // Función para mostrar el estado de carrito vacío sin recargar la página
-        function showEmptyCartState() {
-            const emptyCartHtml = `
-                <div class="text-center py-5">
-                    <i class="bi bi-cart-x text-muted" style="font-size: 5rem;"></i>
-                    <h3 class="mt-3">Tu carrito está vacío</h3>
-                    <p class="text-muted">Agrega productos para empezar a comprar</p>
-                    <a href="{% url 'shop:product_list' %}" class="btn btn-primary btn-lg mt-3">
-                        <i class="bi bi-shop"></i> Ir a la Tienda
-                    </a>
-                </div>
-            `;
         
-            // Reemplazar todo el contenido del contenedor principal
-            $('.container.py-5').html(`
-                <h2 class="mb-4">
-                    <i class="bi bi-cart3"></i> Mi Carrito de Compras
-                </h2>
-                ${emptyCartHtml}
-            `);
-        }
-
-        // Vaciar carrito con Toast (versión corregida)
-        $('.clear-cart').on('click', function() {
-            // Función para manejar el vaciado del carrito con toasts
-            function clearCartWithToast() {
-                $.ajax({
-                    url: '{% url "shop:clear_cart" %}',
-                    method: 'POST',
-                    data: {
-                        'csrfmiddlewaretoken': '{{ csrf_token }}'
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            // Actualizar badge del navbar
-                            $('.cart-badge').text('0').hide();
-
-                            //  TOAST DE ÉXITO 
-                            if (typeof Toast !== 'undefined' && Toast.success) {
-                                Toast.success('Carrito vaciado', 'Todos los productos fueron eliminados', {
-                                    duration: 3000
-                                });
-                            } else {
-                                // Fallback si Toast no está disponible
-                                alert('Carrito vaciado exitosamente');
-                            }
-
-                            // Mostrar estado vacío
-                            setTimeout(function() {
-                                showEmptyCartState();
-                            }, 500);
-                        } else {
-                            //  TOAST DE ERROR 
-                            if (typeof Toast !== 'undefined' && Toast.error) {
-                                Toast.error('Error', response.message || 'No se pudo vaciar el carrito');
-                            } else {
-                                alert(response.message || 'No se pudo vaciar el carrito');
-                            }
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        //  TOAST DE ERROR 
-                        if (typeof Toast !== 'undefined' && Toast.error) {
-                            Toast.error('Error de conexión', 'No se pudo vaciar el carrito');
-                        } else {
-                            alert('Error al vaciar el carrito');
-                        }
-                        console.error('Error AJAX:', error);
-                    }
-                });
-            }
-
-            // Verificar si showConfirmModal existe como función
-            if (typeof window.showConfirmModal === 'function') {
-                // Usar el modal personalizado
-                window.showConfirmModal({
-                    message: '¿Deseas vaciar todo el carrito? Esta acción no se puede deshacer.',
-                    confirmText: 'Vaciar carrito',
-                    confirmClass: 'btn-danger',
-                    onConfirm: function() {
-                        clearCartWithToast();
-                    }
-                });
-            } else {
-                // Fallback con confirm nativo
-                if (!confirm('¿Deseas vaciar todo el carrito?')) {
-                    return;
+        if (typeof window.showConfirmModal === 'function') {
+            window.showConfirmModal({
+                message: '¿Deseas vaciar todo el carrito? Esta acción no se puede deshacer.',
+                confirmText: 'Vaciar carrito',
+                confirmClass: 'btn-danger',
+                onConfirm: function() {
+                    clearCartWithToast();
                 }
+            });
+        } else {
+            if (confirm('¿Deseas vaciar todo el carrito?')) {
                 clearCartWithToast();
             }
-        });
+        }
     });
+});
 </script>
 {% endblock %}
