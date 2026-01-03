@@ -41,13 +41,9 @@ def home(request):
 
 def product_list(request):
     """
-    Lista de productos con filtros y paginación inteligente.
-    
-    ✅ OPTIMIZADO: select_related para category
+    Lista de productos con skeleton screens en AJAX
     """
-    # ✅ OPTIMIZACIÓN CLAVE
     products = Product.objects.filter(is_active=True).select_related('category')
-    
     categories = Category.objects.all()
     
     # Filtro por categoría
@@ -90,7 +86,6 @@ def product_list(request):
     
     paginator = Paginator(products, items_per_page)
     
-    # Validar número de página
     try:
         page = int(request.GET.get('page', 1))
         if page < 1:
@@ -98,7 +93,6 @@ def product_list(request):
     except (ValueError, TypeError):
         page = 1
     
-    # Manejar paginación con validación completa
     try:
         products_page = paginator.page(page)
     except PageNotAnInteger:
@@ -110,8 +104,22 @@ def product_list(request):
         else:
             products_page = paginator.page(1)
     
-    # Para AJAX
+    # ✅ NUEVO: Para AJAX con skeleton screen
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        # Verificar si solicita skeleton
+        if request.GET.get('skeleton') == 'true':
+            # Retornar HTML con skeletons
+            skeleton_html = render_to_string('shop/partials/product_grid_skeleton.html', {
+                'skeleton_count': items_per_page
+            })
+            
+            return JsonResponse({
+                'success': True,
+                'html': skeleton_html,
+                'skeleton': True,
+            })
+        
+        # Retornar productos reales
         products_html = render_to_string('shop/partials/product_grid.html', {
             'products': products_page,
             'user': request.user,
@@ -127,6 +135,7 @@ def product_list(request):
             'total_products': paginator.count,
             'start_index': products_page.start_index(),
             'end_index': products_page.end_index(),
+            'skeleton': False,
         })
     
     context = {
